@@ -1,4 +1,4 @@
-# Plugin Name #
+# Export User Data #
 **Contributors:** qlstudio  
 **Tags:** user, users, xprofile, usermeta csv, excel, batch, export, save, download  
 **Requires at least:** 3.2  
