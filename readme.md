@@ -55,8 +55,7 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 ## Screenshots ##
 
 ###1. User export screen###
-[missing image]
-
+![ScreenShot](http://s.w.org/plugins/export-user-data/screenshot-1.png?r=859689)
 
 ## Changelog ##
 
