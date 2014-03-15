@@ -3,7 +3,7 @@
 **Tags:** user, users, xprofile, usermeta csv, excel, batch, export, save, download  
 **Requires at least:** 3.2  
 **Tested up to:** 3.8.1  
-**Stable tag:** 0.8.3  
+**Stable tag:** 0.9.0  
 **License:** GPLv2  
 
 Export users data, metadata and buddypress xprofile data to a csv or Excel file
@@ -33,18 +33,18 @@ For an automatic installation through WordPress:
 1. Go to the 'Add New' plugins screen in your WordPress admin area
 2. Search for 'Export User Data'
 3. Click 'Install Now' and activate the plugin
-4. Go the 'Users' menu, under 'Export User Data'
+4. Go the 'Export User Data' menu, under 'Users'
 
 For a manual installation via FTP:
 
 1. Upload the `export-user-data` directory to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' screen in your WordPress admin area
-3. Go the 'Users' menu, under 'Export User Data'
+3. Go the 'Export User Data' menu, under 'Users'
 
 To upload the plugin through WordPress, instead of FTP:
 
 1. Upload the downloaded zip file on the 'Add New' plugins screen (see the 'Upload' tab) in your WordPress admin area and activate.
-2. Go the 'Users' menu, under 'Export User Data'
+2. Go the 'Export User Data' menu, under 'Users'
 
 ## Frequently Asked Questions ##
 
@@ -58,6 +58,11 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 ![ScreenShot](http://s.w.org/plugins/export-user-data/screenshot-1.png?r=859689)
 
 ## Changelog ##
+
+### 0.9.0 ###
+* Moved plugin class to singleton model
+* Improved language handling
+* French translation - thanks @bastho - http://wordpress.org/support/profile/bastho
 
 ### 0.8.3 ###
 * clarified export limit options
