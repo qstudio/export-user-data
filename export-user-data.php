@@ -4,7 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPressX Profile data.
-Version: 0.9.0
+Version: 0.9.6
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -14,12 +14,16 @@ Text Domain: export-user-data
 // quick check :) ##
 defined( 'ABSPATH' ) OR exit;
 
+// Increase maximum execution time to prevent "Maximum execution time 
+// exceeded" error
+ini_set('max_execution_time', 3600); 
+
 /* Check for Class */
 if ( ! class_exists( 'Q_Export_User_Data' ) ) 
 {
     
     // plugin version
-    define( 'Q_EXPORT_USER_DATA_VERSION', '0.9.0' ); // version ##
+    define( 'Q_EXPORT_USER_DATA_VERSION', '0.9.6' ); // version ##
     
     // instatiate class via hook, only if inside admin
     if ( is_admin() ) {
@@ -40,11 +44,20 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         
         // Refers to a single instance of this class. ##
         private static $instance = null;
-        
-        
+                
         /* properties */
         public $text_domain = 'export-user-data'; // for translation ##
-        
+        private $q_eud_exports = ''; // export settings ##
+        private $usermeta_saved_fields = array();
+        private $bp_fields_saved_fields = array();
+        private $bp_fields_update_time_saved_fields = array();
+        private $role = '';
+        private $start_date = '';
+        private $end_date = '';
+        private $limit_offset = '';
+        private $limit_total = '';
+        private $format = '';
+ 
         
         /**
          * Creates or returns an instance of this class.
@@ -70,16 +83,20 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         private function __construct() 
         {
 
-            if (is_admin() ) {
+            if ( is_admin() ) {
                 
-                add_action( 'init', array( $this, 'load_plugin_textdomain' ) );  
+                add_action( 'init', array( $this, 'load_plugin_textdomain' ), 1 );  
+                add_action( 'init', array( $this, 'load_user_options' ), 2 );  
                 add_action( 'admin_menu', array( $this, 'add_admin_pages' ) );
-                add_action( 'init', array( $this, 'generate_data' ) );
+                add_action( 'init', array( $this, 'generate_data' ), 3 );
                 add_filter( 'q_eud_exclude_data', array( $this, 'exclude_data' ) );
                 add_action( 'admin_enqueue_scripts', array( $this, 'add_css_and_js' ), 1 );
                 add_action( 'admin_footer', array( $this, 'jquery' ), 100000 );
                 add_action( 'admin_footer', array( $this, 'css' ), 100000 );
-
+                
+                // check for saved settings, default to empty array ##
+                
+                
             }
 
         }
@@ -111,23 +128,59 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         }
 
 
-        /* style and interaction */
+        /**
+         * style and interaction 
+         */
         public function add_css_and_js( $hook ) 
         {
 
-            // load the scripts on only the plugin admin page 
-            if (isset( $_GET['page'] ) && ( $_GET['page'] == $this->text_domain ) ) {
+            // load the scripts on only the plugin admin page ##
+            if ( isset( $_GET['page'] ) && ( $_GET['page'] == $this->text_domain ) ) {
 
-                wp_register_style('q_eud_multi_select_css', plugins_url('css/multi-select.css',__FILE__ ));
-                wp_enqueue_style('q_eud_multi_select_css');
-                wp_enqueue_script('q_eud_multi_select_js', plugins_url('js/jquery.multi-select.js',__FILE__ ), array('jquery'), '0.9.8', false );
+                wp_register_style( 'q_export_user_data', plugins_url( 'css/export-user-data.css' ,__FILE__ ));
+                wp_enqueue_style( 'q_export_user_data' );
+                wp_enqueue_script( 'q_eud_multi_select_js', plugins_url( 'js/jquery.multi-select.js', __FILE__ ), array('jquery'), '0.9.8', false );
 
             } 
 
         }
+        
+        
+        /**
+         * Return Byte count of $val
+         * 
+         * @link        http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue?replies=2
+         * @since       0.9.6
+         */
+        public function return_bytes( $val )
+        {
+            
+            $val = trim( $val );
+            $last = strtolower($val[strlen($val)-1]);
+            switch( $last ) {
+            
+                // The 'G' modifier is available since PHP 5.1.0
+                case 'g':
+                    
+                    $val *= 1024;
+                    
+                case 'm':
+                    
+                    $val *= 1024;
+                    
+                case 'k':
+                    
+                    $val *= 1024;
+                    
+            }
+
+            return $val;
+        }
 
 
-        /* clean that stuff up ## */
+        /**
+         * clean that stuff up
+         */
         public function sanitize( $value ) 
         {
 
@@ -138,7 +191,212 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
         }
 
+        
+        /**
+         * Load up saved exports for this user
+         *
+         * @since       0.9.6
+         * @return      Array of saved exports
+         */
+        public function load_user_options()
+        {
+            
+            
+            $this->q_eud_exports = get_user_meta( get_current_user_id(), 'q_eud_exports' ) ? get_user_meta( get_current_user_id(), 'q_eud_exports', true ) : array() ; 
+            #var_dump( $this->q_eud_exports );
+            
+        }
+        
+        
+        /**
+         * Get list of saved exports for this user
+         *
+         * @since       0.9.4
+         * @return      Array of saved exports
+         */
+        public function get_user_options()
+        {
+            
+            // get the stored options - filter empty array items ##
+            $q_eud_exports = array_filter( $this->q_eud_exports );
+            
+            // quick check if the array is empty ##
+            if ( empty ( $q_eud_exports ) ) { 
+                
+                return false; 
+                
+            }
+            
+            // test the array of saved exports ##
+            #$this->pr( $q_eud_exports );
+            
+            // start with an empty array ##
+            $exports = array();
+            
+            // loop over each saved export and grab each key ##
+            foreach ( $q_eud_exports as $key => $value ) {
+                
+                $exports[] = $key;
+                
+            }
+            
+            // kick back array ##
+            return( $exports );
+          
+        }
+        
+        
+        
+        /**
+         * Check for and load stored user options
+         * 
+         * @since       0.9.3
+         * @return      void
+         */
+        public function get_user_options_by_export( $export = null )
+        {
+            
+            // sanity check ##
+            if ( is_null ( $export ) ) { return false; }
+            
+            if ( isset( $this->q_eud_exports[$export] ) ) {
 
+                  $this->usermeta_saved_fields = $this->q_eud_exports[$export]['usermeta_saved_fields'];
+                  $this->bp_fields_saved_fields = $this->q_eud_exports[$export]['bp_fields_saved_fields'];
+                  $this->bp_fields_update_time_saved_fields = $this->q_eud_exports[$export]['bp_fields_update_time_saved_fields'];
+                  $this->role = $this->q_eud_exports[$export]['role'];
+                  $this->start_date = $this->q_eud_exports[$export]['start_date'];
+                  $this->end_date = $this->q_eud_exports[$export]['end_date'];
+                  $this->limit_offset = $this->q_eud_exports[$export]['limit_offset'];
+                  $this->limit_total = $this->q_eud_exports[$export]['limit_total'];
+                  $this->format = $this->q_eud_exports[$export]['format'];
+
+            } else {
+
+                  $this->usermeta_saved_fields = array();
+                  $this->bp_fields_saved_fields = array();
+                  $this->bp_fields_update_time_saved_fields = array();
+                  $this->role = '';
+                  $this->start_date = '';
+                  $this->end_date = '';
+                  $this->limit_offset = '';
+                  $this->limit_total = '';
+                  $this->format = '';
+
+            }
+          
+        }
+        
+        
+
+        /**
+         * method to store user options
+         *
+         * @todo        sanitizing function is not correct - yet... ##
+         * @param       string      $save_export        Export Key name
+         * @param       array       $save_options       Array of export options to save
+         * @since       0.9.3
+         * @return      void
+         */
+        public function set_user_options( $key = null, $options = null )
+        {
+            
+            // sanity check ##
+            if ( is_null ( $key ) || is_null ( $options ) ) {
+                
+                #$this->pr( 'missing save values' );
+                return false;
+                
+            }
+            
+            #$this->pr( $key );
+            #$this->pr( $options );
+            
+            // for now, I'm simply allowing keys to be resaved - but this is not so logical ##
+            if ( array_key_exists( $key, $this->q_eud_exports ) ) { 
+                
+                #$this->pr( 'key exists, skipping save' );
+                #return false;
+                
+            }
+            
+            if ( isset( $options ) && is_array( $options ) ) {
+                
+                // @todo - sanitizing function is not correct - yet... ##
+                /*
+                // update_option sanitizes the option name but not the option value ##
+                foreach ( $options as $field_name => $field_value ) {
+                  
+                    // so do that here. ##
+                    if ( is_array( $field_value ) ) {
+                      
+                        foreach ( $field_value as $field_array_key => $field_array_value ) {
+                            
+                            $options[$key][$field_name][$field_array_key] = sanitize_text_field( $field_array_value );
+                            
+                        }
+                        
+                    } else {
+                      
+                        $options[$key][$field_name] = sanitize_text_field( $field_value );
+                    
+                    }
+                    
+                }
+                */
+                
+                // assign the sanitized array of values to the class property $q_eud_exports as a new array with key $key ##
+                $this->q_eud_exports[$key] = $options;
+                
+                // update stored user_meta values, if previous key found ##
+                if ( get_user_meta( get_current_user_id(), 'q_eud_exports' ) !== false ) {
+                    
+                    #update_option( 'q_eud_exports', $this->q_eud_exports );
+                    update_user_meta( get_current_user_id(), 'q_eud_exports', $this->q_eud_exports );
+                    
+                // create new user meta key ##
+                } else {
+                    
+                    #add_option( 'q_eud_exports', $this->q_eud_exports, $deprecated, $autoload );
+                    add_user_meta( get_current_user_id(), 'q_eud_exports', $this->q_eud_exports );
+                    
+                }
+              
+            }
+            
+	}
+        
+        
+        
+        /**
+         * method to delete user options
+         *
+         * @param       $key        String      Key name to drop from property
+         * @since       0.9.3
+         * @return      void
+         */
+        public function delete_user_options( $key = null )
+        {
+            
+            // sanity check ##
+            if ( is_null ( $key ) || ! array_key_exists( $key, $this->q_eud_exports ) ) { return false; }
+            
+            // clean it up ##
+            $key = sanitize_text_field( $key );
+            
+            // check it out ##
+            #$this->pr( $key );
+            
+            // drop the array by it's key name from the class property ##
+            unset( $this->q_eud_exports[$key] );
+            
+            // update the saved data ##
+            update_user_meta( get_current_user_id(), 'q_eud_exports', $this->q_eud_exports );
+            
+        }
+ 
+        
+        
         /**
          * Process content of CSV file
          *
@@ -146,15 +404,24 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
          **/
         public function generate_data() 
         {
-
-            if ( ! isset( $_POST['_wpnonce-q-eud-export-user-page_export'] ) ) { 
+            
+            // This function runs before we display the admin page, so we need to skip
+            // the rest of this function if the user didn't click on the
+            // Save, Load, or Delete Settings buttons
+            if ( 
+                ! isset( $_POST['_wpnonce-q-eud-export-user-page_export'] )
+                || isset( $_POST['load_export'] )
+                || isset( $_POST['save_export'] )
+                || isset( $_POST['delete_export'] ) ) 
+            {
 
                 return false;
 
             }
-
+ 
+            // check admin referer ##
             check_admin_referer( 'q-eud-export-user-page_export', '_wpnonce-q-eud-export-user-page_export' );
-
+            
             // build argument array ##
             $args = array(
                 #'fields'    => 'all_with_meta',
@@ -171,7 +438,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             }
 
-            // is the a range limit in place for the export ? ##
+            // is there a range limit in place for the export ? ##
             if ( isset( $_POST['limit_offset'] ) && $_POST['limit_offset'] != '' && isset( $_POST['limit_total'] ) && $_POST['limit_total'] != '' ) {
                 
                 // let's just make sure they are integer values ##
@@ -181,8 +448,14 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 if ( is_int( $limit_offset ) && is_int( $limit_total ) ) {
                 
                     $args['offset'] = $limit_offset;
-                    $args['number'] = $limit_total - $limit_offset;
-
+		    /* cwjordan codex says:
+                     *     number - Limit the total number of users returned
+		     * so don't subtract the offset, like as not 
+		     * that will give us a negative number for $args['number']
+		     * e.g. offset of 1000 total of 100 */
+		    $args['number'] = $limit_total;                    
+//                    $args['number'] = $limit_total - $limit_offset;
+			
                     #wp_die(pr($args));
                 
                 }
@@ -202,7 +475,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 exit;
 
             }
-
+            
             /* get sitename and clean it up */
             $sitename = sanitize_key( get_bloginfo( 'name' ) );
             if ( ! empty( $sitename ) ) {
@@ -384,8 +657,33 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 }
 
             }
+            
+            // no more buffering while spitting back the export data ##
+            ob_end_flush();
+            
+            // get the value in bytes allocated for Memory via php.ini ##
+            // @link http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue?replies=2
+            $memory_limit = $this->return_bytes( ini_get('memory_limit') ) * .75;
+            
+            // we need to disable caching while exporting because we export so much data that it could blow the memory cache
+            // if we can't override the cache here, we'll have to clear it later...
+            if ( function_exists( 'override_function' ) ) {
+                
+                override_function('wp_cache_add', '$key, $data, $group="", $expire=0', '');
+                override_function('wp_cache_set', '$key, $data, $group="", $expire=0', '');
+                override_function('wp_cache_replace', '$key, $data, $group="", $expire=0', '');
+                override_function('wp_cache_add_non_persistent_groups', '$key, $data, $group="", $expire=0', '');
+            
+            } elseif ( function_exists( 'runkit_function_redefine' ) ) {
+                
+                runkit_function_redefine('wp_cache_add', '$key, $data, $group="", $expire=0', '');
+                runkit_function_redefine('wp_cache_set', '$key, $data, $group="", $expire=0', '');
+                runkit_function_redefine('wp_cache_replace', '$key, $data, $group="", $expire=0', '');
+                runkit_function_redefine('wp_cache_add_non_persistent_groups', '$key, $data, $group="", $expire=0', '');
 
-            //open doc wrapper..
+            }
+
+            // open doc wrapper.. ##
             echo $doc_begin;
 
             // echo headers ##
@@ -393,24 +691,50 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             // build row values for each user ##
             foreach ( $users as $user ) {
+                
+                // check if we're hitting any Memory limits, if so flush them out ##
+                // per http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue?replies=2
+		if ( memory_get_usage( true ) > $memory_limit ) {
+                    wp_cache_flush();
+                }
 
+                // open up a new empty array ##
                 $data = array();
 
                 // BP loaded ? ##
                 if ( function_exists ('bp_is_active') ) {
-                    $bp_data = BP_XProfile_ProfileData::get_all_for_user($user->ID);
+                    $bp_data = BP_XProfile_ProfileData::get_all_for_user( $user->ID );
                 }
 
+                // loop over each field ##
                 foreach ( $fields as $field ) {
 
                     // check if this is a BP field ##
                     if ( isset( $bp_data ) && isset( $bp_data[$field] ) && in_array( $field, $bp_fields_passed ) ) {
 
                         $value = $bp_data[$field];
-
+                        
                         if ( is_array( $value ) ) {
-                            $value = $value['field_data'];
+                            
+                            $value = maybe_unserialize($value['field_data']); // suggested by @grexican ##
+                            #$value = $value['field_data'];
+                            
+			    /**
+                             * cwjordan
+                             * after unserializing it we then 
+			     * need to implode it so 
+			     * that we have something readable?
+			     * Going to use :: as a separator
+			     * because that's what Buddypress Members Import
+			     * expects, but we might want to make that 
+			     * configurable. 
+                             */
+			    if ( is_array( $value ) ) {
+                                $value =  implode("::", $value ); 
+			    }
+
                         }
+                        
                         $value = $this->sanitize($value);
 
                     // check if this is a BP field we want the updated date for ##
@@ -420,14 +744,31 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
                         $real_field = str_replace(" Update Date", "", $field);
                         $field_id = xprofile_get_field_id_from_name( $real_field );
-                        $value = $wpdb->get_var ($wpdb->prepare( "SELECT last_updated FROM {$bp->profile->table_name_data} WHERE user_id = %d AND field_id = %d", $user->ID, $field_id ) );
+                        $value = $wpdb->get_var (
+                                    $wpdb->prepare( 
+                                        "
+                                            SELECT last_updated 
+                                            FROM {$bp->profile->table_name_data} 
+                                            WHERE user_id = %d AND field_id = %d
+                                        "
+                                        , $user->ID
+                                        , $field_id 
+                                    ) 
+                                );
 
+                    // include the user's role in the export ##
+                    } elseif ( isset( $_POST['q_eud_role'] ) && $_POST['q_eud_role'] != '' && $field == 'role' ){
+                        
+                        // add "Role" as $value ##
+                        $value = $user->roles[0] ? $user->roles[0] : '' ; // empty value if no role found - note: we only take the first role assigned to the user ##
+                        
                     // user data or usermeta ##
                     } else { 
 
                         $value = isset( $user->{$field} ) ? $user->{$field} : '';
-                        $value = is_array( $value ) ? serialize( $value ) : $value; // maybe serialize the value ##
-
+                        #$value = is_array( $value ) ? serialize( $value ) : $value; // maybe serialize the value ##
+                        $value = is_array( $value ) ? implode(", ", $value ) : $value; // maybe serialize the value - suggested by @nicmare ##
+                        
                     }
 
                     // correct program value to Program Name ##
@@ -466,12 +807,100 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         public function users_page() 
         {
 
+            // quick security check ##
             if ( ! current_user_can( 'list_users' ) ) {
+                
                 wp_die( __( 'You do not have sufficient permissions to access this page.', $this->text_domain ) );
+                
             }
-?>
+            
+            // Save settings button was pressed ##
+            if ( 
+                isset( $_POST['save_export'] ) 
+                && check_admin_referer( 'q-eud-export-user-page_export', '_wpnonce-q-eud-export-user-page_export' ) 
+            ) {
+              
+                // start with an empty variable ##
+                $save_export = "";
+                
+                if ( ! empty( $_POST['save_new_export_name'] ) ) {
+                    
+                    // assign value ##
+                    $save_export = $_POST['save_new_export_name'];
+                    
+                } elseif ( ! empty( $_POST['export_name'] ) ) {
+                    
+                    $save_export = $_POST['export_name'];
+                    
+                }
 
-        <div class="wrap">
+                // clean up $save_export ##
+                $save_export = sanitize_text_field( $save_export );
+              
+                // Build array of $options to save and save them ##
+                if ( $save_export != "" ) {
+               
+                    // prepare all array values ##
+                    $usermeta = isset( $_POST['usermeta'] ) ? $_POST['usermeta']: '' ;
+                    $bp_fields = isset( $_POST['bp_fields'] ) ? $_POST['bp_fields'] : '' ;
+                    $bp_fields_update = isset( $_POST['bp_fields_update_time'] ) ? $_POST['bp_fields_update_time'] : '' ;
+                    $format = isset( $_POST['format'] ) ? $_POST['format'] : '' ;
+                    $role = isset( $_POST['role'] ) ? $_POST['role'] : '' ;
+                    $start_date = isset( $_POST['start_date'] ) ? $_POST['start_date'] : '' ;
+                    $end_date = isset( $_POST['end_date'] ) ? $_POST['end_date'] : '' ;
+                    $limit_offset = isset( $_POST['limit_offset'] ) ? $_POST['limit_offset'] : '' ;
+                    $limit_total = isset( $_POST['limit_total'] ) ? $_POST['limit_total'] : '' ;
+                    
+                    // assign all values to a multidimensional array with $save_export as the key of the upper array ##
+                    #$options = array ( 
+                        $save_array = array (
+                            'usermeta_saved_fields' => $usermeta,
+                            'bp_fields_saved_fields' => $bp_fields,
+                            'bp_fields_update_time_saved_fields' => $bp_fields_update,
+                            'role' => $role,
+                            'start_date' => $start_date,
+                            'end_date' => $end_date,
+                            'limit_offset' => $limit_offset,
+                            'limit_total' => $limit_total,
+                            'format' => $format 
+                        );
+                    #);
+                    
+                    // store the options, for next load ##
+                    $this->set_user_options( $save_export, $save_array );
+                    
+                    // Display the settings the user just saved instead of blanking the form ##
+                    $_POST['load_export'] = 'Load Settings';
+                    $_POST['export_name'] = $save_export;
+                
+                }
+              
+            }
+
+            // Load settings button was pressed ( or option saved and $_POST variables hijacked )##
+            if ( 
+                isset( $_POST['load_export'] ) 
+                && isset( $_POST['export_name'] ) 
+                && check_admin_referer( 'q-eud-export-user-page_export', '_wpnonce-q-eud-export-user-page_export' ) 
+            ) {
+              
+                $this->get_user_options_by_export( sanitize_text_field( $_POST['export_name'] ) );
+                
+            }
+            
+            // Delete settings button was pressed ##
+            if ( 
+                isset( $_POST['delete_export'] ) 
+                && isset( $_POST['export_name'] ) 
+                && check_admin_referer( 'q-eud-export-user-page_export', '_wpnonce-q-eud-export-user-page_export' ) 
+            ) {
+              
+                $this->delete_user_options( sanitize_text_field( $_POST['export_name'] ) );
+                
+            }
+            
+?>
+    <div class="wrap">
         <h2><?php _e( 'Export User Data', $this->text_domain ); ?></h2>
 <?php
 
@@ -535,7 +964,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     <th scope="row">
                         <label for="q_eud_usermeta"><?php _e( 'User Meta Fields', $this->text_domain ); ?></label>
                         <p class="filter" style="margin: 10px 0 0;">
-                            <?php _e('Filter', $this->text_domain); ?>: <a href="#" class="usermeta-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="usermeta-common"><?php _e('Common', $this->text_domain); ?></a>
+                            <?php _e('Filters', $this->text_domain); ?>: <a href="#" class="usermeta-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="usermeta-common"><?php _e('Common', $this->text_domain); ?></a>
                         </p>
                     </th>
                     <td>
@@ -555,7 +984,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                                 }
 
                                 // tidy ##
-                                $display_key = str_replace( "_", " ", ucwords($display_key) );
+                                $display_key = str_replace( "_", " ", ucwords( $display_key ) );
 
                                 #echo "<label for='".esc_attr( $key )."' title='".esc_attr( $key )."'><input id='".esc_attr( $key )."' type='checkbox' name='usermeta[]' value='".esc_attr( $key )."'/> $display_key</label><br />";
 
@@ -566,9 +995,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
                                     if ( strpos( $key, $drop ) !== false ) {
 
-                                        #echo 'FOUND -- '.$drop.' in '.$key.'<br />';
-
-                                        if(($key = array_search($key, $meta_keys)) !== false) {
+                                        // https://wordpress.org/support/topic/bugfix-numbers-in-export-headers?replies=1
+                                        // removed $key = assignment, as not required ##
+                                        if ( ( array_search( $key, $meta_keys ) ) !== false ) {
 
                                             $usermeta_class = 'system';
 
@@ -683,8 +1112,13 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                             echo '<option value="">' . __( 'All Roles', $this->text_domain ) . '</option>';
                             global $wp_roles;
                             foreach ( $wp_roles->role_names as $role => $name ) {
+                              if ( isset ( $this->role ) && ( $this->role == $role ) ) {
+                                echo "\n\t<option selected value='" . esc_attr( $role ) . "'>$name</option>";
+                              } else {
                                 echo "\n\t<option value='" . esc_attr( $role ) . "'>$name</option>";
+                              }
                             }
+
 
 ?>
                         </select>
@@ -734,11 +1168,11 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     <td>
                         <select name="start_date" id="q_eud_users_start_date">
                             <option value="0"><?php _e( 'Start Date', $this->text_domain ); ?></option>
-                            <?php $this->export_date_options(); ?>
+                            <?php $this->export_date_options($this->start_date); ?>
                         </select>
                         <select name="end_date" id="q_eud_users_end_date">
                             <option value="0"><?php _e( 'End Date', $this->text_domain ); ?></option>
-                            <?php $this->export_date_options(); ?>
+                            <?php $this->export_date_options($this->end_date); ?>
                         </select>
                         <p class="description"><?php 
                             printf( 
@@ -751,8 +1185,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 <tr valign="top" class="toggleable">
                     <th scope="row"><label><?php _e( 'Limit Range', $this->text_domain ); ?></label></th>
                     <td>
-                        <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', $this->text_domain ); ?>">
-                        <input name="limit_total" type="text" id="q_eud_users_limit_total" value="" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', $this->text_domain ); ?>">
+                        <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php echo( $this->limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', $this->text_domain ); ?>">
+                        <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php echo ( $this->limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', $this->text_domain ); ?>">
                         <p class="description"><?php 
                             printf( 
                                 __( 'Enter an offset start number and a total number of users to export. <a href="%s" target="_blank">%s</a>', $this->text_domain )
@@ -763,15 +1197,34 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     </td>
                 </tr>
 
+                <tr valign="top" class="hidden">
+                    <th scope="row"><label for="q_eud_role"><?php _e( 'Include Role', $this->text_domain ); ?></label></th>
+                    <td>
+                        <input id='q_eud_role' type='checkbox' name='q_eud_role' value=''/></label>
+                        <p class="description"><?php 
+                            printf( 
+                                __( 'Checking this option will add a column that includes the user\'s role.', $this->text_domain )
+                            ); 
+                        ?></p>
+                    </td>
+                </tr>
+                </tr>
+                
                 <tr valign="top">
                     <th scope="row"><label for="q_eud_users_format"><?php _e( 'Format', $this->text_domain ); ?></label></th>
                     <td>
                         <select name="format" id="q_eud_users_format">
 <?php
-
-                            echo '<option value="excel">' . __( 'Excel', $this->text_domain ) . '</option>';
-                            echo '<option value="csv">' . __( 'CSV', $this->text_domain ) . '</option>';
-
+                            if ( isset ( $this->format ) && ( $this->format == 'excel' ) ) {
+                              echo '<option selected value="excel">' . __( 'Excel', $this->text_domain ) . '</option>';
+                            } else {
+                              echo '<option value="excel">' . __( 'Excel', $this->text_domain ) . '</option>';
+                            }
+                            if ( isset ( $this->format ) && ( $this->format == 'csv' ) ) {
+                              echo '<option selected value="csv">' . __( 'CSV', $this->text_domain ) . '</option>';
+                            } else {
+                              echo '<option value="csv">' . __( 'CSV', $this->text_domain ) . '</option>';
+                            }
 ?>
                         </select>
                         <p class="description"><?php 
@@ -779,6 +1232,61 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                                 __( 'Select the format for the export file.', $this->text_domain )
                             ); 
                         ?></p>
+                    </td>
+                </tr>
+                
+                <tr valign="top" class="remember">
+                   <th scope="row"><label for="q_eud_save_options"><?php _e( 'Stored Options', $this->text_domain ); ?></label></th>
+                    <td>
+
+                        <div class="row">
+                            <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php _e( 'Export Name', $this->text_domain ); ?>">
+                            <input type="submit" id="save_export" class="button-primary" name="save_export" value="<?php _e( 'Save', $this->text_domain ); ?>" />
+                        </div>
+                        <?php
+
+                        // check if the user has any saved exports ##
+                        if ( $this->get_user_options() ) {
+
+?>
+                        <div class="row">
+                            <select name="export_name" id="q_eud_save_options" class="regular-text">
+<?php   
+
+                                // loop over each saved export ##
+                                foreach( $this->get_user_options() as $export ) {
+
+                                    // select Loaded export name, if selected ##
+                                    if ( 
+                                        isset( $_POST['load_export'] ) 
+                                        && isset( $_POST['export_name'] ) 
+                                        && ( $_POST['export_name'] == $export ) 
+                                    ) {
+
+                                        echo "<option selected value='$export'>$export</option>";
+
+                                    // just list previous export name ##
+                                    } else {
+
+                                        echo "<option value='$export'>$export</option>";
+
+                                    }
+
+                                }
+                                
+?>
+                            </select>
+
+                            <input type="submit" id="load_export" class="button-primary" name="load_export" value="<?php _e( 'Load', $this->text_domain ); ?>" />
+                            <input type="submit" id="delete_export" class="button-primary" name="delete_export" value="<?php _e( 'Delete', $this->text_domain ); ?>" />
+<?php
+
+                            }
+
+?>             
+                            </div>
+                            <p class="description"><?php _e( 'Save, load or delete your stored export options.', $this->text_domain ); ?></p>
+                        
                     </td>
                 </tr>
                 
@@ -796,9 +1304,10 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             </table>
             <p class="submit">
                 <input type="hidden" name="_wp_http_referer" value="<?php echo $_SERVER['REQUEST_URI'] ?>" />
-                <input type="submit" class="button-primary" value="<?php _e( 'Export', $this->text_domain ); ?>" />
+                <input type="submit" class="button-primary" value="<?php _e( 'Run Export', $this->text_domain ); ?>" />
             </p>
         </form>
+        </div>
         
 <?php
         }
@@ -821,6 +1330,10 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             // build super multiselect ##
             jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
+            //Select any fields from saved settings ##
+            jQuery('#usermeta').multiSelect('select',([<?php echo($this->quote_array($this->usermeta_saved_fields))?>]));
+            jQuery('#bp_fields').multiSelect('select',([<?php echo($this->quote_array($this->bp_fields_saved_fields))?>]));
+            jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo($this->quote_array($this->bp_fields_update_time_saved_fields))?>]));
 
             // show only common ##
             jQuery('.usermeta-common').click(function(e){
@@ -865,7 +1378,30 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     jQuery(this).text("<?php _e( 'Show', $this->text_domain ); ?>");
                 }
             });
-
+            
+            // @todo - probably we're going to require more validation on these buttons ##
+            // validate save button ##
+            jQuery("#save_export").click( function(e) {
+                
+                // grab the value of the input ##
+                var q_eud_save_options_new_export = jQuery('#q_eud_save_options_new_export').val();
+                
+                if ( ! q_eud_save_options_new_export || q_eud_save_options_new_export == '' ) {
+                    
+                    e.preventDefault(); // stop things here ##
+                    jQuery('#q_eud_save_options_new_export').addClass("error");
+                    
+                }
+                
+            });
+            
+            // remove validation on focus ##
+            jQuery("body").on( 'focus', '#q_eud_save_options_new_export', function(e) {
+                
+                jQuery(this).removeClass("error");
+                
+            });
+            
         });
 
         </script>
@@ -887,6 +1423,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 ?>
         <style>
             .toggleable { display: none; }
+            .hidden { display: none; }
         </style>
 <?php
             }
@@ -933,11 +1470,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         /**
          * Export Date Options
          * 
-         * @global type $wpdb
-         * @global type $wp_locale
-         * @return type
+         * @since       0.9.6
+         * @global      type    $wpdb
+         * @global      type    $wp_locale
+         * @return      void
          */
-        private function export_date_options() 
+        private function export_date_options( $selected_date)
         {
 
             global $wpdb, $wp_locale;
@@ -957,10 +1495,53 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     continue;
 
                 $month = zeroise( $date->month, 2 );
-                echo '<option value="' . $date->year . '-' . $month . '">' . $wp_locale->get_month( $month ) . ' ' . $date->year . '</option>';
+                $date_string = $date->year . '-' . $month;
+                if ( $selected_date == $date_string ) {
+                  echo( '<option selected value="' . $date_string . '">' . $wp_locale->get_month( $month ) . ' ' . $date->year . '</option>' );
+                } else {
+                  echo( '<option value="' . $date_string . '">' . $wp_locale->get_month( $month ) . ' ' . $date->year . '</option>' );
+                }
+
             }
 
         }
+
+        /**
+         * Quote array elements and separate with commas
+         *
+         * @since       0.9.6
+         * @return      String
+         */
+         private function quote_array( $array )
+         {
+             
+           $prefix = ''; // starts empty ##
+           $elementlist = '';
+           if ( is_array( $array ) ) {
+               foreach( $array as $element ) {
+                   $elementlist .= $prefix . "'" . $element . "'";
+                   $prefix = ','; // prefix all remaining items with a comma ##
+               }
+           }
+           
+           // kick back string to function caller ##
+           return( $elementlist );
+           
+         }
+         
+        
+        /**
+         * Nicer var_dump
+         * 
+         * @since       0.9.6
+         */
+        function pr ($thing)
+        {
+            echo '<pre>';
+            print_r ($thing);
+            echo '</pre>';
+        }
+
 
     }
 
