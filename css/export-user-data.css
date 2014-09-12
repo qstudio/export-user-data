@@ -1,3 +1,35 @@
+/*
+export-user-data.css
+
+@since      0.9.6
+*/
+
+
+/* general layout  */
+
+.form-table tr.remember div.row:first-child {
+    margin-bottom: 10px;
+}
+
+.form-table tr.remember input.button-primary {
+    margin-left: 5px;
+}
+
+.form-table tr.remember select {
+    width: 25em;
+}
+
+input.error {
+    background: #D54E21;
+    color: #fff;
+    border: 1px solid #CCC;
+}
+
+/* form inputs */
+
+
+/* multiselects */
+
 .ms-container{
   background: transparent url('../img/switch.png') no-repeat 50% 50%;
   width: 600px;
