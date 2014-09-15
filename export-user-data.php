@@ -3,7 +3,7 @@
 /*
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
-Description: Export User data, metadata and BuddyPressX Profile data.
+Description: Export User data, metadata and BuddyPress X-Profile data.
 Version: 0.9.6
 Author: Q Studio
 Author URI: http://qstudio.us
@@ -964,7 +964,10 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     <th scope="row">
                         <label for="q_eud_usermeta"><?php _e( 'User Meta Fields', $this->text_domain ); ?></label>
                         <p class="filter" style="margin: 10px 0 0;">
-                            <?php _e('Filters', $this->text_domain); ?>: <a href="#" class="usermeta-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="usermeta-common"><?php _e('Common', $this->text_domain); ?></a>
+                            <?php _e('Filter', $this->text_domain); ?>: <a href="#" class="usermeta-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="usermeta-common"><?php _e('Common', $this->text_domain); ?></a>
+                        </p>
+                        <p class="filter" style="margin: 10px 0 0;">
+                            <?php _e('Select', $this->text_domain); ?>: <a href="#" class="select-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="select-none"><?php _e('None', $this->text_domain); ?></a>
                         </p>
                     </th>
                     <td>
@@ -1044,7 +1047,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
 ?>
                 <tr valign="top">
-                    <th scope="row"><label for="q_eud_xprofile"><?php _e( 'BP xProfile Fields', $this->text_domain ); ?></label></th>
+                    <th scope="row">
+                        <label for="q_eud_xprofile"><?php _e( 'BP xProfile Fields', $this->text_domain ); ?></label>
+                        <p class="filter" style="margin: 10px 0 0;">
+                            <?php _e('Select', $this->text_domain); ?>: <a href="#" class="select-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="select-none"><?php _e('None', $this->text_domain); ?></a>
+                        </p>
+                    </th>
                     <td>
                         <select multiple="multiple" id="bp_fields" name="bp_fields[]">
 <?php
@@ -1330,10 +1338,11 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             // build super multiselect ##
             jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
+            
             //Select any fields from saved settings ##
-            jQuery('#usermeta').multiSelect('select',([<?php echo($this->quote_array($this->usermeta_saved_fields))?>]));
-            jQuery('#bp_fields').multiSelect('select',([<?php echo($this->quote_array($this->bp_fields_saved_fields))?>]));
-            jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo($this->quote_array($this->bp_fields_update_time_saved_fields))?>]));
+            jQuery('#usermeta').multiSelect('select',([<?php echo( $this->quote_array( $this->usermeta_saved_fields ) ); ?>]));
+            jQuery('#bp_fields').multiSelect('select',([<?php echo( $this->quote_array($this->bp_fields_saved_fields ) ); ?>]));
+            jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( $this->quote_array( $this->bp_fields_update_time_saved_fields ) ); ?>]));
 
             // show only common ##
             jQuery('.usermeta-common').click(function(e){
@@ -1346,6 +1355,19 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 e.preventDefault();
                 jQuery('#ms-usermeta .ms-selectable li').show();
             });
+
+            // select all ##
+            jQuery('.select-all').click(function(e){
+                e.preventDefault();
+                jQuery( jQuery(this).parent().parent().parent().find( 'select' ) ).multiSelect( 'select_all' );
+            });
+            
+            // select none ##
+            jQuery('.select-none').click(function(e){
+                e.preventDefault();
+                jQuery( jQuery(this).parent().parent().parent().find( 'select' ) ).multiSelect( 'deselect_all' );
+            });
+
 
             // validate number inputs ##
             $("input.numeric").blur(function() {
