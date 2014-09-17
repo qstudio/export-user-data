@@ -25,6 +25,10 @@ input.error {
     border: 1px solid #CCC;
 }
 
+th p.filter {
+    width: 100%;
+}
+
 /* form inputs */
 
 

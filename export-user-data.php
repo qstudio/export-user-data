@@ -345,6 +345,26 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 }
                 */
                 
+                // update_option sanitizes the option name but not the option value ##
+                foreach ( $options as $field_name => $field_value ) {
+
+                    // so do that here. ##
+                    if ( is_array( $field_value ) ) {
+
+                        foreach ( $field_value as $field_array_key => $field_array_value ) {
+
+                            $options[$field_name][$field_array_key] = sanitize_text_field( $field_array_value );
+
+                        }
+
+                    } else {
+
+                        $options[$field_name] = sanitize_text_field( $field_value );
+
+                    }
+
+                }
+                
                 // assign the sanitized array of values to the class property $q_eud_exports as a new array with key $key ##
                 $this->q_eud_exports[$key] = $options;
                 
@@ -395,6 +415,61 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             
         }
  
+        
+        /**
+         * Copy of BP_XProfile_ProfileData::get_all_for_user() from BP version 2.0?
+         * Get all of the profile information for a specific user.
+         * 
+         * @param       $user_id        Integer      ID of specific user
+         * @since       0.9.6
+         * @return      Array           User profile fields
+         */
+        private static function get_all_for_user( $user_id = null ) {
+            
+            // sanity check ##
+            if ( is_null( $user_id ) ) { return false; }
+            
+            global $wpdb, $bp;
+
+            $results = $wpdb->get_results( 
+                $wpdb->prepare( 
+                    "
+                        SELECT g.id as field_group_id, g.name as field_group_name, f.id as field_id, f.name as field_name, f.type as field_type, d.value as field_data, u.user_login, u.user_nicename, u.user_email 
+                        FROM {$bp->profile->table_name_groups} g 
+                            LEFT JOIN {$bp->profile->table_name_fields} f ON g.id = f.group_id 
+                            INNER JOIN {$bp->profile->table_name_data} d ON f.id = d.field_id LEFT JOIN {$wpdb->users} u ON d.user_id = u.ID 
+                        WHERE d.user_id = %d AND d.value != ''
+                    "
+                    , $user_id 
+                ) 
+            );
+                            
+            $profile_data = array();
+
+            if ( ! empty( $results ) ) {
+                
+                $profile_data['user_login']    = $results[0]->user_login;
+                $profile_data['user_nicename'] = $results[0]->user_nicename;
+                $profile_data['user_email']    = $results[0]->user_email;
+
+                foreach( (array) $results as $field ) {
+                
+                    $profile_data[$field->field_name] = array(
+                        'field_group_id'   => $field->field_group_id,
+                        'field_group_name' => $field->field_group_name,
+                        'field_id'         => $field->field_id,
+                        'field_type'       => $field->field_type,
+                        'field_data'       => $field->field_data
+                    );
+                    
+                }
+                
+            }
+
+            return $profile_data;
+            
+        }
+        
         
         
         /**
@@ -703,7 +778,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
                 // BP loaded ? ##
                 if ( function_exists ('bp_is_active') ) {
-                    $bp_data = BP_XProfile_ProfileData::get_all_for_user( $user->ID );
+                    #$bp_data = BP_XProfile_ProfileData::get_all_for_user( $user->ID );
+                    $bp_data = self::get_all_for_user( $user->ID ); // take from old BP method ##
                 }
 
                 // loop over each field ##
@@ -1086,6 +1162,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 <tr valign="top" class="toggleable">
                     <th scope="row">
                         <label for="q_eud_xprofile"><?php _e( 'BP xProfile Fields Update Time', $this->text_domain ); ?></label>
+                        <p class="filter" style="margin: 10px 0 0;">
+                            <?php _e('Select', $this->text_domain); ?>: <a href="#" class="select-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="select-none"><?php _e('None', $this->text_domain); ?></a>
+                        </p>
                     </th>
                     <td>
                         <select multiple="multiple" id="bp_fields_update_time" name="bp_fields_update_time[]">
