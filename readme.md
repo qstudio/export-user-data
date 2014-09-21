@@ -62,7 +62,7 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 ### 0.9.6 ###
 * Save, load and delete stored export settings - thanks to @cwjordan
 * Overcome memory outages on large exports - thanks to @grexican
-* Tested on WP 4.0.0 & BP 2.0.2
+* Tested on WP 4.0.0 & BP 2.1.0
 
 ### 0.9.5 ###
 * BP Serialized data fixes - thanks to @nicmare & @grexican
