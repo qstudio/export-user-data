@@ -4,7 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
-Version: 0.9.6
+Version: 0.9.7
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -23,7 +23,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 {
     
     // plugin version
-    define( 'Q_EXPORT_USER_DATA_VERSION', '0.9.6' ); // version ##
+    define( 'Q_EXPORT_USER_DATA_VERSION', '0.9.7' ); // version ##
     
     // instatiate class via hook, only if inside admin
     if ( is_admin() ) {
@@ -93,9 +93,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 add_action( 'admin_enqueue_scripts', array( $this, 'add_css_and_js' ), 1 );
                 add_action( 'admin_footer', array( $this, 'jquery' ), 100000 );
                 add_action( 'admin_footer', array( $this, 'css' ), 100000 );
-                
-                // check for saved settings, default to empty array ##
-                
                 
             }
 
@@ -471,7 +468,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         }
         
         
-        
         /**
          * Process content of CSV file
          *
@@ -514,10 +510,10 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             }
 
             // is there a range limit in place for the export ? ##
-            if ( isset( $_POST['limit_offset'] ) && $_POST['limit_offset'] != '' && isset( $_POST['limit_total'] ) && $_POST['limit_total'] != '' ) {
+            if ( isset( $_POST['limit_total'] ) && $_POST['limit_total'] != '' ) {
                 
                 // let's just make sure they are integer values ##
-                $limit_offset = (int)$_POST['limit_offset'];
+                $limit_offset = isset( $_POST['limit_offset'] ) ? (int)$_POST['limit_offset'] : 0 ;
                 $limit_total = (int)$_POST['limit_total'];
                 
                 if ( is_int( $limit_offset ) && is_int( $limit_total ) ) {
@@ -529,20 +525,23 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 		     * that will give us a negative number for $args['number']
 		     * e.g. offset of 1000 total of 100 */
 		    $args['number'] = $limit_total;                    
-//                    $args['number'] = $limit_total - $limit_offset;
-			
-                    #wp_die(pr($args));
+		    
+                    // test it ##
+                    #wp_die( $this->pr( $args ) );
                 
                 }
                 
             }
             
-            /* pre_user query */
+            // pre_user query ##
             add_action( 'pre_user_query', array( $this, 'pre_user_query' ) );
             $users = get_users( $args );
             remove_action( 'pre_user_query', array( $this, 'pre_user_query' ) );
-
-            /* no users found, so chuck an error into the args array and exit the export */
+            
+            // test args ##
+            #wp_die( $this->pr ( $args ) );
+            
+            // no users found, so chuck an error into the args array and exit the export ##
             if ( ! $users ) {
 
                 $referer = add_query_arg( 'error', 'empty', wp_get_referer() );
@@ -551,7 +550,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             }
             
-            /* get sitename and clean it up */
+            // get sitename and clean it up ##
             $sitename = sanitize_key( get_bloginfo( 'name' ) );
             if ( ! empty( $sitename ) ) {
                 $sitename .= '.';
@@ -570,7 +569,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             switch ( $export_method ) {
 
-                case "csv":
+                case ( 'csv' ):
 
                     // to csv ##
                     header( 'Content-Description: File Transfer' );
@@ -597,7 +596,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
                     break;
 
-                case ('excel'):
+                case ( 'excel' ):
 
                     // to xls ##
                     header( 'Content-Description: File Transfer' );
@@ -637,6 +636,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             // check for selected usermeta fields ##
             $usermeta = isset( $_POST['usermeta'] ) ? $_POST['usermeta']: '';
+            #$this->pr( $usermeta );
             $usermeta_fields = array();
            
             if ( $usermeta && is_array( $usermeta ) ) {
@@ -695,7 +695,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 ,   'user_url'
                 ,   'user_registered'
                 #,  'user_activation_key'
-                #,  'user_status',
+                ,   'user_status'
                 ,   'display_name'
             );
 
@@ -737,7 +737,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             ob_end_flush();
             
             // get the value in bytes allocated for Memory via php.ini ##
-            // @link http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue?replies=2
+            // @link http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue
             $memory_limit = $this->return_bytes( ini_get('memory_limit') ) * .75;
             
             // we need to disable caching while exporting because we export so much data that it could blow the memory cache
@@ -777,14 +777,16 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 $data = array();
 
                 // BP loaded ? ##
-                if ( function_exists ('bp_is_active') ) {
+                if ( function_exists ( 'bp_is_active' ) ) {
+                    
                     #$bp_data = BP_XProfile_ProfileData::get_all_for_user( $user->ID );
-                    $bp_data = self::get_all_for_user( $user->ID ); // take from old BP method ##
+                    $bp_data = self::get_all_for_user( $user->ID ); // taken from old BP method ##
+                    
                 }
 
                 // loop over each field ##
                 foreach ( $fields as $field ) {
-
+                    
                     // check if this is a BP field ##
                     if ( isset( $bp_data ) && isset( $bp_data[$field] ) && in_array( $field, $bp_fields_passed ) ) {
 
@@ -840,10 +842,33 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         
                     // user data or usermeta ##
                     } else { 
-
-                        $value = isset( $user->{$field} ) ? $user->{$field} : '';
-                        #$value = is_array( $value ) ? serialize( $value ) : $value; // maybe serialize the value ##
-                        $value = is_array( $value ) ? implode(", ", $value ) : $value; // maybe serialize the value - suggested by @nicmare ##
+                        
+                        // grab value from $user object ##
+                        $value = $user->{$field};
+                            
+                        // check if field is known to return an array ##
+                        if ( in_array ( $field, $this->known_arrays() ) && array_filter( $value ) ) {
+                            
+                            #$this->pr( array ( 'known_arrays' => $field ) );
+                            $value = ( array )$value;
+                            
+                        }
+                            
+                        if ( is_array ( $value ) ) {
+                            
+                            $value = implode(", ", $value );
+                            #$value = 'array';
+                            
+                        } elseif ( is_serialized ( $value ) ) {
+                            
+                            $value = maybe_unserialize( $value ); // suggested by @grexican ## 
+                            #$value = 'serialized';
+                            
+                        } else {
+                            
+                            #$value = array_filter( $value );
+                            
+                        }
                         
                     }
 
@@ -853,8 +878,10 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     }
 
                     if ( $is_csv ) {
+                        // wrap values in quotes and add to array ##
                         $data[] = '"' . str_replace( '"', '""', $value ) . '"';
                     } else {
+                        // add to array ##
                         $data[] = $value;
                     }
 
@@ -870,7 +897,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             // stop PHP, so file can export correctly ##
             exit;
-
 
         }
 
@@ -1327,7 +1353,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     <td>
 
                         <div class="row">
-                            <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php _e( 'Export Name', $this->text_domain ); ?>">
+                            <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php _e( 'Export Name', $this->text_domain ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? $_POST['export_name'] : '' ; ?>">
                             <input type="submit" id="save_export" class="button-primary" name="save_export" value="<?php _e( 'Save', $this->text_domain ); ?>" />
                         </div>
                         <?php
@@ -1538,10 +1564,21 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         public function exclude_data() 
         {
 
-            $exclude = array( 'user_pass', 'user_activation_key' );
-            return $exclude;
+            return array( 'user_pass', 'user_activation_key' );
 
         }
+        
+        
+        /**
+         * Array of field names known to contain arrays of data, but which are returned as strings
+         */
+        public function known_arrays() 
+        {
+
+            return apply_filters( 'export_user_data_known_arrays', array( 'bp_latest_update', 'another_key' ) );
+
+        }
+        
 
 
         /*
@@ -1613,7 +1650,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
          * @since       0.9.6
          * @return      String
          */
-         private function quote_array( $array )
+        private function quote_array( $array )
          {
              
            $prefix = ''; // starts empty ##
@@ -1636,7 +1673,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
          * 
          * @since       0.9.6
          */
-        function pr ($thing)
+        public function pr ($thing)
         {
             echo '<pre>';
             print_r ($thing);
