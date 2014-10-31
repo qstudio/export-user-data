@@ -848,7 +848,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         if ( ! in_array ( $field, $data_keys ) ) {
                         
                             // we need to know if the usermeta value is unqiue or not ##
-                            $value = $this->get_usermeta( $user->ID, $field );
+                            $value = $this->get_user_meta( $user->ID, $field );
                             #$this->pr( array ( 'field_'.$field => $value ) );
                         
                         } else {
@@ -1593,7 +1593,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         /**
          * Check in the usermeta table if a user has more than one record for a field
          */
-        public function get_usermeta( $user_id = null, $field = null ) 
+        public function get_user_meta( $user_id = null, $field = null ) 
         {
 
             // sanity check ##
@@ -1617,12 +1617,19 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 )
             );
             
-            if ( $count && ! is_null( $count ) && $count > 1 ) {
+            if ( is_null( $count ) || $count == 0 ) {
                 
+                // no meta_key found for this user, so no point in running get_user_meta() ##
+                return false;
+                
+            } else if ( ! is_null( $count ) && $count && $count > 1 ) {
+                
+                // more than 1 meta_key found, so grab all and return an array ##
                 return (array)get_user_meta( $user_id, $field, false );
                 
             } else {
                 
+                // single value found, so just return that as a string ##
                 return get_user_meta( $user_id, $field, true );
                 
             }
