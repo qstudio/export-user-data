@@ -4,7 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
-Version: 0.9.7
+Version: 0.9.8
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -23,7 +23,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 {
     
     // plugin version
-    define( 'Q_EXPORT_USER_DATA_VERSION', '0.9.7' ); // version ##
+    define( 'Q_EXPORT_USER_DATA_VERSION', '0.9.8' ); // version ##
     
     // instatiate class via hook, only if inside admin
     if ( is_admin() ) {
@@ -495,7 +495,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             
             // build argument array ##
             $args = array(
-                #'fields'    => 'all_with_meta',
                 'fields'    => 'all', // reduce initial data load and call up required fields inside the loop ##
                 'role'      => sanitize_text_field( $_POST['role'] )
             );
@@ -539,13 +538,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             remove_action( 'pre_user_query', array( $this, 'pre_user_query' ) );
             
             // test args ##
-            #wp_die( $this->pr ( $args ) );
+            #wp_die( $this->pr ( $users ) );
             
             // no users found, so chuck an error into the args array and exit the export ##
             if ( ! $users ) {
 
-                $referer = add_query_arg( 'error', 'empty', wp_get_referer() );
-                wp_redirect( $referer );
+                wp_redirect( add_query_arg( 'error', 'empty', wp_get_referer() ) );
                 exit;
 
             }
@@ -651,7 +649,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             // check for selected x profile fields ##
             $bp_fields = isset( $_POST['bp_fields'] ) ? $_POST['bp_fields'] : '';
             $bp_fields_passed = array();
-            if ( $bp_fields && is_array($bp_fields) ) {
+            if ( $bp_fields && is_array( $bp_fields ) ) {
 
                 foreach( $bp_fields as $field ) {
 
@@ -843,16 +841,31 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     // user data or usermeta ##
                     } else { 
                         
-                        // grab value from $user object ##
-                        $value = $user->{$field};
+                        
+                        #$value = $user->{$field};
+                        
+                        // if this is a usermeta field, check if it's unique ##
+                        if ( ! in_array ( $field, $data_keys ) ) {
+                        
+                            // we need to know if the usermeta value is unqiue or not ##
+                            $value = $this->get_usermeta( $user->ID, $field );
+                            #$this->pr( array ( 'field_'.$field => $value ) );
+                        
+                        } else {
                             
-                        // check if field is known to return an array ##
-                        if ( in_array ( $field, $this->known_arrays() ) && array_filter( $value ) ) {
-                            
-                            #$this->pr( array ( 'known_arrays' => $field ) );
-                            $value = ( array )$value;
+                            // grab value from $user object -- added magically ##
+                            // http://scribu.net/wordpress/the-magic-of-wp_user.html
+                            $value = $user->{$field};
                             
                         }
+                        
+                        // check if field is known to return an array ##
+                        #if ( in_array ( $field, $this->known_arrays() ) && array_filter( $value ) ) {
+                            
+                            #$this->pr( array ( 'known_arrays' => $field ) );
+                            #$value = ( array )$value;
+                            
+                        #}
                             
                         if ( is_array ( $value ) ) {
                             
@@ -863,10 +876,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                             
                             $value = maybe_unserialize( $value ); // suggested by @grexican ## 
                             #$value = 'serialized';
-                            
-                        } else {
-                            
-                            #$value = array_filter( $value );
                             
                         }
                         
@@ -1579,7 +1588,46 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
         }
         
+        
+        
+        /**
+         * Check in the usermeta table if a user has more than one record for a field
+         */
+        public function get_usermeta( $user_id = null, $field = null ) 
+        {
 
+            // sanity check ##
+            if ( is_null ( $user_id ) || is_null ( $field ) ) { return false; }
+            
+            // grab global $wpdb ##
+            global $wpdb;
+            
+            // could number of rows in the usermeta table that contain the same meta_key and user_id 
+            // if this is > 1, then we know the usermeta value is non-unique
+            $count = $wpdb->get_var(
+                $wpdb->prepare(
+                    "
+                        SELECT COUNT(*)
+                        FROM $wpdb->usermeta 
+                        WHERE user_id = %d && meta_key = %s
+                        LIMIT 2
+                    ",
+                        $user_id
+                    ,   $field
+                )
+            );
+            
+            if ( $count && ! is_null( $count ) && $count > 1 ) {
+                
+                return (array)get_user_meta( $user_id, $field, false );
+                
+            } else {
+                
+                return get_user_meta( $user_id, $field, true );
+                
+            }
+            
+        }
 
         /*
          * Pre User Query

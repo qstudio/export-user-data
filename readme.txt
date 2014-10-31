@@ -3,7 +3,7 @@ Contributors: qlstudio
 Tags: user, users, xprofile, usermeta csv, excel, batch, export, save, download
 Requires at least: 3.2
 Tested up to: 4.0.0
-Stable tag: 0.9.7
+Stable tag: 0.9.8
 License: GPLv2
 
 Export users data, metadata and buddypress xprofile data to a csv or Excel file
@@ -57,6 +57,10 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 1. User export screen
 
 == Changelog ==
+
+= 0.9.8 =
+* added get_usermeta() to check if meta keys are unique and return an array if not 
+* removed known_arrays() filter to allow for array data to be returned correctly - too hacky
 
 = 0.9.7 =
 * Added known_arrays() filter to allow for array data to be returned correctly
