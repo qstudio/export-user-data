@@ -3,7 +3,7 @@
 **Tags:** user, users, xprofile, usermeta csv, excel, batch, export, save, download  
 **Requires at least:** 3.2  
 **Tested up to:** 4.0.0  
-**Stable tag:** 0.9.8  
+**Stable tag:** 0.9.9  
 **License:** GPLv2  
 
 Export users data, metadata and buddypress xprofile data to a csv or Excel file
@@ -58,6 +58,12 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 ![ScreenShot](http://s.w.org/plugins/export-user-data/screenshot-1.png?r=859689)
 
 ## Changelog ##
+
+### 0.9.9 ###
+* get_uermeta renamed get_user_meta to be more consistent with WP
+* get_user_meta tidied up and tested on larger exports
+* added option to export user BP Groups
+* added option to export all user WP Roles
 
 ### 0.9.8 ###
 * added get_usermeta() to check if meta keys are unique and return an array if not 
