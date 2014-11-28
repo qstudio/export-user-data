@@ -59,6 +59,10 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 
 ## Changelog ##
 
+### 1.0.0 ###
+* Reduced all get_user_meta queries to a single call to improve performance
+* Serialized data is now returned in it's pure stored format - not imploded or unserialized to avoid data structure loss
+
 ### 0.9.9 ###
 * get_uermeta renamed get_user_meta to be more consistent with WP
 * get_user_meta tidied up and tested on larger exports

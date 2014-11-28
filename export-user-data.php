@@ -4,7 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
-Version: 0.9.9
+Version: 1.0.0
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -23,7 +23,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 {
     
     // plugin version
-    define( 'Q_EXPORT_USER_DATA_VERSION', '0.9.9' ); // version ##
+    define( 'Q_EXPORT_USER_DATA_VERSION', '1.0.0' ); // version ##
     
     // instatiate class via hook, only if inside admin
     if ( is_admin() ) {
@@ -662,9 +662,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             // test field array ##
             #$this->pr( $fields );
             
-            // grab fields to exclude from exports ## 
-            $exclude_fields = $this->get_exclude_fields();
-            
             // build the document headers ##
             $headers = array();
             
@@ -674,8 +671,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 if ( $field == 'member_of_club' ){
                     $field = 'Program';
                 }
-
-                if ( in_array( $field, $exclude_fields ) ) {
+                
+                // grab fields to exclude from exports ## 
+                if ( in_array( $field, $this->get_exclude_fields() ) ) {
 
                     unset( $fields[$key] );
 
@@ -746,7 +744,16 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     $bp_data = self::get_all_for_user( $user->ID ); // taken from old BP method ##
                     
                 }
-
+                
+                // single query method - get all user_meta data ##
+                $get_user_meta = (array)get_user_meta( $user->ID );
+                #wp_die( $this->pr( $get_user_meta ) );
+                
+                // Filter out empty meta data ##
+                $get_user_meta = array_filter( array_map( function( $a ) {
+                    return $a[0];
+                }, $get_user_meta ) );
+                
                 // loop over each field ##
                 foreach ( $fields as $field ) {
                     
@@ -804,7 +811,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         $value = isset( $user->roles[0] ) ? implode( $user->roles, ', ' ) : '' ; // empty value if no role found - or flat array of user roles ##
                     
                     // include the user's BP group in the export ##
-                    } elseif ( isset( $_POST['groups'] ) && $_POST['groups'] == '1' && $field == 'groups' ){
+                    } elseif ( isset( $_POST['groups'] ) && $_POST['groups'] == '1' && $field == 'groups' ) {
                         
                         if ( function_exists( 'groups_get_user_groups' ) ) {
                         
@@ -837,46 +844,94 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                             $value = '';
                             
                         }
+                     
+                    } elseif ( $field == 'bp_latest_update' ) {
+                        
+                        // https://bpdevel.wordpress.com/2014/02/21/user-last_activity-data-and-buddypress-2-0/ ##
+                        $value = bp_get_user_last_activity( $user->ID );
                         
                     // user or usermeta field ##
                     } else { 
                         
-                        // grab value from $user object -- added magically ##
-                        // http://scribu.net/wordpress/the-magic-of-wp_user.html
-                        $value = $user->{$field};
-                        #$this->pr( $value ); // test value grabbed magically ##
-                        
-                        // check if field is known to return an array ##
-                        if ( in_array ( $field, $this->is_known_array() ) && array_filter( $value ) ) {
+                        // the user_meta key isset ##
+                        if ( isset( $get_user_meta[$field] ) ) {
                             
-                            $value = ( array )$value;
-                            #$this->pr( 'field_'.$field.'_drop_1' );
-                            
-                        // if this is a usermeta field, check if it's unique ##
-                        } else if ( ! in_array ( $field, $this->get_user_fields() ) ) {
+                            // take from the bulk get_user_meta call ##
+                            $value = $get_user_meta[$field];
                         
-                            // we need to know if the usermeta value is unqiue or not ##
-                            $value = $this->get_user_meta( $user->ID, $field );
-                            #$this->pr( 'field_'.$field.'_drop_2' );
+                        // standard WP_User value ##
+                        } else {
+                            
+                            // use the magically assigned value from WP_Users
+                            $value = $user->{$field};
                             
                         }
                         
-                        // if it's an array, implode it ##
+                        /*
+                        // the $value is serialized ##
+                        if ( is_serialized( $value ) ) {
+                            
+                            // unserliaze to new variable ##
+                            $unserialized = @unserialize( $value );
+                            
+                            // test if unserliazing produced errors ##
+                            if ( $unserialized !== false || $value === 'b:0;' ) {
+                                
+                                #$value .= ' - unserialized_GOOD';
+                                $value = $unserialized;
+                                
+                            } else {
+                                
+                                #$value = 'UNSERIALIZE_FAILED';
+                                
+                            }
+                            
+                            
+                            // the value is an array ##                        
+                            if ( is_array ( $value ) ) {
+                                
+                                if ( count ( $value ) == 1 ) {
+                                    
+                                    $value = 'SINGLE_IMPLODED_'.implode( ", ", maybe_unserialize( $value ) );
+                                    
+                                } else {
+                                
+                                    foreach( $value as &$v ) {
+                                        
+                                        $v = maybe_unserialize( $v );
+                                        
+                                    }
+                                    
+                                    // explode the array and maybe_unseralize the output ##
+                                    #$value = 'SPECIAL';
+                                    $value = 'LOOP_IMPLODED_'.maybe_unserialize( $v );
+
+                                }
+                                
+                            }
+                            
+                        }
+                        
+                        
+                        // the value is an array ##                        
                         if ( is_array ( $value ) ) {
-                            
-                            $value = implode(", ", $value );
-                            #$this->pr( 'field_'.$field.'_drop_3' );
-                            
-                        // else, if it's serialized, unserialize it ##
-                        } elseif ( is_serialized ( $value ) ) {
-                            
-                            $value = maybe_unserialize( $value ); // suggested by @grexican ## 
-                            #$this->pr( 'field_'.$field.'_drop_4' );
+
+                            // explode the array and maybe_unseralize the output ##
+                            $value = implode( ", ", maybe_unserialize( $value ) );
                             
                         }
+                        */
                         
                     }
-
+                    
+                    
+                    // remove commas ##
+                    #$value = str_replace( ",", "||", $value );
+                    
+                    // remove line breaks ##
+                    #$value = str_replace( array( "\r", "\n" ), "#BREAK#", $value );
+                    
+                    
                     // correct program value to Program Name ##
                     if ( $field == 'member_of_club' ) {
                         
@@ -1599,7 +1654,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             
             $exclude_fields = array (
                     'user_pass'
-                ,   'user_activation_key'
+                #,   'user_activation_key'
             );
             
             return apply_filters( 'export_user_data_exclude_fields', $exclude_fields );
@@ -1673,7 +1728,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             // grab global $wpdb ##
             global $wpdb;
             
-            // could number of rows in the usermeta table that contain the same meta_key and user_id 
+            // count number of rows in the usermeta table that contain the same meta_key and user_id 
             // if this is > 1, then we know the usermeta value is non-unique
             $count = $wpdb->get_var(
                 $wpdb->prepare(
@@ -1696,7 +1751,16 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             } else if ( ! is_null( $count ) && $count && $count > 1 ) {
                 
                 // more than 1 meta_key found, so grab all and return an array ##
-                return (array)get_user_meta( $user_id, $field, false );
+                $array = (array)get_user_meta( $user_id, $field, false );
+                $return = ''; // nada ##
+                foreach( $array as $value ) {
+                                        
+                    $return .= implode( ", ", maybe_unserialize( $value ) );
+
+                };
+                
+                // kick back a string ##
+                return $return;
                 
             } else {
                 
@@ -1770,6 +1834,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
         }
 
+        
         /**
          * Quote array elements and separate with commas
          *
