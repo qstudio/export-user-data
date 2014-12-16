@@ -4,7 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
-Version: 1.0.0
+Version: 1.0.1
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -295,7 +295,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         /**
          * method to store user options
          *
-         * @todo        sanitizing function is not correct - yet... ##
          * @param       string      $save_export        Export Key name
          * @param       array       $save_options       Array of export options to save
          * @since       0.9.3
@@ -758,7 +757,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 foreach ( $fields as $field ) {
                     
                     // check if this is a BP field ##
-                    if ( isset( $bp_data ) && isset( $bp_data[$field] ) && in_array( $field, $bp_fields_passed ) ) {
+                    if ( isset( $bp_data ) && isset( $bp_data[$field] ) && in_array( $field, $bp_fields_passed ) ) 
+                    {
 
                         $value = $bp_data[$field];
                         
@@ -786,7 +786,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         $value = $this->sanitize($value);
 
                     // check if this is a BP field we want the updated date for ##
-                    } elseif ( in_array( $field, $bp_fields_update_passed ) ) {
+                    } 
+                    elseif ( in_array( $field, $bp_fields_update_passed ) ) 
+                    {
 
                         global $bp;
 
@@ -805,13 +807,17 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                                 );
 
                     // include the user's role in the export ##
-                    } elseif ( isset( $_POST['roles'] ) && $_POST['roles'] == '1' && $field == 'roles' ){
+                    } 
+                    elseif ( isset( $_POST['roles'] ) && $_POST['roles'] == '1' && $field == 'roles' )
+                    {
                         
                         // add "Role" as $value ##
-                        $value = isset( $user->roles[0] ) ? implode( $user->roles, ', ' ) : '' ; // empty value if no role found - or flat array of user roles ##
+                        $value = isset( $user->roles[0] ) ? implode( $user->roles, '|' ) : '' ; // empty value if no role found - or flat array of user roles ##
                     
                     // include the user's BP group in the export ##
-                    } elseif ( isset( $_POST['groups'] ) && $_POST['groups'] == '1' && $field == 'groups' ) {
+                    } 
+                    elseif ( isset( $_POST['groups'] ) && $_POST['groups'] == '1' && $field == 'groups' ) 
+                    {
                         
                         if ( function_exists( 'groups_get_user_groups' ) ) {
                         
@@ -835,7 +841,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                                 }
 
                                 // implode it ##
-                                $value = implode( $groups, ', ' );
+                                $value = implode( $groups, '|' );
 
                             }
 
@@ -845,13 +851,17 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                             
                         }
                      
-                    } elseif ( $field == 'bp_latest_update' ) {
+                    } 
+                    elseif ( $field == 'bp_latest_update' ) 
+                    {
                         
                         // https://bpdevel.wordpress.com/2014/02/21/user-last_activity-data-and-buddypress-2-0/ ##
                         $value = bp_get_user_last_activity( $user->ID );
                         
                     // user or usermeta field ##
-                    } else { 
+                    } 
+                    else 
+                    { 
                         
                         // the user_meta key isset ##
                         if ( isset( $get_user_meta[$field] ) ) {
@@ -867,7 +877,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                             
                         }
                         
-                        /*
+                       
                         // the $value is serialized ##
                         if ( is_serialized( $value ) ) {
                             
@@ -875,61 +885,29 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                             $unserialized = @unserialize( $value );
                             
                             // test if unserliazing produced errors ##
-                            if ( $unserialized !== false || $value === 'b:0;' ) {
+                            if ( $unserialized !== false || $value == 'b:0;' ) {
                                 
-                                #$value .= ' - unserialized_GOOD';
+                                #$value = 'UNSERIALIZED_'.$value;
                                 $value = $unserialized;
                                 
                             } else {
                                 
-                                #$value = 'UNSERIALIZE_FAILED';
-                                
-                            }
-                            
-                            
-                            // the value is an array ##                        
-                            if ( is_array ( $value ) ) {
-                                
-                                if ( count ( $value ) == 1 ) {
-                                    
-                                    $value = 'SINGLE_IMPLODED_'.implode( ", ", maybe_unserialize( $value ) );
-                                    
-                                } else {
-                                
-                                    foreach( $value as &$v ) {
-                                        
-                                        $v = maybe_unserialize( $v );
-                                        
-                                    }
-                                    
-                                    // explode the array and maybe_unseralize the output ##
-                                    #$value = 'SPECIAL';
-                                    $value = 'LOOP_IMPLODED_'.maybe_unserialize( $v );
-
-                                }
+                                // failed to unserialize - data potentially corrupted in db ##
+                                $value = $value;
                                 
                             }
                             
                         }
-                        
-                        
+                            
                         // the value is an array ##                        
                         if ( is_array ( $value ) ) {
 
-                            // explode the array and maybe_unseralize the output ##
-                            $value = implode( ", ", maybe_unserialize( $value ) );
-                            
+                            // recursive implode it ##
+                            $value = self::recursive_implode( $value );
+
                         }
-                        */
-                        
+                            
                     }
-                    
-                    
-                    // remove commas ##
-                    #$value = str_replace( ",", "||", $value );
-                    
-                    // remove line breaks ##
-                    #$value = str_replace( array( "\r", "\n" ), "#BREAK#", $value );
                     
                     
                     // correct program value to Program Name ##
@@ -1594,7 +1572,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 }
             });
             
-            // @todo - probably we're going to require more validation on these buttons ##
             // validate save button ##
             jQuery("#save_export").click( function(e) {
                 
@@ -1700,17 +1677,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             );
 
             return apply_filters( 'export_user_data_special_fields', $special_fields );
-
-        }
-        
-        
-        /**
-         * Array of field names known to contain arrays of data, but which are returned as strings
-         */
-        public function is_known_array() 
-        {
-
-            return apply_filters( 'export_user_data_known_arrays', array( 'bp_latest_update' ) );
 
         }
         
@@ -1842,7 +1808,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
          * @return      String
          */
         private function quote_array( $array )
-         {
+        {
              
            $prefix = ''; // starts empty ##
            $elementlist = '';
@@ -1858,16 +1824,53 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
            
          }
          
+    
+        /**
+        * Recursively implodes an array
+        * 
+        * @since    1.0.1
+        * @access   public
+        * @param    array       $array          multi-dimensional array to recursively implode
+        * @param    string      $glue           value that glues elements together	
+        * @param    bool        $include_keys   include keys before their values
+        * @param    bool        $trim_all       trim ALL whitespace from string
+        * @return   string      imploded array
+        * @link     https://gist.github.com/jimmygle/2564610
+        */ 
+        public static function recursive_implode( array $array, $glue = '|', $include_keys = true, $trim_all = true )
+        {
+            
+            $glued_string = '';
+            $glue_count = 0;
+
+            // Recursively iterates array and adds key/value to glued string ##
+            array_walk_recursive( $array, function( $value, $key ) use ( $glue, $include_keys, &$glued_string, $glue_count )
+            {
+                $include_keys and $glued_string .= $key.$glue;
+                $glued_string .= $value.$glue; //.'GC_'.$glue_count.$glue;
+                $glue_count ++;
+            });
+
+            // Removes last $glue from string ##
+            strlen( $glue) > 0 and $glued_string = substr( $glued_string, 0, -strlen( $glue ) );
+
+            // Trim ALL whitespace ##
+            $trim_all and $glued_string = preg_replace( "/(\s)/ixsm", '', $glued_string );
+
+            return (string) $glued_string;
+            
+        }
+         
         
         /**
          * Nicer var_dump
          * 
          * @since       0.9.6
          */
-        public function pr ($thing)
+        public function pr ( $variable )
         {
             echo '<pre>';
-            print_r ($thing);
+            print_r ( $variable );
             echo '</pre>';
         }
 

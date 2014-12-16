@@ -2,7 +2,7 @@
 Contributors: qlstudio
 Tags: user, users, xprofile, usermeta csv, excel, batch, export, save, download
 Requires at least: 3.2
-Tested up to: 4.0.0
+Tested up to: 4.0.1
 Stable tag: 1.0.0
 License: GPLv2
 
@@ -57,6 +57,9 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 1. User export screen
 
 == Changelog ==
+
+= 1.0.1 =
+* Added recursive_implode() method to flatten data stored in arrays ( exported with keys and values divided by "|" )
 
 = 1.0.0 =
 * Reduced all get_user_meta queries to a single call to improve performance
