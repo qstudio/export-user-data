@@ -3,7 +3,7 @@
 **Tags:** user, users, xprofile, usermeta csv, excel, batch, export, save, download  
 **Requires at least:** 3.2  
 **Tested up to:** 4.0.1  
-**Stable tag:** 1.0.0 
+**Stable tag:** 1.0.1 
 **License:** GPLv2  
 
 Export users data, metadata and buddypress xprofile data to a csv or Excel file
