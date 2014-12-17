@@ -4,7 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
-Version: 1.0.1
+Version: 1.0.2
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -139,7 +139,14 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 wp_register_style( 'q_export_user_data', plugins_url( 'css/export-user-data.css' ,__FILE__ ));
                 wp_enqueue_style( 'q_export_user_data' );
                 wp_enqueue_script( 'q_eud_multi_select_js', plugins_url( 'js/jquery.multi-select.js', __FILE__ ), array('jquery'), '0.9.8', false );
+                
+                // add script ##
+                wp_enqueue_script('jquery-ui-datepicker');
 
+                // add style ##
+                wp_enqueue_style( 'jquery-ui-datepicker' );
+                wp_enqueue_style('jquery-ui-css', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/smoothness/jquery-ui.css');
+                
             } 
 
         }
@@ -245,7 +252,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         }
         
         
-        
         /**
          * Check for and load stored user options
          * 
@@ -289,7 +295,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             }
           
         }
-        
         
 
         /**
@@ -364,7 +369,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             }
             
 	}
-        
         
         
         /**
@@ -1358,14 +1362,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 <tr valign="top" class="toggleable">
                     <th scope="row"><label><?php _e( 'Registered', $this->text_domain ); ?></label></th>
                     <td>
-                        <select name="start_date" id="q_eud_users_start_date">
-                            <option value="0"><?php _e( 'Start Date', $this->text_domain ); ?></option>
-                            <?php $this->export_date_options($this->start_date); ?>
-                        </select>
-                        <select name="end_date" id="q_eud_users_end_date">
-                            <option value="0"><?php _e( 'End Date', $this->text_domain ); ?></option>
-                            <?php $this->export_date_options($this->end_date); ?>
-                        </select>
+                        <input type="text" id="q_eud_users_start_date" name="start_date" value="<?php echo $this->start_date; ?>" class="start-datepicker" />
+                        <input type="text" id="q_eud_users_end_date" name="end_date" value="<?php echo $this->end_date; ?>" class="end-datepicker" />
                         <p class="description"><?php 
                             printf( 
                                 __( 'Pick a start and end user registration date to limit the results.', $this->text_domain )
@@ -1594,6 +1592,27 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 
             });
             
+<?php 
+            
+            // method returns an object with "first" & "last" keys ##
+            $dates = self::get_user_registered_dates(); 
+            
+?>
+            
+            // start date picker ##
+            jQuery('.start-datepicker').datepicker( {
+                dateFormat  : 'yy-mm-dd',
+                minDate     : '<?php echo substr( $dates["0"]->first, 0, 10 ); ?>',
+                maxDate     : '<?php echo substr( $dates["0"]->last, 0, 10 ); ?>'
+            } );
+            
+            // end date picker ##
+            jQuery('.end-datepicker').datepicker( {
+                dateFormat  : 'yy-mm-dd',
+                minDate     : '<?php echo substr( $dates["0"]->first, 0, 10 ); ?>',
+                maxDate     : '<?php echo substr( $dates["0"]->last, 0, 10 ); ?>'
+            } );
+            
         });
 
         </script>
@@ -1681,9 +1700,10 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         }
         
         
-        
         /**
          * Check in the usermeta table if a user has more than one record for a field
+         * 
+         * @deprecated      1.0.1
          */
         public function get_user_meta( $user_id = null, $field = null ) 
         {
@@ -1737,6 +1757,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             
         }
 
+        
         /*
          * Pre User Query
          */
@@ -1747,15 +1768,30 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             $where = '';
 
-            if ( ! empty( $_POST['start_date'] ) )
-                $where .= $wpdb->prepare( " AND $wpdb->users.user_registered >= %s", date( 'Y-m-d', strtotime( sanitize_text_field ( $_POST['start_date'] ) ) ) );
-
-            if ( ! empty( $_POST['end_date'] ) )
-                $where .= $wpdb->prepare( " AND $wpdb->users.user_registered < %s", date( 'Y-m-d', strtotime( '+1 month', strtotime( sanitize_text_field ( $_POST['end_date'] ) ) ) ) );
-
-            if ( ! empty( $where ) )
+            if ( ! empty( $_POST['start_date'] ) ) {
+                
+                $date = new DateTime( sanitize_text_field ( $_POST['start_date'] ). ' 00:00:00' );
+                $date_formatted = $date->format( 'Y-m-d H:i:s' );
+                
+                $where .= $wpdb->prepare( " AND $wpdb->users.user_registered >= %s", $date_formatted );
+                
+            }
+            if ( ! empty( $_POST['end_date'] ) ) {
+                
+                $date = new DateTime( sanitize_text_field ( $_POST['end_date'] ). ' 00:00:00' );
+                $date_formatted = $date->format( 'Y-m-d H:i:s' );
+                
+                $where .= $wpdb->prepare( " AND $wpdb->users.user_registered < %s", $date_formatted );
+                
+            }
+                
+            if ( ! empty( $where ) ) {
+                
                 $user_search->query_where = str_replace( 'WHERE 1=1', "WHERE 1=1 $where", $user_search->query_where );
+                
+            }
 
+            #wp_die( self::pr( $user_search ) );
             return $user_search;
 
         }
@@ -1766,37 +1802,84 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
          * 
          * @since       0.9.6
          * @global      type    $wpdb
-         * @global      type    $wp_locale
-         * @return      void
+         * @return      Array of objects
          */
-        private function export_date_options( $selected_date)
+        private static function get_user_registered_dates()
         {
-
+            
+            // invite in global objects ##
+            global $wpdb;
+            
+            // query user table for oldest and newest registration ##
+            $range = 
+                $wpdb->get_results ( 
+                    #$wpdb->prepare ( 
+                        "
+                        SELECT
+                            MIN( user_registered ) AS first,
+                            MAX( user_registered ) AS last
+                        FROM
+                            {$wpdb->users}
+                        "
+                    #)
+                );
+            
+            return $range;
+            
+            /*
+            // invite in global objects ##
             global $wpdb, $wp_locale;
 
+            // grab list of years and months available
             $months = $wpdb->get_results( "
-                SELECT DISTINCT YEAR( user_registered ) AS year, MONTH( user_registered ) AS month
+                SELECT DISTINCT YEAR( user_registered ) AS year, MONTH( user_registered ) AS month, DAY( user_registered ) AS day
                 FROM $wpdb->users
                 ORDER BY user_registered DESC
             " );
 
+            // check if we got a result ##
             $month_count = count( $months );
-            if ( !$month_count || ( 1 == $month_count && 0 == $months[0]->month ) )
+            
+            // nothing cokking ##
+            if ( ! $month_count || ( 1 == $month_count && 0 == $months[0]->month ) ) {
+                
                 return;
+                
+            }
 
+            #wp_die( self::pr( $months ) );
+            
+            // loop over each month ##
             foreach ( $months as $date ) {
-                if ( 0 == $date->year )
+                
+                // skip if year == '0' ##
+                if ( 0 == $date->year ) {
                     continue;
-
+                }
+                
+                // make sure the month is in a MM two digit format ##
                 $month = zeroise( $date->month, 2 );
+                
+                // build up a tae string - YYYY-MM ##
                 $date_string = $date->year . '-' . $month;
+                
+                // check if passed date matches this string ##
                 if ( $selected_date == $date_string ) {
-                  echo( '<option selected value="' . $date_string . '">' . $wp_locale->get_month( $month ) . ' ' . $date->year . '</option>' );
+                    
+?>
+                    <option selected value="<?php echo $date_string; ?>"><?php echo $wp_locale->get_month( $month ); ?> <?php echo $date->year; ?></option>
+<?php
+                    
                 } else {
-                  echo( '<option value="' . $date_string . '">' . $wp_locale->get_month( $month ) . ' ' . $date->year . '</option>' );
+                    
+?>
+                    <option value="<?php echo $date_string; ?>"><?php echo $wp_locale->get_month( $month ); ?> <?php echo $date->year; ?></option>
+<?php
+                    
                 }
 
             }
+            */
 
         }
 
