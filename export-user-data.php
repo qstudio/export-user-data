@@ -1700,64 +1700,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         }
         
         
-        /**
-         * Check in the usermeta table if a user has more than one record for a field
-         * 
-         * @deprecated      1.0.1
-         */
-        public function get_user_meta( $user_id = null, $field = null ) 
-        {
-
-            // sanity check ##
-            if ( is_null ( $user_id ) || is_null ( $field ) ) { return false; }
-            
-            // grab global $wpdb ##
-            global $wpdb;
-            
-            // count number of rows in the usermeta table that contain the same meta_key and user_id 
-            // if this is > 1, then we know the usermeta value is non-unique
-            $count = $wpdb->get_var(
-                $wpdb->prepare(
-                    "
-                        SELECT COUNT(*)
-                        FROM $wpdb->usermeta 
-                        WHERE user_id = %d && meta_key = %s
-                        LIMIT 2
-                    ",
-                        $user_id
-                    ,   $field
-                )
-            );
-            
-            if ( is_null( $count ) || $count == 0 ) {
-                
-                // no meta_key found for this user, so no point in running get_user_meta() ##
-                return false;
-                
-            } else if ( ! is_null( $count ) && $count && $count > 1 ) {
-                
-                // more than 1 meta_key found, so grab all and return an array ##
-                $array = (array)get_user_meta( $user_id, $field, false );
-                $return = ''; // nada ##
-                foreach( $array as $value ) {
-                                        
-                    $return .= implode( ", ", maybe_unserialize( $value ) );
-
-                };
-                
-                // kick back a string ##
-                return $return;
-                
-            } else {
-                
-                // single value found, so just return that as a string ##
-                return get_user_meta( $user_id, $field, true );
-                
-            }
-            
-        }
-
-        
         /*
          * Pre User Query
          */
