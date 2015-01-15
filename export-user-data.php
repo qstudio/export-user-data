@@ -4,7 +4,11 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
+<<<<<<< HEAD
 Version: 1.1.1
+=======
+Version: 1.0.4
+>>>>>>> 020eac4656ad46ddabae98179f3d19e91ca11fc7
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -462,6 +466,17 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         public function generate_data() 
         {
             
+            #self::pr( 'a:5:{i:0;s:7:"acf_676";i:1;s:15:"wordpress-https";i:2;s:16:"gp-theme-options";i:3;s:10:"postcustom";i:4;s:16:"commentstatusdiv";}' );
+            #echo self::recursive_implode( 'a:5:{i:0;s:7:"acf_676";i:1;s:15:"wordpress-https";i:2;s:16:"gp-theme-options";i:3;s:10:"postcustom";i:4;s:16:"commentstatusdiv";}' );
+            
+            #self::pr( '58' );
+            #echo self::recursive_implode( '58' );
+            
+            #self::pr( 'a:2:{i:0;s:3:"sub";i:1;a:1:{i:0;s:7:"acf_676";}}' );
+            #echo self::recursive_implode( 'a:2:{i:0;s:3:"sub";i:1;a:1:{i:0;s:7:"acf_676";}}' );
+            
+            #wp_die();
+            
             // Check if the user clicked on the Save, Load, or Delete Settings buttons ##
             if ( 
                 ! isset( $_POST['_wpnonce-q-eud-export-user-page_export'] )
@@ -753,9 +768,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 #wp_die( $this->pr( $get_user_meta ) );
                 
                 // Filter out empty meta data ##
-                $get_user_meta = array_filter( array_map( function( $a ) {
-                    return $a[0];
-                }, $get_user_meta ) );
+                #$get_user_meta = array_filter( array_map( function( $a ) {
+                #    return $a[0];
+                #}, $get_user_meta ) );
                 
                 // loop over each field ##
                 foreach ( $fields as $field ) {
@@ -870,8 +885,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         // the user_meta key isset ##
                         if ( isset( $get_user_meta[$field] ) ) {
                             
-                            // take from the bulk get_user_meta call ##
-                            $value = $get_user_meta[$field];
+                            // take from the bulk get_user_meta call - this returns an array in all cases, so we take the first key ##
+                            $value = $get_user_meta[$field][0];
                         
                         // standard WP_User value ##
                         } else {
@@ -882,27 +897,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         }
                         
                        
-                        // the $value is serialized ##
-                        if ( is_serialized( $value ) ) {
-                            
-                            // unserliaze to new variable ##
-                            $unserialized = @unserialize( $value );
-                            
-                            // test if unserliazing produced errors ##
-                            if ( $unserialized !== false || $value == 'b:0;' ) {
-                                
-                                #$value = 'UNSERIALIZED_'.$value;
-                                $value = $unserialized;
-                                
-                            } else {
-                                
-                                // failed to unserialize - data potentially corrupted in db ##
-                                $value = $value;
-                                
-                            }
-                            
-                        }
-                            
+                        // the $value might be serialized ##
+                        $value = self::unserialize( $value );
+                        
                         // the value is an array ##                        
                         if ( is_array ( $value ) ) {
 
@@ -1860,32 +1857,113 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         * @param    bool        $include_keys   include keys before their values
         * @param    bool        $trim_all       trim ALL whitespace from string
         * @return   string      imploded array
-        * @link     https://gist.github.com/jimmygle/2564610
         */ 
-        public static function recursive_implode( array $array, $glue = '|', $include_keys = true, $trim_all = true )
+        public static function recursive_implode( $array, $return = null, $glue = '|' )
         {
             
-            $glued_string = '';
-            $glue_count = 0;
+            // unserialize ##
+            $array = self::unserialize( $array );
+            
+            // kick it back ##
+            if ( is_null ( $return ) && ! is_array( $array ) ) { 
+                
+                return $array;
+                
+            }
+            
+            // empty return ##
+            if ( is_null ( $return ) ) { 
+                
+                $return = ''; 
+                
+            } else {
+                
+                if ( "||" == $glue ) {
+                    
+                    $glue = '|||';
+                    
+                } else if ( "|" == $glue ) {
+                    
+                    $glue = '||';
+                    
+                }
+                
+            }
+            
+            // loop ##
+            foreach( $array as $key => $value ) {
+                
+                // unserialize ##
+                $value = self::unserialize( $value );
+                
+                if( is_array( $value ) ) {
+                    
+                    $return .= $glue . $key . $glue . self::recursive_implode( $value, $return, $glue );
+                    
+                } else {
+                    
+                    $return .= $glue . $key . $glue . $value;
+                    
+                }
+                
+            }
 
-            // Recursively iterates array and adds key/value to glued string ##
-            array_walk_recursive( $array, function( $value, $key ) use ( $glue, $include_keys, &$glued_string, $glue_count )
-            {
-                $include_keys and $glued_string .= $key.$glue;
-                $glued_string .= $value.$glue; //.'GC_'.$glue_count.$glue;
-                $glue_count ++;
-            });
+            // Removes first $glue from string ##
+            if ( $glue && $return && $return[0] == '|' ) { 
 
-            // Removes last $glue from string ##
-            strlen( $glue) > 0 and $glued_string = substr( $glued_string, 0, -strlen( $glue ) );
-
+                $return = ltrim ( $return, '|' );
+                
+            }
+            
             // Trim ALL whitespace ##
-            $trim_all and $glued_string = preg_replace( "/(\s)/ixsm", '', $glued_string );
+            if ( $return ) {
+                
+                $return = preg_replace( "/(\s)/ixsm", '', $return );
+                
+            }
+            
+            // kick it back ##
+            return $return;
+            
+        } 
+        
+        
+        
+        /**
+         * Save Unserializer
+         * 
+         * @since       1.1.4
+         */
+        public function unserialize( $value )
+        {
+            
+            // the $value is serialized ##
+            if ( is_serialized( $value ) ) {
 
-            return (string) $glued_string;
+                // unserliaze to new variable ##
+                $unserialized = @unserialize( $value );
+
+                // test if unserliazing produced errors ##
+                if ( $unserialized !== false || $value == 'b:0;' ) {
+
+                    #$value = 'UNSERIALIZED_'.$unserialized;
+                    $value = $unserialized;
+
+                } else {
+
+                    // failed to unserialize - data potentially corrupted in db ##
+                    #$value = 'NOT_SERIALIZED_'.$value;
+                    $value = $value;
+
+                }
+
+            }
+            
+            // kick it back ##
+            return $value;
             
         }
-         
+        
         
         /**
          * Nicer var_dump
