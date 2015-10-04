@@ -60,6 +60,8 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 
 = 1.2.1 = 
 * Checked on WP 4.3.1
+* Moved text-domain to string in preperation for addition to translate.wordpress.org
+* Added Log() method to allow for debugging to WP Error Log
 * Added Greek translation - Thanks @Leonidas Mi
 
 = 1.2.0 = 

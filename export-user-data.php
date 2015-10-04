@@ -4,15 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
-<<<<<<< HEAD
-Version: 1.2.0
-=======
-<<<<<<< HEAD
-Version: 1.1.1
-=======
-Version: 1.0.4
->>>>>>> 020eac4656ad46ddabae98179f3d19e91ca11fc7
->>>>>>> 5d3bee83f5f3023358f9fea55b09976f4a40aabf
+Version: 1.2.1
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -31,17 +23,13 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 {
     
     // plugin version
-<<<<<<< HEAD
-    define( 'Q_EXPORT_USER_DATA_VERSION', '1.2.0' ); // version ##
-=======
-    define( 'Q_EXPORT_USER_DATA_VERSION', '1.1.1' ); // version ##
->>>>>>> 5d3bee83f5f3023358f9fea55b09976f4a40aabf
+    define( 'Q_EXPORT_USER_DATA_VERSION', '1.2.1' ); // version ##
     
     // instatiate class via hook, only if inside admin
     if ( is_admin() ) {
     
         // instatiate plugin via WP hook - not too early, not too late ##
-        add_action( 'init', array ( 'Q_Export_User_Data', 'get_instance' ), 0 ); 
+        add_action( 'init', array ( 'Q_Export_User_Data', 'get_instance' ), 100000000 ); 
 
     }
     
@@ -53,6 +41,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
      **/
     class Q_Export_User_Data {
         
+		// debug ##
+		const debug = true;
         
         // Refers to a single instance of this class. ##
         private static $instance = null;
@@ -99,10 +89,10 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             if ( is_admin() ) {
                 
-                add_action( 'init', array( $this, 'load_plugin_textdomain' ), 1 );  
-                add_action( 'init', array( $this, 'load_user_options' ), 2 );  
+                add_action( 'init', array( $this, 'load_plugin_textdomain' ), 100000001 );  
+                add_action( 'init', array( $this, 'load_user_options' ), 100000002 );  
                 add_action( 'admin_menu', array( $this, 'add_admin_pages' ) );
-                add_action( 'init', array( $this, 'generate_data' ), 3 );
+                add_action( 'init', array( $this, 'generate_data' ), 100000003 );
                 add_filter( 'q_eud_exclude_data', array( $this, 'exclude_data' ) );
                 add_action( 'admin_enqueue_scripts', array( $this, 'add_css_and_js' ), 1 );
                 add_action( 'admin_footer', array( $this, 'jquery' ), 100000 );
@@ -122,10 +112,29 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         public function load_plugin_textdomain() 
         {
         
-            load_plugin_textdomain( $this->text_domain, false, basename( dirname( __FILE__ ) ) . '/languages' );
+            load_plugin_textdomain( 'export-user-data', false, basename( dirname( __FILE__ ) ) . '/languages' );
             
         }
-
+		
+		
+		/**
+		 * Write to WP Error Log
+		 * 
+		 * @since		1.2.1
+		 * @return		void
+		 */
+		public static function log( $log )  
+		{
+			if ( true === WP_DEBUG ) {
+				if ( is_array( $log ) || is_object( $log ) ) {
+					error_log( print_r( $log, true ) );
+				} else {
+					error_log( $log );
+				}
+			}
+		}
+		
+		
         /**
          * Add administration menus
          *
@@ -134,7 +143,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         public function add_admin_pages() 
         {
 
-            add_users_page( __( 'Export User Data', $this->text_domain ), __( 'Export User Data', $this->text_domain ), 'list_users', $this->text_domain, array( $this, 'users_page' ) );
+            add_users_page( __( 'Export User Data', 'export-user-data' ), __( 'Export User Data', 'export-user-data' ), 'list_users', 'export-user-data', array( $this, 'users_page' ) );
 
         }
 
@@ -146,7 +155,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         {
 
             // load the scripts on only the plugin admin page ##
-            if ( isset( $_GET['page'] ) && ( $_GET['page'] == $this->text_domain ) ) {
+            if ( isset( $_GET['page'] ) && ( $_GET['page'] == 'export-user-data' ) ) {
 
                 wp_register_style( 'q_export_user_data', plugins_url( 'css/export-user-data.css' ,__FILE__ ));
                 wp_enqueue_style( 'q_export_user_data' );
@@ -157,7 +166,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
                 // add style ##
                 wp_enqueue_style( 'jquery-ui-datepicker' );
-                wp_enqueue_style('jquery-ui-css', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/smoothness/jquery-ui.css');
+                wp_enqueue_style('jquery-ui-css', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/smoothness/jquery-ui.css');
                 
             } 
 
@@ -199,7 +208,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         /**
          * clean that stuff up
          */
-        public function sanitize( $value ) 
+        public static function sanitize( $value ) 
         {
 
             $value = str_replace("\r", '', $value);
@@ -419,12 +428,15 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
          * @since       0.9.6
          * @return      Array           User profile fields
          */
-        private static function get_all_for_user( $user_id = null ) {
+        private static function get_all_for_user( $user_id = null ) 
+		{
             
             // sanity check ##
             if ( is_null( $user_id ) ) { return false; }
             
             global $wpdb, $bp;
+			
+			$bp = buddypress();
 
             $results = $wpdb->get_results( 
                 $wpdb->prepare( 
@@ -474,17 +486,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         public function generate_data() 
         {
             
-            #self::pr( 'a:5:{i:0;s:7:"acf_676";i:1;s:15:"wordpress-https";i:2;s:16:"gp-theme-options";i:3;s:10:"postcustom";i:4;s:16:"commentstatusdiv";}' );
-            #echo self::recursive_implode( 'a:5:{i:0;s:7:"acf_676";i:1;s:15:"wordpress-https";i:2;s:16:"gp-theme-options";i:3;s:10:"postcustom";i:4;s:16:"commentstatusdiv";}' );
-            
-            #self::pr( '58' );
-            #echo self::recursive_implode( '58' );
-            
-            #self::pr( 'a:2:{i:0;s:3:"sub";i:1;a:1:{i:0;s:7:"acf_676";}}' );
-            #echo self::recursive_implode( 'a:2:{i:0;s:3:"sub";i:1;a:1:{i:0;s:7:"acf_676";}}' );
-            
-            #wp_die();
-            
             // Check if the user clicked on the Save, Load, or Delete Settings buttons ##
             if ( 
                 ! isset( $_POST['_wpnonce-q-eud-export-user-page_export'] )
@@ -525,7 +526,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 if ( is_int( $limit_offset ) && is_int( $limit_total ) ) {
                 
                     $args['offset'] = $limit_offset;
-		    $args['number'] = $limit_total; // number - Limit the total number of users returned ##        
+					$args['number'] = $limit_total; // number - Limit the total number of users returned ##        
 		    
                     // test it ##
                     #wp_die( $this->pr( $args ) );
@@ -719,6 +720,10 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 }
 
             }
+			
+			// quick check ##
+			#if ( self::debug ) self::log( 'All Fields: '. var_dump( $fields ) );
+			#if ( self::debug ) self::log( '$bp_fields_passed: '. var_dump( $bp_fields_passed ) );
             
             // no more buffering while spitting back the export data ##
             ob_end_flush();
@@ -756,24 +761,26 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 
                 // check if we're hitting any Memory limits, if so flush them out ##
                 // per http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue?replies=2
-		if ( memory_get_usage( true ) > $memory_limit ) {
+				if ( memory_get_usage( true ) > $memory_limit ) {
                     wp_cache_flush();
                 }
 
                 // open up a new empty array ##
                 $data = array();
-
+				
+				#wp_die( self::pr( $GLOBALS['bp'] ) );
+				
                 // BP loaded ? ##
-                if ( function_exists ( 'bp_is_active' ) ) {
+                if ( function_exists ( 'bp_is_active' ) && bp_is_active( 'xprofile' ) ) {
                     
-                    #$bp_data = BP_XProfile_ProfileData::get_all_for_user( $user->ID );
-                    $bp_data = self::get_all_for_user( $user->ID ); // taken from old BP method ##
+					// grab all user data ##
+					$bp_data = BP_XProfile_ProfileData::get_all_for_user( $user->ID );
                     
                 }
                 
                 // single query method - get all user_meta data ##
                 $get_user_meta = (array)get_user_meta( $user->ID );
-                #wp_die( $this->pr( $get_user_meta ) );
+                #wp_die( self::pr( $get_user_meta ) );
                 
                 // Filter out empty meta data ##
                 #$get_user_meta = array_filter( array_map( function( $a ) {
@@ -786,31 +793,35 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     // check if this is a BP field ##
                     if ( isset( $bp_data ) && isset( $bp_data[$field] ) && in_array( $field, $bp_fields_passed ) ) 
                     {
-
-                        $value = $bp_data[$field];
+						
+						#$value = xprofile_get_field_data( $field, $user->ID );
+						#if ( self::debug ) self::log( 'Field: '.$field.' / Value: '.$value );
+						
+                        // old way from single BP query ##
+						$value = $bp_data[$field];
                         
                         if ( is_array( $value ) ) {
                             
                             $value = maybe_unserialize( $value['field_data'] ); // suggested by @grexican ##
                             #$value = $value['field_data'];
                             
-			    /**
-                             * cwjordan
-                             * after unserializing it we then 
-			     * need to implode it so 
-			     * that we have something readable?
-			     * Going to use :: as a separator
-			     * because that's what Buddypress Members Import
-			     * expects, but we might want to make that 
-			     * configurable. 
-                             */
-			    if ( is_array( $value ) ) {
-                                $value =  implode("::", $value ); 
-			    }
+							/**
+							 * cwjordan
+							 * after unserializing it we then 
+							 * need to implode it so 
+							 * that we have something readable?
+							 * Going to use :: as a separator
+							 * because that's what Buddypress Members Import
+							 * expects, but we might want to make that 
+							 * configurable. 
+							*/
+							if ( is_array( $value ) ) {
+								$value =  implode("::", $value ); 
+							}
 
                         }
                         
-                        $value = $this->sanitize($value);
+                        $value = self::sanitize($value);
 
                     // check if this is a BP field we want the updated date for ##
                     } 
@@ -847,10 +858,13 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     {
                         
                         if ( function_exists( 'groups_get_user_groups' ) ) {
-                        
+							
                             // check if user is a member of any groups ##
                             $group_ids = groups_get_user_groups( $user->ID );
-
+							
+							#self::pr( $group_ids );
+							#wp_die( pr( 'loaded group data.' ));
+							
                             if ( ! $group_ids || $group_ids == '' ) { 
 
                                 $value = ''; 
@@ -964,7 +978,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             // quick security check ##
             if ( ! current_user_can( 'list_users' ) ) {
                 
-                wp_die( __( 'You do not have sufficient permissions to access this page.', $this->text_domain ) );
+                wp_die( __( 'You do not have sufficient permissions to access this page.', 'export-user-data' ) );
                 
             }
             
@@ -1057,12 +1071,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             
 ?>
     <div class="wrap">
-        <h2><?php _e( 'Export User Data', $this->text_domain ); ?></h2>
+        <h2><?php _e( 'Export User Data', 'export-user-data' ); ?></h2>
 <?php
 
         // nothing happening? ##
         if ( isset( $_GET['error'] ) ) {
-            echo '<div class="updated"><p><strong>' . __( 'No users found.', $this->text_domain ) . '</strong></p></div>';
+            echo '<div class="updated"><p><strong>' . __( 'No users found.', 'export-user-data' ) . '</strong></p></div>';
         }
 
 ?>
@@ -1118,12 +1132,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 ?>
                 <tr valign="top">
                     <th scope="row">
-                        <label for="q_eud_usermeta"><?php _e( 'User Meta Fields', $this->text_domain ); ?></label>
+                        <label for="q_eud_usermeta"><?php _e( 'User Meta Fields', 'export-user-data' ); ?></label>
                         <p class="filter" style="margin: 10px 0 0;">
-                            <?php _e('Filter', $this->text_domain); ?>: <a href="#" class="usermeta-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="usermeta-common"><?php _e('Common', $this->text_domain); ?></a>
+                            <?php _e('Filter', 'export-user-data'); ?>: <a href="#" class="usermeta-all"><?php _e('All', 'export-user-data'); ?></a> | <a href="#" class="usermeta-common"><?php _e('Common', 'export-user-data'); ?></a>
                         </p>
                         <p class="filter" style="margin: 10px 0 0;">
-                            <?php _e('Select', $this->text_domain); ?>: <a href="#" class="select-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="select-none"><?php _e('None', $this->text_domain); ?></a>
+                            <?php _e('Select', 'export-user-data'); ?>: <a href="#" class="select-all"><?php _e('All', 'export-user-data'); ?></a> | <a href="#" class="select-none"><?php _e('None', 'export-user-data'); ?></a>
                         </p>
                     </th>
                     <td>
@@ -1174,7 +1188,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         </select>
                         <p class="description"><?php 
                             printf( 
-                                __( 'Select the user meta keys to export, use the filters to simplify the list.', $this->text_domain )
+                                __( 'Select the user meta keys to export, use the filters to simplify the list.', 'export-user-data' )
                             ); 
                         ?></p>
                     </td>
@@ -1204,9 +1218,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 ?>
                 <tr valign="top">
                     <th scope="row">
-                        <label for="q_eud_xprofile"><?php _e( 'BP xProfile Fields', $this->text_domain ); ?></label>
+                        <label for="q_eud_xprofile"><?php _e( 'BP xProfile Fields', 'export-user-data' ); ?></label>
                         <p class="filter" style="margin: 10px 0 0;">
-                            <?php _e('Select', $this->text_domain); ?>: <a href="#" class="select-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="select-none"><?php _e('None', $this->text_domain); ?></a>
+                            <?php _e('Select', 'export-user-data'); ?>: <a href="#" class="select-all"><?php _e('All', 'export-user-data'); ?></a> | <a href="#" class="select-none"><?php _e('None', 'export-user-data'); ?></a>
                         </p>
                     </th>
                     <td>
@@ -1229,7 +1243,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         </select>
                         <p class="description"><?php 
                             printf( 
-                                __( 'Select the BuddyPress XProfile keys to export', $this->text_domain )
+                                __( 'Select the BuddyPress XProfile keys to export', 'export-user-data' )
                             ); 
                         ?></p>
                     </td>
@@ -1241,9 +1255,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 ?>
                 <tr valign="top" class="toggleable">
                     <th scope="row">
-                        <label for="q_eud_xprofile"><?php _e( 'BP xProfile Fields Update Time', $this->text_domain ); ?></label>
+                        <label for="q_eud_xprofile"><?php _e( 'BP xProfile Fields Update Time', 'export-user-data' ); ?></label>
                         <p class="filter" style="margin: 10px 0 0;">
-                            <?php _e('Select', $this->text_domain); ?>: <a href="#" class="select-all"><?php _e('All', $this->text_domain); ?></a> | <a href="#" class="select-none"><?php _e('None', $this->text_domain); ?></a>
+                            <?php _e('Select', 'export-user-data'); ?>: <a href="#" class="select-all"><?php _e('All', 'export-user-data'); ?></a> | <a href="#" class="select-none"><?php _e('None', 'export-user-data'); ?></a>
                         </p>
                     </th>
                     <td>
@@ -1260,19 +1274,19 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         </select>
                         <p class="description"><?php 
                             printf( 
-                                __( 'Select the BuddyPress XProfile keys updated dates to export', $this->text_domain )
+                                __( 'Select the BuddyPress XProfile keys updated dates to export', 'export-user-data' )
                             ); 
                         ?></p>
                     </td>
                 </tr>
 
                 <tr valign="top" class="toggleable">
-                    <th scope="row"><label for="groups"><?php _e( 'BP User Groups', $this->text_domain ); ?></label></th>
+                    <th scope="row"><label for="groups"><?php _e( 'BP User Groups', 'export-user-data' ); ?></label></th>
                     <td>
                         <input id='groups' type='checkbox' name='groups' value='1' <?php checked( isset ( $this->groups ) ? intval ( $this->groups ) : '', 1 ); ?> />
                         <p class="description"><?php 
                             printf( 
-                                __( 'Include BuddyPress Group Data. <a href="%s" target="_blank">%s</a>', $this->text_domain )
+                                __( 'Include BuddyPress Group Data. <a href="%s" target="_blank">%s</a>', 'export-user-data' )
                                 ,   esc_html('https://codex.buddypress.org/buddypress-components-and-features/groups/')
                                 ,   'Codex'
                             ); 
@@ -1285,12 +1299,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
 ?>
                 <tr valign="top" class="toggleable">
-                    <th scope="row"><label for="q_eud_users_role"><?php _e( 'Role', $this->text_domain ); ?></label></th>
+                    <th scope="row"><label for="q_eud_users_role"><?php _e( 'Role', 'export-user-data' ); ?></label></th>
                     <td>
                         <select name="role" id="q_eud_users_role">
 <?php
 
-                            echo '<option value="">' . __( 'All Roles', $this->text_domain ) . '</option>';
+                            echo '<option value="">' . __( 'All Roles', 'export-user-data' ) . '</option>';
                             global $wp_roles;
                             
                             foreach ( $wp_roles->role_names as $role => $name ) {
@@ -1311,7 +1325,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         </select>
                         <p class="description"><?php 
                             printf( 
-                                __( 'Filter the exported users by a WordPress Role. <a href="%s" target="_blank">%s</a>', $this->text_domain )
+                                __( 'Filter the exported users by a WordPress Role. <a href="%s" target="_blank">%s</a>', 'export-user-data' )
                                 ,   esc_html('http://codex.wordpress.org/Roles_and_Capabilities')
                                 ,   'Codex'
                             ); 
@@ -1320,12 +1334,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 </tr>
                 
                 <tr valign="top" class="toggleable">
-                    <th scope="row"><label for="roles"><?php _e( 'User Roles', $this->text_domain ); ?></label></th>
+                    <th scope="row"><label for="roles"><?php _e( 'User Roles', 'export-user-data' ); ?></label></th>
                     <td>
                         <input id='roles' type='checkbox' name='roles' value='1' <?php checked( isset ( $this->roles ) ? intval ( $this->roles ) : '', 1 ); ?> />
                         <p class="description"><?php 
                             printf( 
-                                __( 'Include all of the users <a href="%s" target="_blank">%s</a>', $this->text_domain )
+                                __( 'Include all of the users <a href="%s" target="_blank">%s</a>', 'export-user-data' )
                                 ,   esc_html('http://codex.wordpress.org/Roles_and_Capabilities')
                                 ,   'Roles'
                             ); 
@@ -1339,12 +1353,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
 ?>
                 <tr valign="top" class="toggleable">
-                    <th scope="row"><label for="q_eud_users_program"><?php _e( 'Programs', $this->text_domain ); ?></label></th>
+                    <th scope="row"><label for="q_eud_users_program"><?php _e( 'Programs', 'export-user-data' ); ?></label></th>
                     <td>
                         <select name="program" id="q_eud_users_program">
 <?php
 
-                            echo '<option value="">' . __( 'All Programs', $this->text_domain ) . '</option>';
+                            echo '<option value="">' . __( 'All Programs', 'export-user-data' ) . '</option>';
 
                             $clubs_array = get_posts(array( 'post_type'=> 'club', 'posts_per_page' => -1 )); // grab all posts of type "club" ##
 
@@ -1365,26 +1379,26 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
 ?>
                 <tr valign="top" class="toggleable">
-                    <th scope="row"><label><?php _e( 'Registered', $this->text_domain ); ?></label></th>
+                    <th scope="row"><label><?php _e( 'Registered', 'export-user-data' ); ?></label></th>
                     <td>
                         <input type="text" id="q_eud_users_start_date" name="start_date" value="<?php echo $this->start_date; ?>" class="start-datepicker" />
                         <input type="text" id="q_eud_users_end_date" name="end_date" value="<?php echo $this->end_date; ?>" class="end-datepicker" />
                         <p class="description"><?php 
                             printf( 
-                                __( 'Pick a start and end user registration date to limit the results.', $this->text_domain )
+                                __( 'Pick a start and end user registration date to limit the results.', 'export-user-data' )
                             ); 
                         ?></p>
                     </td>
                 </tr>
                 
                 <tr valign="top" class="toggleable">
-                    <th scope="row"><label><?php _e( 'Limit Range', $this->text_domain ); ?></label></th>
+                    <th scope="row"><label><?php _e( 'Limit Range', 'export-user-data' ); ?></label></th>
                     <td>
-                        <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php echo( $this->limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', $this->text_domain ); ?>">
-                        <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php echo ( $this->limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', $this->text_domain ); ?>">
+                        <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php echo( $this->limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', 'export-user-data' ); ?>">
+                        <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php echo ( $this->limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', 'export-user-data' ); ?>">
                         <p class="description"><?php 
                             printf( 
-                                __( 'Enter an offset start number and a total number of users to export. <a href="%s" target="_blank">%s</a>', $this->text_domain )
+                                __( 'Enter an offset start number and a total number of users to export. <a href="%s" target="_blank">%s</a>', 'export-user-data' )
                                 ,   esc_html('http://codex.wordpress.org/Function_Reference/get_users#Parameters')
                                 ,   'Codex'
                             ); 
@@ -1393,37 +1407,37 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row"><label for="q_eud_users_format"><?php _e( 'Format', $this->text_domain ); ?></label></th>
+                    <th scope="row"><label for="q_eud_users_format"><?php _e( 'Format', 'export-user-data' ); ?></label></th>
                     <td>
                         <select name="format" id="q_eud_users_format">
 <?php
                             if ( isset ( $this->format ) && ( $this->format == 'excel' ) ) {
-                              echo '<option selected value="excel">' . __( 'Excel', $this->text_domain ) . '</option>';
+                              echo '<option selected value="excel">' . __( 'Excel', 'export-user-data' ) . '</option>';
                             } else {
-                              echo '<option value="excel">' . __( 'Excel', $this->text_domain ) . '</option>';
+                              echo '<option value="excel">' . __( 'Excel', 'export-user-data' ) . '</option>';
                             }
                             if ( isset ( $this->format ) && ( $this->format == 'csv' ) ) {
-                              echo '<option selected value="csv">' . __( 'CSV', $this->text_domain ) . '</option>';
+                              echo '<option selected value="csv">' . __( 'CSV', 'export-user-data' ) . '</option>';
                             } else {
-                              echo '<option value="csv">' . __( 'CSV', $this->text_domain ) . '</option>';
+                              echo '<option value="csv">' . __( 'CSV', 'export-user-data' ) . '</option>';
                             }
 ?>
                         </select>
                         <p class="description"><?php 
                             printf( 
-                                __( 'Select the format for the export file.', $this->text_domain )
+                                __( 'Select the format for the export file.', 'export-user-data' )
                             ); 
                         ?></p>
                     </td>
                 </tr>
                 
                 <tr valign="top" class="remember">
-                   <th scope="row"><label for="q_eud_save_options"><?php _e( 'Stored Options', $this->text_domain ); ?></label></th>
+                   <th scope="row"><label for="q_eud_save_options"><?php _e( 'Stored Options', 'export-user-data' ); ?></label></th>
                     <td>
 
                         <div class="row">
-                            <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php _e( 'Export Name', $this->text_domain ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? $_POST['export_name'] : '' ; ?>">
-                            <input type="submit" id="save_export" class="button-primary" name="save_export" value="<?php _e( 'Save', $this->text_domain ); ?>" />
+                            <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php _e( 'Export Name', 'export-user-data' ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? $_POST['export_name'] : '' ; ?>">
+                            <input type="submit" id="save_export" class="button-primary" name="save_export" value="<?php _e( 'Save', 'export-user-data' ); ?>" />
                         </div>
                         <?php
 
@@ -1459,26 +1473,26 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 ?>
                             </select>
 
-                            <input type="submit" id="load_export" class="button-primary" name="load_export" value="<?php _e( 'Load', $this->text_domain ); ?>" />
-                            <input type="submit" id="delete_export" class="button-primary" name="delete_export" value="<?php _e( 'Delete', $this->text_domain ); ?>" />
+                            <input type="submit" id="load_export" class="button-primary" name="load_export" value="<?php _e( 'Load', 'export-user-data' ); ?>" />
+                            <input type="submit" id="delete_export" class="button-primary" name="delete_export" value="<?php _e( 'Delete', 'export-user-data' ); ?>" />
 <?php
 
                             }
 
 ?>             
                             </div>
-                            <p class="description"><?php _e( 'Save, load or delete your stored export options.', $this->text_domain ); ?></p>
+                            <p class="description"><?php _e( 'Save, load or delete your stored export options.', 'export-user-data' ); ?></p>
                         
                     </td>
                 </tr>
                 
                 <tr valign="top">
                     <th scope="row">
-                        <label for="q_eud_xprofile"><?php _e( 'Advanced Options', $this->text_domain ); ?></label>
+                        <label for="q_eud_xprofile"><?php _e( 'Advanced Options', 'export-user-data' ); ?></label>
                     </th>
                     <td>
                         <div class="toggle">
-                            <a href="#"><?php _e( 'Show', $this->text_domain ); ?></a>
+                            <a href="#"><?php _e( 'Show', 'export-user-data' ); ?></a>
                         </div>
                     </td>
                 </tr>
@@ -1486,7 +1500,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             </table>
             <p class="submit">
                 <input type="hidden" name="_wp_http_referer" value="<?php echo $_SERVER['REQUEST_URI'] ?>" />
-                <input type="submit" class="button-primary" value="<?php _e( 'Run Export', $this->text_domain ); ?>" />
+                <input type="submit" class="button-primary" value="<?php _e( 'Run Export', 'export-user-data' ); ?>" />
             </p>
         </form>
         </div>
@@ -1503,7 +1517,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         {
 
             // load the scripts on only the plugin admin page 
-            if (isset( $_GET['page'] ) && ( $_GET['page'] == $this->text_domain ) ) {
+            if (isset( $_GET['page'] ) && ( $_GET['page'] == 'export-user-data' ) ) {
 ?>
         <script>
             
@@ -1569,9 +1583,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 $toggleable = jQuery("tr.toggleable");
                 $toggleable.toggle();
                 if ( $toggleable.is(":visible") ) {
-                    jQuery(this).text("<?php _e( 'Hide', $this->text_domain ); ?>");
+                    jQuery(this).text("<?php _e( 'Hide', 'export-user-data' ); ?>");
                 } else {
-                    jQuery(this).text("<?php _e( 'Show', $this->text_domain ); ?>");
+                    jQuery(this).text("<?php _e( 'Show', 'export-user-data' ); ?>");
                 }
             });
             
@@ -1635,7 +1649,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         {
 
             // load the scripts on only the plugin admin page 
-            if (isset( $_GET['page'] ) && ( $_GET['page'] == $this->text_domain ) ) {
+            if (isset( $_GET['page'] ) && ( $_GET['page'] == 'export-user-data' ) ) {
 ?>
         <style>
             .toggleable { display: none; }
@@ -1936,13 +1950,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         } 
         
         
-        
         /**
          * Save Unserializer
          * 
          * @since       1.1.4
          */
-        public function unserialize( $value )
+        public static function unserialize( $value )
         {
             
             // the $value is serialized ##
@@ -1978,11 +1991,13 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
          * 
          * @since       0.9.6
          */
-        public function pr ( $variable )
+        public static function pr ( $variable )
         {
+			
             echo '<pre>';
             print_r ( $variable );
             echo '</pre>';
+			
         }
 
 
