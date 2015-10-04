@@ -4,7 +4,15 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
+<<<<<<< HEAD
 Version: 1.2.0
+=======
+<<<<<<< HEAD
+Version: 1.1.1
+=======
+Version: 1.0.4
+>>>>>>> 020eac4656ad46ddabae98179f3d19e91ca11fc7
+>>>>>>> 5d3bee83f5f3023358f9fea55b09976f4a40aabf
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -23,7 +31,11 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 {
     
     // plugin version
+<<<<<<< HEAD
     define( 'Q_EXPORT_USER_DATA_VERSION', '1.2.0' ); // version ##
+=======
+    define( 'Q_EXPORT_USER_DATA_VERSION', '1.1.1' ); // version ##
+>>>>>>> 5d3bee83f5f3023358f9fea55b09976f4a40aabf
     
     // instatiate class via hook, only if inside admin
     if ( is_admin() ) {

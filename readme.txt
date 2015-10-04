@@ -2,8 +2,8 @@
 Contributors: qlstudio
 Tags: user, users, xprofile, usermeta csv, excel, batch, export, save, download
 Requires at least: 3.2
-Tested up to: 4.1.0
-Stable tag: 1.2.0
+Tested up to: 4.3.1
+Stable tag: 1.2.1
 License: GPLv2
 
 Export users data, metadata and buddypress xprofile data to a csv or Excel file
@@ -58,8 +58,12 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 
 == Changelog ==
 
+= 1.2.1 = 
+* Checked on WP 4.3.1
+* Added Greek translation - Thanks @Leonidas Mi
+
 = 1.2.0 = 
-* Data stored in recursive and serialized arrays is now exported in a flat string format with safe delimiters ( ||, ||| - etc. )
+* Data stored in recursive and serialized arrays is now exported in a flat string format with safer delimiters ( ||, ||| - etc. )
 * Removed anonymous function calls giving errors on older versions of PHP
 
 = 1.1.1 = 
@@ -68,6 +72,10 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 = 1.1.0 = 
 * Version change to sync SVN on wordpress.org
 
+= 1.1.1 =
+* Removed accidently included .git files
+
+= 1.1.0 =
 = 1.0.4 =
 * Added unserialize function with @ fallback
 * Removed anonymous function to allow support for PHP < 5.2
