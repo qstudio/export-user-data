@@ -60,6 +60,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         private $end_date = '';
         private $limit_offset = '';
         private $limit_total = '';
+		private $updated_since_date = '';
+		private $field_updated_since = '';	
         private $format = '';
  
         
@@ -290,6 +292,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                   $this->usermeta_saved_fields = $this->q_eud_exports[$export]['usermeta_saved_fields'];
                   $this->bp_fields_saved_fields = $this->q_eud_exports[$export]['bp_fields_saved_fields'];
                   $this->bp_fields_update_time_saved_fields = $this->q_eud_exports[$export]['bp_fields_update_time_saved_fields'];
+				  $this->updated_since_date = $this->q_eud_exports[$export]['updated_since_date'];
+				  $this->field_updated_since = $this->q_eud_exports[$export]['field_updated_since'];
                   $this->role = $this->q_eud_exports[$export]['role'];
                   $this->roles = $this->q_eud_exports[$export]['roles'];
                   $this->groups = $this->q_eud_exports[$export]['groups'];
@@ -304,6 +308,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                   $this->usermeta_saved_fields = array();
                   $this->bp_fields_saved_fields = array();
                   $this->bp_fields_update_time_saved_fields = array();
+				  $this->updated_since_date = '';
+				  $this->field_updated_since = '';
                   $this->role = '';
                   $this->roles = '1';
                   $this->groups = '1';
@@ -794,9 +800,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     if ( isset( $bp_data ) && isset( $bp_data[$field] ) && in_array( $field, $bp_fields_passed ) ) 
                     {
 						
-						#$value = xprofile_get_field_data( $field, $user->ID );
-						#if ( self::debug ) self::log( 'Field: '.$field.' / Value: '.$value );
-						
                         // old way from single BP query ##
 						$value = $bp_data[$field];
                         
@@ -1020,6 +1023,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     $end_date = isset( $_POST['end_date'] ) ? $_POST['end_date'] : '' ;
                     $limit_offset = isset( $_POST['limit_offset'] ) ? $_POST['limit_offset'] : '' ;
                     $limit_total = isset( $_POST['limit_total'] ) ? $_POST['limit_total'] : '' ;
+					$updated_since_date = isset ( $_POST['updated_since_date'] ) ? $_POST['updated_since_date'] : '' ;
+					$field_updated_since = isset ( $_POST['bp_field_updated_since'] ) ? $_POST['bp_field_updated_since'] : '';
                     
                     // assign all values to an array ##
                     $save_array = array (
@@ -1033,6 +1038,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         'end_date' => $end_date,
                         'limit_offset' => $limit_offset,
                         'limit_total' => $limit_total,
+						'updated_since_date' => $updated_since_date,
+						'field_updated_since' => $field_updated_since,
                         'format' => $format 
                     );
                     
@@ -1406,6 +1413,32 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     </td>
                 </tr>
 
+                <tr valign="top" class="toggleable">
+                    <th scope="row"><label><?php _e( 'Updated Since', 'export-user-data' ); ?></label></th>
+                    <td>
+                        <input type="text" id="q_eud_updated_since_date" name="updated_since_date" value="<?php echo $this->updated_since_date; ?>" class="updated-datepicker" />
+                        <select id="bp_field_updated_since" name="bp_field_updated_since">
+<?php
+
+                        foreach ( $bp_fields as $key ) {
+			    if ( $this->field_updated_since == $key ) {
+                            	echo "<option value='".esc_attr( $key )."' title='".esc_attr( $key )."' selected>$key</option>";
+			    } else {
+                            	echo "<option value='".esc_attr( $key )."' title='".esc_attr( $key )."'>$key</option>";
+			    }
+                        }
+
+?>
+                        </select>
+
+                        <p class="description"><?php 
+                            printf( 
+                                __( 'Limit the results to users who have updated this extended profile field after this date.', 'export-user-data' )
+                            ); 
+                        ?></p>
+                    </td>
+                </tr>
+
                 <tr valign="top">
                     <th scope="row"><label for="q_eud_users_format"><?php _e( 'Format', 'export-user-data' ); ?></label></th>
                     <td>
@@ -1528,9 +1561,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
             
             //Select any fields from saved settings ##
-            jQuery('#usermeta').multiSelect('select',([<?php echo( $this->quote_array( $this->usermeta_saved_fields ) ); ?>]));
-            jQuery('#bp_fields').multiSelect('select',([<?php echo( $this->quote_array($this->bp_fields_saved_fields ) ); ?>]));
-            jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( $this->quote_array( $this->bp_fields_update_time_saved_fields ) ); ?>]));
+            jQuery('#usermeta').multiSelect('select',([<?php echo( self::quote_array( $this->usermeta_saved_fields ) ); ?>]));
+            jQuery('#bp_fields').multiSelect('select',([<?php echo( self::quote_array($this->bp_fields_saved_fields ) ); ?>]));
+            jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( self::quote_array( $this->bp_fields_update_time_saved_fields ) ); ?>]));
 
             // show only common ##
             jQuery('.usermeta-common').click(function(e){
@@ -1631,6 +1664,15 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 minDate     : '<?php echo substr( $dates["0"]->first, 0, 10 ); ?>',
                 maxDate     : '<?php echo substr( $dates["0"]->last, 0, 10 ); ?>'
             } );
+            
+            // end date picker ##
+			// might want to set minDate to something else, but not sure
+			// what would be best for everyone
+				jQuery('.updated-datepicker').datepicker( {
+					dateFormat  : 'yy-mm-dd',
+					minDate     : '<?php echo substr( $dates["0"]->first, 0, 10 ); ?>',
+					maxDate	    : '0'
+				} );
             
         });
 
@@ -1745,7 +1787,18 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 $where .= $wpdb->prepare( " AND $wpdb->users.user_registered < %s", $date_formatted );
                 
             }
-                
+			
+			//search by last update time of BP extended fields
+			if ( ( isset ($_POST['updated_since_date'] ) && $_POST['updated_since_date'] != '' ) &&
+				(isset ($_POST['bp_field_updated_since'] ) && $_POST['bp_field_updated_since'] != '' ) ) {
+			$last_updated_date = new DateTime( sanitize_text_field ( $_POST['updated_since_date'] ) . ' 00:00:00' );
+			$this->updated_since_date = $last_updated_date->format( 'Y-m-d H:i:s' );
+			$this->field_updated_since = sanitize_text_field ( $_POST['bp_field_updated_since'] );
+			$field_updated_since_id = BP_Xprofile_Field::get_id_from_name( $this->field_updated_since );
+					$user_search->query_from .=  " JOIN `wp_bp_xprofile_data` XP ON XP.user_id = wp_users.ID ";
+			$where .= $wpdb->prepare( " AND XP.field_id = %s AND XP.last_updated >= %s", $field_updated_since_id, $this->updated_since_date );
+			}
+			
             if ( ! empty( $where ) ) {
                 
                 $user_search->query_where = str_replace( 'WHERE 1=1', "WHERE 1=1 $where", $user_search->query_where );
@@ -1851,7 +1904,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
          * @since       0.9.6
          * @return      String
          */
-        private function quote_array( $array )
+        private static function quote_array( $array )
         {
              
            $prefix = ''; // starts empty ##

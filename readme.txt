@@ -63,6 +63,7 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 * Moved text-domain to string in preperation for addition to translate.wordpress.org
 * Added Log() method to allow for debugging to WP Error Log
 * Added Greek translation - Thanks @Leonidas Mi
+* Added option to limit export by last_updated date of specific xprofile field - Thanks to @cwjordan
 
 = 1.2.0 = 
 * Data stored in recursive and serialized arrays is now exported in a flat string format with safer delimiters ( ||, ||| - etc. )
