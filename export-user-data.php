@@ -4,7 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
-Version: 1.2.1
+Version: 1.2.3
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -23,7 +23,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 {
     
     // plugin version
-    define( 'Q_EXPORT_USER_DATA_VERSION', '1.2.1' ); // version ##
+    define( 'Q_EXPORT_USER_DATA_VERSION', '1.2.3' ); // version ##
     
     // instatiate class via hook, only if inside admin
     if ( is_admin() ) {
@@ -96,7 +96,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 add_action( 'admin_menu', array( $this, 'add_admin_pages' ) );
                 add_action( 'init', array( $this, 'generate_data' ), 100000003 );
                 add_filter( 'q_eud_exclude_data', array( $this, 'exclude_data' ) );
-                add_action( 'admin_enqueue_scripts', array( $this, 'add_css_and_js' ), 1 );
+                add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 1 );
                 add_action( 'admin_footer', array( $this, 'jquery' ), 100000 );
                 add_action( 'admin_footer', array( $this, 'css' ), 100000 );
                 
@@ -126,14 +126,21 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 		 * @return		void
 		 */
 		public static function log( $log )  
-		{
+		{	
+			
 			if ( true === WP_DEBUG ) {
+				
 				if ( is_array( $log ) || is_object( $log ) ) {
+					
 					error_log( print_r( $log, true ) );
+					
 				} else {
+					
 					error_log( $log );
+					
 				}
 			}
+			
 		}
 		
 		
@@ -153,7 +160,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         /**
          * style and interaction 
          */
-        public function add_css_and_js( $hook ) 
+        public function admin_enqueue_scripts( $hook ) 
         {
 
             // load the scripts on only the plugin admin page ##
@@ -297,6 +304,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                   $this->role = $this->q_eud_exports[$export]['role'];
                   $this->roles = $this->q_eud_exports[$export]['roles'];
                   $this->groups = $this->q_eud_exports[$export]['groups'];
+				  $this->user_fields = $this->q_eud_exports[$export]['user_fields'];
                   $this->start_date = $this->q_eud_exports[$export]['start_date'];
                   $this->end_date = $this->q_eud_exports[$export]['end_date'];
                   $this->limit_offset = $this->q_eud_exports[$export]['limit_offset'];
@@ -311,6 +319,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 				  $this->updated_since_date = '';
 				  $this->field_updated_since = '';
                   $this->role = '';
+				  $this->user_fields = '1';
                   $this->roles = '1';
                   $this->groups = '1';
                   $this->start_date = '';
@@ -433,6 +442,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
          * @param       $user_id        Integer      ID of specific user
          * @since       0.9.6
          * @return      Array           User profile fields
+		 * @deprecated	since 1.2.1
          */
         private static function get_all_for_user( $user_id = null ) 
 		{
@@ -509,7 +519,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             
             // build argument array ##
             $args = array(
-                'fields'    => 'all',
+                'fields'    => ( isset( $_POST['user_fields'] ) && '1' == $_POST['user_fields'] ) ? 'all' : array( 'ID' ), // exclude standard wp_users fields from get_users query ##
                 'role'      => sanitize_text_field( $_POST['role'] )
             );
 
@@ -540,7 +550,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 }
                 
             }
-            
+			
             // pre_user query ##
             add_action( 'pre_user_query', array( $this, 'pre_user_query' ) );
             $users = get_users( $args );
@@ -689,11 +699,20 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             // global wpdb object ##
             global $wpdb;
 
+			// debug ##
+			if ( self::debug ) self::log( 'generate_data(): merging array' );
+			
             // compile final fields list ##
-            $fields = array_merge( $this->get_user_fields(), $this->get_special_fields(), $usermeta_fields, $bp_fields_passed, $bp_fields_update_passed );
+            $fields = array_merge( 
+					self::get_user_fields() // standard wp_user fields ##
+				,	self::get_special_fields() // 'special' fields - which are controlled via dedicated checks ##
+				,	$usermeta_fields // wp_user_meta fields ##
+				,	$bp_fields_passed // selected buddypress fields ##
+				,	$bp_fields_update_passed // update date for buddypress fields ##
+			);
             
             // test field array ##
-            #$this->pr( $fields );
+            #self::pr( $fields );
             
             // build the document headers ##
             $headers = array();
@@ -708,6 +727,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 // grab fields to exclude from exports ## 
                 if ( in_array( $field, $this->get_exclude_fields() ) ) {
 
+					// ditch 'em ##
                     unset( $fields[$key] );
 
                 } else {
@@ -761,10 +781,14 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             // echo headers ##
             echo $pre . implode( $seperator, $headers ) . $breaker;
-
+			
+			#wp_die( self::pr( $users ) );
+			
             // build row values for each user ##
             foreach ( $users as $user ) {
-                
+				
+				#wp_die( self::pr( $user ) );
+				
                 // check if we're hitting any Memory limits, if so flush them out ##
                 // per http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue?replies=2
 				if ( memory_get_usage( true ) > $memory_limit ) {
@@ -849,7 +873,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
                     // include the user's role in the export ##
                     } 
-                    elseif ( isset( $_POST['roles'] ) && $_POST['roles'] == '1' && $field == 'roles' )
+                    elseif ( isset( $_POST['roles'] ) && '1' == $_POST['roles'] && $field == 'roles' )
                     {
                         
                         // add "Role" as $value ##
@@ -857,7 +881,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     
                     // include the user's BP group in the export ##
                     } 
-                    elseif ( isset( $_POST['groups'] ) && $_POST['groups'] == '1' && $field == 'groups' ) 
+                    elseif ( isset( $_POST['groups'] ) && '1' == $_POST['groups'] && $field == 'groups' ) 
                     {
                         
                         if ( function_exists( 'groups_get_user_groups' ) ) {
@@ -946,12 +970,12 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     // wrap values in quotes and add to array ##
                     if ( $is_csv ) {
                         
-                        $data[] = '"' . str_replace( '"', '""', $value ) . '"';
+                        $data[] = '"' . str_replace( '"', '""', self::special_characters( $value ) ) . '"';
                         
                     // just add to array ##
                     } else {
                         
-                        $data[] = $value;
+                        $data[] = self::special_characters( $value );
                     }
 
                 }
@@ -1018,6 +1042,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     $format = isset( $_POST['format'] ) ? $_POST['format'] : '' ;
                     $role = isset( $_POST['role'] ) ? $_POST['role'] : '' ;
                     $roles = isset( $_POST['roles'] ) ? $_POST['roles'] : '0' ;
+					$user_fields = isset( $_POST['user_fields'] ) ? $_POST['user_fields'] : '0' ;
                     $groups = isset( $_POST['groups'] ) ? $_POST['groups'] : '0' ;
                     $start_date = isset( $_POST['start_date'] ) ? $_POST['start_date'] : '' ;
                     $end_date = isset( $_POST['end_date'] ) ? $_POST['end_date'] : '' ;
@@ -1033,6 +1058,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         'bp_fields_update_time_saved_fields' => $bp_fields_update,
                         'role' => $role,
                         'roles' => $roles,
+						'user_fields' => $user_fields,
                         'groups' => $groups,
                         'start_date' => $start_date,
                         'end_date' => $end_date,
@@ -1075,6 +1101,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 $this->delete_user_options( sanitize_text_field( $_POST['export_name'] ) );
                 
             }
+			
+			// what's in 'this' ? ##
+			#self:pr( $this );
             
 ?>
     <div class="wrap">
@@ -1237,7 +1266,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         foreach ( $bp_fields as $key ) {
 
                             // tidy up key ##
-                            $key_tidy = str_replace( ' ', '__', ($key));
+                            #$key_tidy = str_replace( ' ', '__', $key );
 
                             #echo "<label for='".esc_attr( $key_tidy )."'><input id='".esc_attr( $key_tidy )."' type='checkbox' name='bp_fields[]' value='".esc_attr( $key_tidy )."'/> $key</label><br />";
 
@@ -1286,7 +1315,23 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         ?></p>
                     </td>
                 </tr>
-
+				
+				<tr valign="top" class="toggleable">
+                    <th scope="row"><label for="user_fields"><?php _e( 'Standard User Fields', 'export-user-data' ); ?></label></th>
+                    <td>
+                        <input id='user_fields' type='checkbox' name='user_fields' value='1' <?php checked( isset ( $this->user_fields ) ? intval ( $this->user_fields ) : '', 1 ); ?> />
+                        <p class="description"><?php 
+                            printf( 
+                                __( 'Include Standard user profile fields, such as user_login. <a href="%s" target="_blank">%s</a>', 'export-user-data' )
+                                ,   esc_html('https://codex.wordpress.org/Database_Description#Table:_wp_users')
+                                ,   'Codex'
+                            ); 
+							
+							echo 'value: '.$this->user_fields .' / Post value: '.$_POST['user_fields'];
+                        ?></p>
+                    </td>
+                </tr>
+				
                 <tr valign="top" class="toggleable">
                     <th scope="row"><label for="groups"><?php _e( 'BP User Groups', 'export-user-data' ); ?></label></th>
                     <td>
@@ -1532,7 +1577,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 
             </table>
             <p class="submit">
-                <input type="hidden" name="_wp_http_referer" value="<?php echo $_SERVER['REQUEST_URI'] ?>" />
+                <input type="hidden" name="_wp_http_referer" value="<?php echo esc_url( $_SERVER['REQUEST_URI'] ); ?>" />
                 <input type="submit" class="button-primary" value="<?php _e( 'Run Export', 'export-user-data' ); ?>" />
             </p>
         </form>
@@ -1722,23 +1767,42 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         /**
          * Get the array of standard WP_User fields to return
          */
-        public function get_user_fields() 
+        public static function get_user_fields() 
         {
             
-            // exportable user data ##
-            $user_fields = array(
-                    'ID'
-                ,   'user_login'
-                #,  'user_pass'
-                ,   'user_nicename'
-                ,   'user_email'
-                ,   'user_url'
-                ,   'user_registered'
-                #,  'user_activation_key'
-                ,   'user_status'
-                ,   'display_name'
-            );
-
+			// skip addition fo standard wp_users fields ##
+			if ( isset( $_POST['user_fields'] ) && '1' == $_POST['user_fields'] ) {
+				
+				// debug ##
+				if ( self::debug ) self::log( 'get_user_fields(): full' );
+				
+				// exportable user data ##
+				$user_fields = array(
+						'ID'
+					,   'user_login'
+					#,  'user_pass'
+					,   'user_nicename'
+					,   'user_email'
+					,   'user_url'
+					,   'user_registered'
+					#,  'user_activation_key'
+					,   'user_status'
+					,   'display_name'
+				);
+				
+			} else {
+				
+				// debug ##
+				if ( self::debug ) self::log( 'get_user_fields(): reduced' );
+				
+				// just return the user ID 
+				$user_fields = array(
+						'ID'
+				);
+			
+			}
+			
+			// kick back values ##
             return apply_filters( 'export_user_data_user_fields', $user_fields );
 
         }
@@ -1747,15 +1811,30 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         /**
          * Get the array of special user fields to return
          */
-        public function get_special_fields() 
+        public static function get_special_fields() 
         {
             
             // exportable user data ##
             $special_fields = array(
-                    'roles'     // list of WP Roles
-                ,   'groups'    // BP Groups
+                #    'roles'     // list of WP Roles
+                #,   'groups'    // BP Groups
             );
-
+			
+			// should we allow groups ##
+			if ( isset( $_POST['groups'] ) && '1' == $_POST['groups'] ) {
+				
+				$special_fields[] = 'groups'; // add groups ##
+				
+			}
+			
+			// should we allow groups ##
+			if ( isset( $_POST['roles'] ) && '1' == $_POST['roles'] ) {
+				
+				$special_fields[] = 'roles'; // add groups ##
+				
+			}
+			
+			// kick back the array ##
             return apply_filters( 'export_user_data_special_fields', $special_fields );
 
         }
@@ -2037,6 +2116,29 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             return $value;
             
         }
+		
+		
+		/**
+		 * Encode special characters
+		 * 
+		 * @param		type		$string
+		 * @return		string		Encoding string
+		 * @since		1.2.3
+		 */
+		public static function special_characters( $string = null )
+		{
+			
+			// sanity check ##
+			if ( is_null( $string ) ) {
+				
+				return false;
+				
+			}
+			
+			// kick it back in a nicer format ##
+			return htmlentities( $string, ENT_COMPAT, 'UTF-8' );
+			
+		}
         
         
         /**
