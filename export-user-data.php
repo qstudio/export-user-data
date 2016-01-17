@@ -4,7 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
-Version: 1.2.3
+Version: 1.2.5
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -23,7 +23,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 {
     
     // plugin version
-    define( 'Q_EXPORT_USER_DATA_VERSION', '1.2.3' ); // version ##
+    define( 'Q_EXPORT_USER_DATA_VERSION', '1.2.5' ); // version ##
     
     // instatiate class via hook, only if inside admin
     if ( is_admin() ) {
@@ -42,7 +42,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
     class Q_Export_User_Data {
         
 		// debug ##
-		const debug = true;
+		const debug = false;
         
         // Refers to a single instance of this class. ##
         private static $instance = null;
@@ -54,8 +54,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         private $bp_fields_saved_fields = array();
         private $bp_fields_update_time_saved_fields = array();
         private $role = '';
-        private $roles = '1';
-        private $groups = '1';
+        private $roles = '0';
+		private $user_fields = '1';
+        private $groups = '0';
         private $start_date = '';
         private $end_date = '';
         private $limit_offset = '';
@@ -327,7 +328,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                   $this->limit_offset = '';
                   $this->limit_total = '';
                   $this->format = '';
-
+				  
             }
           
         }
@@ -1316,22 +1317,6 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                     </td>
                 </tr>
 				
-				<tr valign="top" class="toggleable">
-                    <th scope="row"><label for="user_fields"><?php _e( 'Standard User Fields', 'export-user-data' ); ?></label></th>
-                    <td>
-                        <input id='user_fields' type='checkbox' name='user_fields' value='1' <?php checked( isset ( $this->user_fields ) ? intval ( $this->user_fields ) : '', 1 ); ?> />
-                        <p class="description"><?php 
-                            printf( 
-                                __( 'Include Standard user profile fields, such as user_login. <a href="%s" target="_blank">%s</a>', 'export-user-data' )
-                                ,   esc_html('https://codex.wordpress.org/Database_Description#Table:_wp_users')
-                                ,   'Codex'
-                            ); 
-							
-							echo 'value: '.$this->user_fields .' / Post value: '.$_POST['user_fields'];
-                        ?></p>
-                    </td>
-                </tr>
-				
                 <tr valign="top" class="toggleable">
                     <th scope="row"><label for="groups"><?php _e( 'BP User Groups', 'export-user-data' ); ?></label></th>
                     <td>
@@ -1350,6 +1335,29 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             } // BP installed and active ##
 
 ?>
+				<tr valign="top" class="toggleable">
+                    <th scope="row"><label for="user_fields"><?php _e( 'Standard User Fields', 'export-user-data' ); ?></label></th>
+                    <td>
+                        <input id='user_fields' type='checkbox' name='user_fields' value='1' <?php checked( isset ( $this->user_fields ) ? intval ( $this->user_fields ) : '', 1 ); ?> />
+                        <p class="description"><?php 
+						
+							if ( self::debug ) {
+								
+								self::log( 'user_fields: '.$this->user_fields );
+								#echo 'user_fields: '. $this->user_fields;
+								
+							}
+						
+                            printf( 
+                                __( 'Include Standard user profile fields, such as user_login. <a href="%s" target="_blank">%s</a>', 'export-user-data' )
+                                ,   esc_html('https://codex.wordpress.org/Database_Description#Table:_wp_users')
+                                ,   'Codex'
+                            ); 
+							
+                        ?></p>
+                    </td>
+                </tr>
+				
                 <tr valign="top" class="toggleable">
                     <th scope="row"><label for="q_eud_users_role"><?php _e( 'Role', 'export-user-data' ); ?></label></th>
                     <td>
@@ -1770,7 +1778,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         public static function get_user_fields() 
         {
             
-			// skip addition fo standard wp_users fields ##
+			// standard wp_users fields ##
 			if ( isset( $_POST['user_fields'] ) && '1' == $_POST['user_fields'] ) {
 				
 				// debug ##
