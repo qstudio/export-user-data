@@ -3,7 +3,7 @@
 **Tags:** user, users, xprofile, usermeta csv, excel, batch, export, save, download  
 **Requires at least:** 3.2  
 **Tested up to:** 4.4.1
-**Stable tag:** 1.2.6
+**Stable tag:** 1.2.7
 **License:** GPLv2  
 
 Export users data, metadata and buddypress xprofile data to a csv or Excel file
@@ -58,6 +58,9 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 ![ScreenShot](http://s.w.org/plugins/export-user-data/screenshot-1.png?r=859689)
 
 ## Changelog ##
+
+*** 1.2.7 ***
+* Added: Spanish translation - thanks Elías Gómez Sainz ( elias@estudions.es )
 
 *** 1.2.6 ***
 * Update: WP 4.4.1
