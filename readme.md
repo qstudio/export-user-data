@@ -59,10 +59,10 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 
 ## Changelog ##
 
-*** 1.2.7 ***
+### 1.2.7 ###
 * Added: Spanish translation - thanks Elías Gómez Sainz ( elias@estudions.es )
 
-*** 1.2.6 ***
+### 1.2.6 ###
 * Update: WP 4.4.1
 
 ### 1.2.3 ###
