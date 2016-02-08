@@ -1,10 +1,10 @@
 # Export User Data #
-**Contributors:** qlstudio  
-**Tags:** user, users, xprofile, usermeta csv, excel, batch, export, save, download  
-**Requires at least:** 3.2  
+**Contributors:** qlstudio
+**Tags:** user, users, xprofile, usermeta csv, excel, batch, export, save, download
+**Requires at least:** 3.2
 **Tested up to:** 4.4.1
-**Stable tag:** 1.2.7
-**License:** GPLv2  
+**Stable tag:** 1.2.8
+**License:** GPLv2
 
 Export users data, metadata and buddypress xprofile data to a csv or Excel file
 
@@ -59,10 +59,18 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 
 ## Changelog ##
 
-### 1.2.7 ###
+*** 1.2.8 ***
+* New: Added load_buddypress() methods to test for buddypress and load up if missing
+* New: move action hooks and priority to load later
+* New: Plugin no longer uses singleton model to instatiate - instead called from action hook to public function
+* New: added log() to debug.log file to help debugging issues
+* Update: jQuery datepickers pull start_of_week value from WordPress
+* Tested on 4.4.2
+
+*** 1.2.7 ***
 * Added: Spanish translation - thanks Elías Gómez Sainz ( elias@estudions.es )
 
-### 1.2.6 ###
+*** 1.2.6 ***
 * Update: WP 4.4.1
 
 ### 1.2.3 ###
@@ -83,10 +91,10 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 ### 1.2.0 ###
 * Data stored in recursive and serialized arrays is now exported in a flat string format with safe delimiters ( ||, ||| - etc. )
 
-### 1.1.1 ### 
+### 1.1.1 ###
 * Removed accidently included .git files
 
-### 1.1.0 ### 
+### 1.1.0 ###
 * Version change to sync SVN on wordpress.org
 
 ### 1.0.4 ###
@@ -114,7 +122,7 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 * added option to export all user WP Roles
 
 ### 0.9.8 ###
-* added get_usermeta() to check if meta keys are unique and return an array if not 
+* added get_usermeta() to check if meta keys are unique and return an array if not
 * removed known_arrays() filter to allow for array data to be returned correctly - too hacky
 
 ### 0.9.7 ###
@@ -170,7 +178,7 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 * fixes to allow exports without selecting extra user date from usermeta or x-profile
 
 ### 0.6.3 ###
-* added multiselect to pick usermeta and xprofile fields 
+* added multiselect to pick usermeta and xprofile fields
 
 ### 0.5 ###
 * First public release.
