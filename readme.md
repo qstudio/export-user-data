@@ -2,7 +2,7 @@
 **Contributors:** qlstudio
 **Tags:** user, users, xprofile, usermeta csv, excel, batch, export, save, download
 **Requires at least:** 3.2
-**Tested up to:** 4.4.1
+**Tested up to:** 4.4.2
 **Stable tag:** 1.2.8
 **License:** GPLv2
 
