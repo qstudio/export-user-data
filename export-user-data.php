@@ -4,7 +4,7 @@
 Plugin Name: Export User Data
 Plugin URI: http://qstudio.us/plugins/
 Description: Export User data, metadata and BuddyPress X-Profile data.
-Version: 1.2.8
+Version: 1.3.0
 Author: Q Studio
 Author URI: http://qstudio.us
 License: GPL2
@@ -24,7 +24,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
     define( 'Q_LOG_PREFIX', 'EUD' ); // wp action to hook to ##
 
     // plugin version
-    define( 'Q_EUD', '1.2.8' ); // version ##
+    define( 'Q_EUD', '1.3.0' ); // version ##
 
     // on activate ##
     #register_activation_hook( __FILE__, 'function' );
@@ -61,22 +61,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 		protected $field_updated_since = '';
         protected $format = '';
         protected $bp_data_available = false;
+        protected $allowed_tags = '';
 
-
-        // /**
-        //  * Creates or returns an instance of this class.
-        //  *
-        //  * @return  Foo     A single instance of this class.
-        //  */
-        // public static function get_instance() {
-
-        //     if ( null == self::$instance ) {
-        //         self::$instance = new self;
-        //     }
-
-        //     return self::$instance;
-
-        // }
 
 
         /**
@@ -87,7 +73,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         public function __construct()
         {
 
-
+            // silence is golden ##
 
         }
 
@@ -137,7 +123,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 add_action( Q_EUD_HOOK, array( $this, 'generate_data' ), Q_EUD_PRIORITY+3 );
 
                 // filter exported data - perhaps unused ##
-                add_filter( 'q_eud_exclude_data', array( $this, 'exclude_data' ) );
+                #add_filter( 'q_eud_exclude_data', array( $this, 'exclude_data' ) );
 
                 // add export page inside admin ##
                 add_action( 'admin_menu', array( $this, 'add_admin_pages' ) );
@@ -281,10 +267,43 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
         protected function sanitize( $value )
         {
 
+            // emove line breaks ##
             $value = str_replace("\r", '', $value);
             $value = str_replace("\n", '', $value);
             $value = str_replace("\t", '', $value);
+
+            // with wp_kses ##
+            $value = wp_kses( $value, $this->get_allowed_tags() );
+
+            // with esc_html
+            $value = esc_html( $value );
+
+            // return value ##
             return $value;
+
+        }
+
+
+        /**
+         * Get allowed tags for wp_kses
+         *
+         * @since  1.2.8
+         * @return Array
+         */
+        protected function get_allowed_tags()
+        {
+
+            $allowed_tags = array(
+                'a' => array(
+                    'href' => array(),
+                    'title' => array()
+                ),
+                'br' => array(),
+                'em' => array(),
+                'strong' => array(),
+            );
+
+            return apply_filters( 'export_user_data_allowed_tags', $allowed_tags );
 
         }
 
@@ -316,7 +335,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             }
 
-            $this->log( 'BP loaded' );
+            #$this->log( 'BP loaded' );
 
             return true;
 
@@ -816,12 +835,14 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 			);
 
             // test field array ##
-            #self::pr( $fields );
+            #$this->pr( $fields );
 
             // build the document headers ##
             $headers = array();
 
             foreach ( $fields as $key => $field ) {
+
+                #$this->log( 'Field: '. $field );
 
                 // rename programs field ##
                 if ( $field == 'member_of_club' ){
@@ -829,7 +850,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                 }
 
                 // grab fields to exclude from exports ##
-                if ( in_array( $field, $this->get_exclude_fields() ) ) {
+                if ( in_array( $fields[$key], $this->get_exclude_fields() ) ) {
+
+                    #$this->log( 'Dump Field: '. $fields[$key] );
 
 					// ditch 'em ##
                     unset( $fields[$key] );
@@ -852,7 +875,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
             }
 
 			// quick check ##
-			#if ( $this->debug ) $this->log( 'All Fields: '. var_dump( $fields ) );
+			#$this->log( $fields );
 			#if ( $this->debug ) $this->log( '$bp_fields_passed: '. var_dump( $bp_fields_passed ) );
 
             // no more buffering while spitting back the export data ##
@@ -970,7 +993,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
                         }
 
-                        $value = $this->sanitize($value);
+                        // sanitize ##
+                        #$value = $this->sanitize($value);
 
                     // check if this is a BP field we want the updated date for ##
                     }
@@ -1079,6 +1103,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
                         }
 
+                        // sanitize ##
+                        #$value = $this->sanitize($value);
+
                     }
 
 
@@ -1088,6 +1115,9 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                         $value = get_the_title($value);
 
                     }
+
+                    // sanitize ##
+                    $value = $this->sanitize($value);
 
                     // wrap values in quotes and add to array ##
                     if ( $is_csv ) {
@@ -1890,6 +1920,7 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
 
             $exclude_fields = array (
                     'user_pass'
+                ,   'q_eud_exports'
                 #,   'user_activation_key'
             );
 
