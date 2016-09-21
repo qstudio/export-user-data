@@ -3,7 +3,7 @@ Contributors: qlstudio
 Tags: user, users, xprofile, usermeta csv, excel, batch, export, save, download
 Requires at least: 3.2
 Tested up to: 4.4.2
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2
 
 Export users data, metadata and buddypress xprofile data to a csv or Excel file
@@ -58,8 +58,11 @@ Click on the 'Export User Data' link in the 'Users' menu, choose the role and th
 
 == Changelog ==
 
+= 1.3.1 =
+* Moved all internal action hooks to admin_init to allow for internal function loading
+
 = 1.3.0 =
-* Added extra data sanitization before outputting to file - thanks to Hely Shah <helyhshah@gmail.com> for te heads-up
+* Added extra data sanitization before outputting to file - thanks to Hely Shah <helyhshah@gmail.com> for the heads-up
 
 = 1.2.8 =
 * New: Added load_buddypress() methods to test for buddypress and load up if missing
