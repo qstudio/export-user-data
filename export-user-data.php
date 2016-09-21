@@ -1612,24 +1612,21 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                             );
                         ?></p>
                     </td>
-                </tr>
-
+                </tr><?php
+				if( is_array( $bp_fields ) && !empty( $bp_fields ) ) : ?>
                 <tr valign="top" class="toggleable">
                     <th scope="row"><label><?php _e( 'Updated Since', 'export-user-data' ); ?></label></th>
                     <td>
                         <input type="text" id="q_eud_updated_since_date" name="updated_since_date" value="<?php echo $this->updated_since_date; ?>" class="updated-datepicker" />
-                        <select id="bp_field_updated_since" name="bp_field_updated_since">
-<?php
-
-                        foreach ( $bp_fields as $key ) {
-			    if ( $this->field_updated_since == $key ) {
-                            	echo "<option value='".esc_attr( $key )."' title='".esc_attr( $key )."' selected>$key</option>";
-			    } else {
-                            	echo "<option value='".esc_attr( $key )."' title='".esc_attr( $key )."'>$key</option>";
-			    }
-                        }
-
-?>
+                        <select id="bp_field_updated_since" name="bp_field_updated_since"><?php
+							foreach ( $bp_fields as $key ) {
+								if ( $this->field_updated_since == $key ) {
+									echo "<option value='".esc_attr( $key )."' title='".esc_attr( $key )."' selected>$key</option>";
+								}
+								else {
+									echo "<option value='".esc_attr( $key )."' title='".esc_attr( $key )."'>$key</option>";
+								}
+							} ?>
                         </select>
 
                         <p class="description"><?php
@@ -1638,7 +1635,8 @@ if ( ! class_exists( 'Q_Export_User_Data' ) )
                             );
                         ?></p>
                     </td>
-                </tr>
+                </tr><?php
+				endif; ?>
 
                 <tr valign="top">
                     <th scope="row"><label for="q_eud_users_format"><?php _e( 'Format', 'export-user-data' ); ?></label></th>
