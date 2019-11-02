@@ -1,0 +1,166 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Export User Data\n"
+"Report-Msgid-Bugs-To: http://wordpress.org/tag/export-users-to-csv\n"
+"POT-Creation-Date: 2014-01-26 00:56+0100\n"
+"PO-Revision-Date: 2014-03-13 14:08+0100\n"
+"Last-Translator: aurélie <administratif@urbancube.fr>\n"
+"Language-Team: urbancube <contact@urbancube.fr>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.6.4\n"
+"X-Poedit-KeywordsList: _;_e;_n;__\n"
+"X-Poedit-Basepath: .\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"Language: fr\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPath-1: ..\n"
+
+#: ../export-user-data.php:85 ../export-user-data.php:450
+msgid "Export User Data"
+msgstr "Exportez les données utilisateurs."
+
+#: ../export-user-data.php:445
+msgid "You do not have sufficient permissions to access this page."
+msgstr "Vous n'avez pas la permission d'accéder à cette page."
+
+#: ../export-user-data.php:455
+msgid "No users found."
+msgstr "Aucun utilisateur trouvé."
+
+#: ../export-user-data.php:511
+msgid "User Meta Fields"
+msgstr "Champs de balise utilisateurs"
+
+#: ../export-user-data.php:513
+msgid "Filter"
+msgstr "Filtre"
+
+#: ../export-user-data.php:513
+msgid "All"
+msgstr "Tous"
+
+#: ../export-user-data.php:513
+msgid "Common"
+msgstr "Commun"
+
+#: ../export-user-data.php:564
+msgid ""
+"Select the user meta keys to export, use the filters to simplify the list."
+msgstr ""
+"Choisissez les balises clés d'utilisateur pour exporter, utiliser les "
+"filtres pour simplifier la liste."
+
+#: ../export-user-data.php:593
+msgid "BP xProfile Fields"
+msgstr "Champs BP xProfile"
+
+#: ../export-user-data.php:614
+msgid "Select the BuddyPress XProfile keys to export"
+msgstr "Choisissez le bouton BuddyPress XProfile pour exporter"
+
+#: ../export-user-data.php:626
+msgid "BP xProfile Fields Update Time"
+msgstr "Champs de temps passé BP xProfile"
+
+#: ../export-user-data.php:642
+msgid "Select the BuddyPress XProfile keys updated dates to export"
+msgstr ""
+"Choisissez les touches BuddyPress XProfile des dates mises à jour pour "
+"exporter"
+
+#: ../export-user-data.php:653
+msgid "Role"
+msgstr "Rôle"
+
+#: ../export-user-data.php:658
+msgid "All Roles"
+msgstr "Tous les rôles"
+
+#: ../export-user-data.php:668
+#, php-format
+msgid ""
+"Filter the exported users by a WordPress Role. <a href=\"%s\" target=\"_blank"
+"\">%s</a>"
+msgstr ""
+"Filtrez les utilisateurs exportés par un Rôle WordPress. <a href=\"%s\" "
+"target=\"_blank\">%s</a>"
+
+#: ../export-user-data.php:682
+msgid "Programs"
+msgstr "Programmes"
+
+#: ../export-user-data.php:687
+msgid "All Programs"
+msgstr "Tous les programmes"
+
+#: ../export-user-data.php:708
+msgid "Registered"
+msgstr "Enregistré"
+
+#: ../export-user-data.php:711
+msgid "Start Date"
+msgstr "Date de début"
+
+#: ../export-user-data.php:715
+msgid "End Date"
+msgstr "Date de fin"
+
+#: ../export-user-data.php:720
+msgid "Pick a start and end user registration date to limit the results."
+msgstr ""
+"Choisissez une date de début et de fin d'enregistrement utilisateur pour "
+"limiter les résultats."
+
+#: ../export-user-data.php:727
+msgid "Limit Range"
+msgstr "Limite supérieure"
+
+#: ../export-user-data.php:729
+msgid "From"
+msgstr "De"
+
+#: ../export-user-data.php:730
+msgid "To"
+msgstr "A"
+
+#: ../export-user-data.php:733
+#, php-format
+msgid ""
+"Enter an offset start number and a total number to export. <a href=\"%s\" "
+"target=\"_blank\">%s</a>"
+msgstr "Entrez  un nombre de début décalé et un nombre total pour exporter"
+
+#: ../export-user-data.php:742
+msgid "Format"
+msgstr "Format"
+
+#: ../export-user-data.php:747
+msgid "Excel"
+msgstr "Excel"
+
+#: ../export-user-data.php:748
+msgid "CSV"
+msgstr "CSV"
+
+#: ../export-user-data.php:754
+msgid "Select the format for the export file."
+msgstr "Choisissez le format d'exportation du fichier."
+
+#: ../export-user-data.php:762
+msgid "Advanced Options"
+msgstr "Options avancées"
+
+#: ../export-user-data.php:766 ../export-user-data.php:840
+msgid "Show"
+msgstr "Montrer"
+
+#: ../export-user-data.php:774
+msgid "Export"
+msgstr "Export"
+
+#: ../export-user-data.php:838
+msgid "Hide"
+msgstr "En cache"
