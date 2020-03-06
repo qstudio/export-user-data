@@ -4,7 +4,8 @@ namespace q\report\core;
 
 use q\report\core\core as core;
 use q\report\core\helper as helper;
-use q\report\core\xml as xml;
+use q\report\core\excel2003 as excel2003;
+use XLSXWriter;
 
 // load it up ##
 \q\report\core\export::run();
@@ -107,7 +108,7 @@ class export extends \q_export_user_data {
         }
 
         // export method ? ##
-        $export_method = 'excel'; // default to Excel export ##
+        $export_method = 'excel2003'; // default to Excel export ##
         if ( isset( $_POST['format'] ) && $_POST['format'] != '' ) {
 
             $export_method = \sanitize_text_field( $_POST['format'] );
@@ -146,7 +147,7 @@ class export extends \q_export_user_data {
 
             break;
 
-            case ( 'excel' ):
+            case ( 'excel2003' ):
 
                 // to xls ##
                 header( 'Content-Description: File Transfer' );
@@ -159,21 +160,47 @@ class export extends \q_export_user_data {
                 $is_csv = false;
 
                 // open xml
-                $doc_begin  = xml::begin();
+                $doc_begin  = excel2003::begin();
 
                 //preformat
-                $pre        = xml::pre();
+                $pre        = excel2003::pre();
 
                 // how to seperate data ##
-                $seperator  = xml::seperator();
+                $seperator  = excel2003::seperator();
 
                 // line break ##
-                $breaker    = xml::breaker();
+                $breaker    = excel2003::breaker();
 
                 // close xml
-                $doc_end    = xml::end();
+                $doc_end    = excel2003::end();
 
             break;
+
+            case ( 'excel2007' ):
+
+                // to xlsx ##
+                header( 'Content-Description: File Transfer' );
+                header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                header("Content-Disposition: attachment; filename=$filename.xlsx");
+                header('Content-Transfer-Encoding: binary');
+                //header('Content-Length: ' . filesize($file));
+                //header('Cache-Control: must-revalidate');
+                //header('Pragma: public');
+                header("Pragma: no-cache");
+                header("Expires: 0");
+
+                // set a csv check flag
+                $is_csv = false;
+
+                // open xml
+                $doc_begin  = "";
+                $pre        = "";
+                $seperator  = "";
+                $breaker    = "";
+                $doc_end    = "";
+
+                $writer = new XLSXWriter();
+                break;
 
         }
 
@@ -308,13 +335,25 @@ class export extends \q_export_user_data {
 
         }
 
-        // open doc wrapper.. ##
-        echo $doc_begin;
 
-        // echo headers ##
-        echo $pre . implode( $seperator, $headers ) . $breaker;
+        if ($export_method !== "excel2007") {
+            // open doc wrapper.. ##
+            echo $doc_begin;
 
-        #helper::log( $users );
+            // echo headers ##
+            echo $pre . implode( $seperator, $headers ) . $breaker;
+
+            #helper::log( $users );
+        } else {
+
+            $xlsx_header = array_flip($headers);
+
+            foreach($xlsx_header as $k => $v) {
+                $xlsx_header[$k] = "string";
+            }
+
+            $writer->writeSheetHeader('Sheet1', $xlsx_header);
+        }
 
         // build row values for each user ##
         foreach ( $users as $user ) {
@@ -530,13 +569,24 @@ class export extends \q_export_user_data {
 
             }
 
-            // echo row data ##
-            echo $pre . implode( $seperator, $data ) . $breaker;
+            if ($export_method !== "excel2007") {
+                // echo row data ##
+                echo $pre . implode( $seperator, $data ) . $breaker;
+            } else {
+                $writer->writeSheetRow('Sheet1', $data);
+            }
 
         }
 
-        // close doc wrapper..
-        echo $doc_end;
+        if ($export_method !== "excel2007") {
+            // close doc wrapper..
+            echo $doc_end;
+        } else {
+            //$writer->writeSheet($rows,'Sheet1', $header); //or write the whole sheet in 1 call
+            //$writer->writeToFile('xlsx-simple.xlsx');
+            //$writer->writeToStdOut();
+            echo $writer->writeToString();
+        }
 
         // stop PHP, so file can export correctly ##
         exit;
