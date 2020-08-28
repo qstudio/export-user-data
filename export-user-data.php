@@ -9,7 +9,7 @@
  * License:         GPL2
  * Class:           q_export_user_data
  * Text Domain:     q-export-user-data
- * GitHub Plugin URI: qstudio/export-user-data
+ * GitHub Plugin URI: qstudio/q-export-user-data
 */
 
 /*
@@ -184,12 +184,15 @@ if ( ! class_exists( 'q_export_user_data' ) ) {
 		private static function load_libraries()
         {
 
+            // vendor ##
+            require_once self::get_plugin_path( 'vendor/PHP_XLSXWriter/xlsxwriter.class.php' );
+
             // methods ##
             require_once self::get_plugin_path( 'library/core/helper.php' );
             require_once self::get_plugin_path( 'library/core/core.php' );
             require_once self::get_plugin_path( 'library/core/user.php' );
             require_once self::get_plugin_path( 'library/core/buddypress.php' );
-            require_once self::get_plugin_path( 'library/core/xml.php' );
+            require_once self::get_plugin_path( 'library/core/excel2003.php' );
             require_once self::get_plugin_path( 'library/core/export.php' );
             require_once self::get_plugin_path( 'library/core/filters.php' );
 

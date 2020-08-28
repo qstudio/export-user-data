@@ -14,7 +14,7 @@ use q\report\core\helper as helper;
 // load it up ##
 #\q\report\core\core::run();
 
-class xml extends \q_export_user_data {
+class excel2003 extends \q_export_user_data {
 
   public static function begin()
   {
