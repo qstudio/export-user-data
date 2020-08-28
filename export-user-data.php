@@ -3,7 +3,7 @@
 /*
  * Plugin Name:     Export User Date
  * Description:     Export User data and metadata.
- * Version:         2.0.3
+ * Version:         2.1.0
  * Author:          Q Studio
  * Author URI:      http://qstudio.us/
  * License:         GPL2

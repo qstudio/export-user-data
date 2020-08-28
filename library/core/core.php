@@ -207,13 +207,19 @@ class core extends \q_export_user_data {
 
             if( is_array( $value ) ) {
 
+				$return .= $glue . $key . $glue . self::recursive_implode( $value, $return, $glue );
+				
+			// add @2.1.0 from issue #4 - https://github.com/qstudio/export-user-data/issues/4
+			} elseif(is_object($value)) {
+
                 $return .= $glue . $key . $glue . self::recursive_implode( $value, $return, $glue );
 
             } else {
 
                 $return .= $glue . $key . $glue . $value;
 
-            }
+			}
+			
 
         }
 

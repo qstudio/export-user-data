@@ -1,7 +1,0 @@
-git submodule deinit -f wp-content/plugins/q-report
-rm -rf .git/modules/wp-content/plugins/q-report/
-git rm -r --cached wp-content/plugins/q-report
-rm -rf wp-content/plugins/q-report/
-git commit -m "Removed Q Report"
-git submodule add -f https://github.com/qstudio/export-user-data wp-content/plugins/q-export-user-data
-git commit -m "Added Q Export User Data"

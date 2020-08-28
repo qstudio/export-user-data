@@ -1,5 +1,11 @@
 ## Changelog ##
 
+*** 2.1.0 ***
+
+* Excel 2003 update options - thanks to @reyneke-vosz - https://github.com/qstudio/export-user-data/pull/5
+* Validated as working in WP 5.5.0
+* BuddyPress support almost removed... - sorry, but we can't continue to support due to testing complexity
+
 *** 2.0.3 ***
 
 * Removed remote call to jQuery UI CSS
