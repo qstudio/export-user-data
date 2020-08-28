@@ -550,13 +550,23 @@ class admin extends \q_export_user_data {
                 <td>
                     <select name="format" id="q_report_users_format">
 <?php
-                        if ( isset ( self::$format ) && ( self::$format == 'excel' ) ) {
+                        if ( isset ( self::$format ) && ( self::$format == 'excel2003' ) ) {
 
-                            echo '<option selected value="excel">' . __( 'Excel', 'q-export-user-data' ) . '</option>';
+                            echo '<option selected value="excel2003">' . __( 'Excel 2003 (xls)', 'q-export-user-data' ) . '</option>';
 
                         } else {
 
-                            echo '<option value="excel">' . __( 'Excel', 'q-export-user-data' ) . '</option>';
+                            echo '<option value="excel2003">' . __( 'Excel 2003 (xls)', 'q-export-user-data' ) . '</option>';
+
+                        }
+
+                        if ( isset ( self::$format ) && ( self::$format == 'excel2007' ) ) {
+
+                            echo '<option selected value="excel2007">' . __( 'Excel 2007 (xlsx)', 'q-export-user-data' ) . '</option>';
+
+                        } else {
+
+                            echo '<option value="excel2007">' . __( 'Excel 2007 (xlsx)', 'q-export-user-data' ) . '</option>';
 
                         }
 
