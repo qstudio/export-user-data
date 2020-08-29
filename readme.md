@@ -1,7 +1,7 @@
 # Export User Data #
 
 **Contributors:** qlstudio  
-**Tags:** user, users, xprofile, usermeta csv, excel, batch, export, save, download  
+**Tags:** users, export, usermeta, excel  
 **Requires PHP:** 6.0  
 **Requires at least:** 5.0  
 **Tested up to:** 5.5  
