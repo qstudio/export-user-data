@@ -1,14 +1,14 @@
 <?php
 
-namespace q\report\core;
+namespace q\eud\core;
 
-use q\report\core\core as core;
-use q\report\core\helper as helper;
-use q\report\core\excel2003 as excel2003;
+use q\eud\core\core as core;
+use q\eud\core\helper as helper;
+// use q\eud\core\excel2003 as excel2003;
 use XLSXWriter;
 
 // load it up ##
-\q\report\core\export::run();
+\q\eud\core\export::run();
 
 class export extends \q_export_user_data {
 
@@ -36,7 +36,7 @@ class export extends \q_export_user_data {
 
         // Check if the user clicked on the Save, Load, or Delete Settings buttons ##
         if (
-            ! isset( $_POST['_wpnonce-q-report-admin-page'] )
+            ! isset( $_POST['_wpnonce-q-eud-admin-page'] )
             || isset( $_POST['load_export'] )
             || isset( $_POST['save_export'] )
             || isset( $_POST['delete_export'] ) )
@@ -51,7 +51,7 @@ class export extends \q_export_user_data {
         ini_set( 'memory_limit', -1 ); // bad idea? ##
 
         // check admin referer ##
-        \check_admin_referer( 'q-report-admin-page', '_wpnonce-q-report-admin-page' );
+        \check_admin_referer( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' );
 
         // build argument array ##
         $args = array(
@@ -74,14 +74,14 @@ class export extends \q_export_user_data {
                 $args['number'] = $limit_total; // number - Limit the total number of users returned ##
 
                 // test it ##
-                #if ( self::$debug )helper::log( $args );
+                helper::log( $args );
 
             }
 
         }
 
         // add custom args via filters ##
-        $args = \apply_filters( 'q/report/export/args', $args );
+        $args = \apply_filters( 'q/eud/export/args', $args );
 
         #helper::log( $args );
 
@@ -108,7 +108,7 @@ class export extends \q_export_user_data {
         }
 
         // export method ? ##
-        $export_method = 'excel2003'; // default to Excel export ##
+        $export_method = 'excel2007'; // default to Excel export ##
         if ( isset( $_POST['format'] ) && $_POST['format'] != '' ) {
 
             $export_method = \sanitize_text_field( $_POST['format'] );
@@ -147,6 +147,7 @@ class export extends \q_export_user_data {
 
             break;
 
+			/*
             case ( 'excel2003' ):
 
                 // to xls ##
@@ -174,7 +175,8 @@ class export extends \q_export_user_data {
                 // close xml
                 $doc_end    = excel2003::end();
 
-            break;
+			break;
+			*/
 
             case ( 'excel2007' ):
 
@@ -200,7 +202,8 @@ class export extends \q_export_user_data {
                 $doc_end    = "";
 
                 $writer = new XLSXWriter();
-                break;
+				
+			break;
 
         }
 
@@ -210,7 +213,7 @@ class export extends \q_export_user_data {
         #helper::log( $usermeta );
         $usermeta_fields = array();
 
-        // loop over each field and sanitize ##
+        // loop over each field and sanitize ## @todo - user array_map ##
         if ( $usermeta && is_array( $usermeta ) ) {
             foreach( $usermeta as $field ) {
                 $usermeta_fields[] = \sanitize_text_field ( $field  );
@@ -280,7 +283,7 @@ class export extends \q_export_user_data {
             #helper::log( 'Field: '. $field );
 
             // filter field name ##
-            $field = \apply_filters( 'q/report/export/field', $field );
+            $field = \apply_filters( 'q/eud/export/field', $field );
 
             // grab fields to exclude from exports - filterable ##
             if ( in_array( $fields[$key], core::get_exclude_fields() ) ) {
@@ -464,8 +467,24 @@ class export extends \q_export_user_data {
                 elseif ( isset( $_POST['roles'] ) && '1' == $_POST['roles'] && $field == 'roles' )
                 {
 
-                    // add "Role" as $value ##
-                    $value = isset( $user->roles[0] ) ? implode( $user->roles, '|' ) : '' ; // empty value if no role found - or flat array of user roles ##
+					// empty array ##
+					$user_roles = [];
+					
+					// get usermeta data
+					$userdata = \get_userdata( $user->ID );
+						
+					// loop over roles, taking the name ##
+					foreach( $userdata->roles as $role ) {
+
+						$user_roles[] = \translate_user_role( $role );
+						
+					}
+
+					// test ##
+					// helper::log( $user_roles );
+
+                     // empty value if no role found - or flat array of user roles ##
+                    $value = ! empty( $user_roles ) ? implode( $user_roles, '|' ) : '';
 
                 // include the user's BP group in the export ##
                 }
@@ -551,7 +570,7 @@ class export extends \q_export_user_data {
                 }
 
                 // filter $value ##
-                $value = \apply_filters( 'q/report/export/value', $value, $field );
+                $value = \apply_filters( 'q/eud/export/value', $value, $field );
 
                 // sanitize ##
                 $value = core::sanitize( $value );

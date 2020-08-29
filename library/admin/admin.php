@@ -1,15 +1,15 @@
 <?php
 
-namespace q\report\admin;
+namespace q\eud\admin;
 
-use q\report\core\core as core;
-use q\report\core\helper as helper;
-use q\report\core\user as user;
-use q\report\core\buddypress as buddypress;
-use q\report\api\admin as api_admin;
+use q\eud\core\core as core;
+use q\eud\core\helper as helper;
+use q\eud\core\user as user;
+use q\eud\core\buddypress as buddypress;
+use q\eud\api\admin as api_admin;
 
 // load it up ##
-\q\report\admin\admin::run();
+\q\eud\admin\admin::run();
 
 class admin extends \q_export_user_data {
 
@@ -45,7 +45,7 @@ class admin extends \q_export_user_data {
         add_users_page ( 
             __( 'Export User Data', 'q-export-user-data' ), 
             __( 'Export User Data', 'q-export-user-data' ), 
-            \apply_filters( 'q/report/admin_capability', 'list_users' ), 
+            \apply_filters( 'q/eud/admin_capability', 'list_users' ), 
             'q-export-user-data', 
             array( 
                 get_class(), 
@@ -65,7 +65,7 @@ class admin extends \q_export_user_data {
     {
 
         // quick security check ##
-        if ( ! \current_user_can( \apply_filters( 'q/report/admin_capability', 'list_users' ) ) ) {
+        if ( ! \current_user_can( \apply_filters( 'q/eud/admin_capability', 'list_users' ) ) ) {
 
             \wp_die( __( 'You do not have sufficient permissions to access this page.', 'q-export-user-data' ) );
 
@@ -74,7 +74,7 @@ class admin extends \q_export_user_data {
         // Save settings button was pressed ##
         if (
             isset( $_POST['save_export'] )
-            && \check_admin_referer( 'q-report-admin-page', '_wpnonce-q-report-admin-page' )
+            && \check_admin_referer( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' )
         ) {
 
             // start with an empty variable ##
@@ -97,11 +97,12 @@ class admin extends \q_export_user_data {
             // Build array of $options to save and save them ##
             if ( isset( $save_export ) ) {
 
-                // prepare all array values ##
-                $usermeta = 
-                    isset( $_POST['usermeta'] ) ? 
-                    \sanitize_text_field( $_POST['usermeta'] ): 
-                    '' ;
+				// prepare all array values ##
+				$usermeta = 
+					isset( $_POST['usermeta'] ) ? 
+					array_map( 'sanitize_text_field', 
+					$_POST['usermeta'] ) : 
+					'';
                 $bp_fields = 
                     isset( $_POST['bp_fields'] ) ? 
                     array_map( 'sanitize_text_field', $_POST['bp_fields'] ) : 
@@ -188,7 +189,7 @@ class admin extends \q_export_user_data {
         if (
             isset( $_POST['load_export'] )
             && isset( $_POST['export_name'] )
-            && \check_admin_referer( 'q-report-admin-page', '_wpnonce-q-report-admin-page' )
+            && \check_admin_referer( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' )
         ) {
 
             user::get_user_options_by_export( \sanitize_text_field( $_POST['export_name'] ) );
@@ -199,7 +200,7 @@ class admin extends \q_export_user_data {
         if (
             isset( $_POST['delete_export'] )
             && isset( $_POST['export_name'] )
-            && \check_admin_referer( 'q-report-admin-page', '_wpnonce-q-report-admin-page' )
+            && \check_admin_referer( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' )
         ) {
 
             user::delete_user_options( \sanitize_text_field( $_POST['export_name'] ) );
@@ -218,7 +219,7 @@ class admin extends \q_export_user_data {
 
 ?>
     <form method="post" action="" enctype="multipart/form-data">
-        <?php \wp_nonce_field( 'q-report-admin-page', '_wpnonce-q-report-admin-page' ); ?>
+        <?php \wp_nonce_field( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' ); ?>
         <table class="form-table">
 <?php
 
@@ -227,13 +228,13 @@ class admin extends \q_export_user_data {
     
             // filterable SQL ##
             $meta_keys = \apply_filters( 
-                'q/report/admin/sql', 
+                'q/eud/admin/sql', 
                 $wpdb->get_results( "SELECT distinct(meta_key) FROM $wpdb->usermeta" ) 
             );
 
             // filterable sort ##
             \apply_filters( 
-                'q/report/admin/sort', 
+                'q/eud/admin/sort', 
                 asort( $meta_keys )
             );
 
@@ -241,7 +242,7 @@ class admin extends \q_export_user_data {
             $meta_keys = \wp_list_pluck( $meta_keys, 'meta_key' );
 
             // allow array to be filtered ##
-            $meta_keys_common = \apply_filters( 'q/report/admin/meta_keys_common', [] );
+            $meta_keys_common = \apply_filters( 'q/eud/admin/meta_keys_common', [] );
 
             // test array ##
             #helper::log( $meta_keys );
@@ -253,7 +254,7 @@ class admin extends \q_export_user_data {
 ?>
             <tr valign="top">
                 <th scope="row">
-                    <label for="q_report_usermeta"><?php \_e( 'User Meta Fields', 'q-export-user-data' ); ?></label>
+                    <label for="q_eud_usermeta"><?php \_e( 'User Meta Fields', 'q-export-user-data' ); ?></label>
                     <p class="filter" style="margin: 10px 0 0;">
                         <?php \_e('Filter', 'q-export-user-data'); ?>: <a href="#" class="usermeta-all"><?php \_e('All', 'q-export-user-data'); ?></a> | <a href="#" class="usermeta-common"><?php \_e('Common', 'q-export-user-data'); ?></a>
                     </p>
@@ -268,7 +269,7 @@ class admin extends \q_export_user_data {
                         foreach ( $meta_keys as $key ) {    
 
                             // filter key displayed ##
-                            $display_key = \apply_filters( 'q/report/admin/display_key', $key );
+                            $display_key = \apply_filters( 'q/eud/admin/display_key', $key );
 
                             // class ##
                             $usermeta_class = 'normal';
@@ -321,7 +322,7 @@ class admin extends \q_export_user_data {
 ?>
             <tr valign="top">
                 <th scope="row">
-                    <label for="q_report_xprofile"><?php \_e( 'BP xProfile Fields', 'q-export-user-data' ); ?></label>
+                    <label for="q_eud_xprofile"><?php \_e( 'BP xProfile Fields', 'q-export-user-data' ); ?></label>
                     <p class="filter" style="margin: 10px 0 0;">
                         <?php \_e('Select', 'q-export-user-data'); ?>: <a href="#" class="select-all"><?php \_e('All', 'q-export-user-data'); ?></a> | <a href="#" class="select-none"><?php \_e('None', 'q-export-user-data'); ?></a>
                     </p>
@@ -353,7 +354,7 @@ class admin extends \q_export_user_data {
 ?>
             <tr valign="top" class="toggleable">
                 <th scope="row">
-                    <label for="q_report_xprofile"><?php \_e( 'BP xProfile Fields Update Time', 'q-export-user-data' ); ?></label>
+                    <label for="q_eud_xprofile"><?php \_e( 'BP xProfile Fields Update Time', 'q-export-user-data' ); ?></label>
                     <p class="filter" style="margin: 10px 0 0;">
                         <?php \_e('Select', 'q-export-user-data'); ?>: <a href="#" class="select-all"><?php \_e('All', 'q-export-user-data'); ?></a> | <a href="#" class="select-none"><?php _e('None', 'q-export-user-data'); ?></a>
                     </p>
@@ -416,9 +417,9 @@ class admin extends \q_export_user_data {
             </tr>
 
             <tr valign="top" class="toggleable">
-                <th scope="row"><label for="q_report_users_role"><?php \_e( 'Role', 'q-export-user-data' ); ?></label></th>
+                <th scope="row"><label for="q_eud_users_role"><?php \_e( 'Role', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <select name="role" id="q_report_users_role">
+                    <select name="role" id="q_eud_users_role">
 <?php
 
                         echo '<option value="">' . \__( 'All Roles', 'q-export-user-data' ) . '</option>';
@@ -468,8 +469,8 @@ class admin extends \q_export_user_data {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Registered', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input type="text" id="q_report_users_start_date" name="start_date" value="<?php echo self::$start_date; ?>" class="start-datepicker" />
-                    <input type="text" id="q_report_users_end_date" name="end_date" value="<?php echo self::$end_date; ?>" class="end-datepicker" />
+                    <input type="text" id="q_eud_users_start_date" name="start_date" value="<?php echo self::$start_date; ?>" class="start-datepicker" />
+                    <input type="text" id="q_eud_users_end_date" name="end_date" value="<?php echo self::$end_date; ?>" class="end-datepicker" />
                     <p class="description"><?php
                         printf(
                             \__( 'Pick a start and end user registration date to limit the results.', 'q-export-user-data' )
@@ -481,8 +482,8 @@ class admin extends \q_export_user_data {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Limit Range', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input name="limit_offset" type="text" id="q_report_users_limit_offset" value="<?php echo( self::$limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', 'q-export-user-data' ); ?>">
-                    <input name="limit_total" type="text" id="q_report_users_limit_total" value="<?php echo ( self::$limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', 'q-export-user-data' ); ?>">
+                    <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php echo( self::$limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', 'q-export-user-data' ); ?>">
+                    <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php echo ( self::$limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', 'q-export-user-data' ); ?>">
                     <p class="description"><?php
                         printf(
                             \__( 'Enter an offset start number and a total number of users to export. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
@@ -501,7 +502,7 @@ class admin extends \q_export_user_data {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Updated Since', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input type="text" id="q_report_updated_since_date" name="updated_since_date" value="<?php echo self::$updated_since_date; ?>" class="updated-datepicker" />
+                    <input type="text" id="q_eud_updated_since_date" name="updated_since_date" value="<?php echo self::$updated_since_date; ?>" class="updated-datepicker" />
                     <select id="bp_field_updated_since" name="bp_field_updated_since">
 <?php
 
@@ -534,7 +535,7 @@ class admin extends \q_export_user_data {
         } // bp date ##
 
         // pull in extra export options from api ##
-        if ( $api_fields = \apply_filters( 'q/report/api/admin/fields', [] ) ) {
+        if ( $api_fields = \apply_filters( 'q/eud/api/admin/fields', [] ) ) {
             
             foreach( $api_fields as $field ) {
              
@@ -546,11 +547,12 @@ class admin extends \q_export_user_data {
 
 ?>
             <tr valign="top">
-                <th scope="row"><label for="q_report_users_format"><?php \_e( 'Format', 'q-export-user-data' ); ?></label></th>
+                <th scope="row"><label for="q_eud_users_format"><?php \_e( 'Format', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <select name="format" id="q_report_users_format">
+                    <select name="format" id="q_eud_users_format">
 <?php
-                        if ( isset ( self::$format ) && ( self::$format == 'excel2003' ) ) {
+						/*
+						if ( isset ( self::$format ) && ( self::$format == 'excel2003' ) ) {
 
                             echo '<option selected value="excel2003">' . __( 'Excel 2003 (xls)', 'q-export-user-data' ) . '</option>';
 
@@ -558,7 +560,8 @@ class admin extends \q_export_user_data {
 
                             echo '<option value="excel2003">' . __( 'Excel 2003 (xls)', 'q-export-user-data' ) . '</option>';
 
-                        }
+						}
+						*/
 
                         if ( isset ( self::$format ) && ( self::$format == 'excel2007' ) ) {
 
@@ -590,11 +593,11 @@ class admin extends \q_export_user_data {
             </tr>
 
             <tr valign="top" class="remember">
-                <th scope="row"><label for="q_report_save_options"><?php \_e( 'Stored Options', 'q-export-user-data' ); ?></label></th>
+                <th scope="row"><label for="q_eud_save_options"><?php \_e( 'Stored Options', 'q-export-user-data' ); ?></label></th>
                 <td>
 
                     <div class="row">
-                        <input type="text" class="regular-text" name="save_new_export_name" id="q_report_save_options_new_export" placeholder="<?php \_e( 'Export Name', 'q-export-user-data' ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? \sanitize_text_field( $_POST['export_name'] ) : '' ; ?>">
+                        <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php \_e( 'Export Name', 'q-export-user-data' ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? \sanitize_text_field( $_POST['export_name'] ) : '' ; ?>">
                         <input type="submit" id="save_export" class="button-primary" name="save_export" value="<?php \_e( 'Save', 'q-export-user-data' ); ?>" />
                     </div>
                     <?php
@@ -604,7 +607,7 @@ class admin extends \q_export_user_data {
 
 ?>
                     <div class="row">
-                        <select name="export_name" id="q_report_save_options" class="regular-text">
+                        <select name="export_name" id="q_eud_save_options" class="regular-text">
 <?php
 
                             // loop over each saved export ##
@@ -646,7 +649,7 @@ class admin extends \q_export_user_data {
 
             <tr valign="top">
                 <th scope="row">
-                    <label for="q_report_xprofile"><?php \_e( 'Advanced Options', 'q-export-user-data' ); ?></label>
+                    <label for="q_eud_xprofile"><?php \_e( 'Advanced Options', 'q-export-user-data' ); ?></label>
                 </th>
                 <td>
                     <div class="toggle">
@@ -685,12 +688,14 @@ class admin extends \q_export_user_data {
 
         }
 
-        \wp_register_style( 'q-report-css', \plugins_url( 'css/q-report.css' ,__FILE__ ), '', self::version );
-        \wp_enqueue_style( 'q-report-css' );
-        \wp_enqueue_script( 'q_report_multi_select_js', \plugins_url( 'javascript/jquery.multi-select.js', __FILE__ ), array('jquery'), '0.9.8', false );
+        \wp_register_style( 'q-eud-css', \plugins_url( 'css/q-eud.css' ,__FILE__ ), '', self::version );
+        \wp_enqueue_style( 'q-eud-css' );
+        \wp_enqueue_script( 'q_eud_multi_select_js', \plugins_url( 'javascript/jquery.multi-select.js', __FILE__ ), array('jquery'), '0.9.8', false );
 
         // add script ##
         \wp_enqueue_script('jquery-ui-datepicker');
+    	\wp_register_style('jquery-ui', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css');
+    	\wp_enqueue_style('jquery-ui');
 
         // add style ##
         // \wp_enqueue_style( 'jquery-ui-datepicker' );
@@ -794,19 +799,19 @@ class admin extends \q_export_user_data {
         jQuery("#save_export").click( function(e) {
 
             // grab the value of the input ##
-            var q_report_save_options_new_export = jQuery('#q_report_save_options_new_export').val();
+            var q_eud_save_options_new_export = jQuery('#q_eud_save_options_new_export').val();
 
-            if ( ! q_report_save_options_new_export || q_report_save_options_new_export == '' ) {
+            if ( ! q_eud_save_options_new_export || q_eud_save_options_new_export == '' ) {
 
                 e.preventDefault(); // stop things here ##
-                jQuery('#q_report_save_options_new_export').addClass("error");
+                jQuery('#q_eud_save_options_new_export').addClass("error");
 
             }
 
         });
 
         // remove validation on focus ##
-        jQuery("body").on( 'focus', '#q_report_save_options_new_export', function(e) {
+        jQuery("body").on( 'focus', '#q_eud_save_options_new_export', function(e) {
 
             jQuery(this).removeClass("error");
 

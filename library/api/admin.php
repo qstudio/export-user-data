@@ -1,12 +1,12 @@
 <?php
 
-namespace q\report\api;
+namespace q\eud\api;
 
-use q\report\core\core as core;
-use q\report\core\helper as helper;
+use q\eud\core\core as core;
+use q\eud\core\helper as helper;
 
 // load it up ##
-#\q\report\api\admin::run();
+#\q\eud\api\admin::run();
 
 class admin extends \q_export_user_data {
 
@@ -80,7 +80,7 @@ class admin extends \q_export_user_data {
 
 ?>
         <tr valign="top" class="<?php echo $toggleable; ?>">
-            <th scope="row"><label for="q_report_<?php echo $array['label']; ?>"><?php echo $array['title']; ?></label></th>
+            <th scope="row"><label for="q_eud_<?php echo $array['label']; ?>"><?php echo $array['title']; ?></label></th>
             <td>
 <?php 
 
@@ -190,7 +190,7 @@ class admin extends \q_export_user_data {
         $multiselect = isset( $array['multiselect'] ) ? ' multiple="multiple"' : '' ;
 
 ?>
-        <select <?php echo $multiselect; ?> name="<?php echo $array['label']; ?>" id="q_report_<?php echo $array['label']; ?>">
+        <select <?php echo $multiselect; ?> name="<?php echo $array['label']; ?>" id="q_eud_<?php echo $array['label']; ?>">
 <?php
 
             // label ##

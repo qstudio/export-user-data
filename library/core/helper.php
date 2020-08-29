@@ -1,14 +1,11 @@
 <?php
 
 // namespace ##
-namespace q\report\core;
-
-// piggyback Q helper ##
-use q\core\helper as q_helper;
+namespace q\eud\core;
 
 /**
  * helper Class
- * @package   q_report\core
+ * @package   q_eud\core
  */
 class helper extends \q_export_user_data {
 

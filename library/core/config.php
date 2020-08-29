@@ -1,12 +1,12 @@
 <?php
 
-namespace q\report\core;
+namespace q\eud\core;
 
-use q\report\core\core as core;
-use q\report\core\helper as helper;
+use q\eud\core\core as core;
+use q\eud\core\helper as helper;
 
 // load it up ##
-// \q\report\core\config::run();
+// \q\eud\core\config::run();
 
 class config extends \q_export_user_data {
 
@@ -74,7 +74,7 @@ class config extends \q_export_user_data {
         self::$api_admin_fields = $array;
 
         // filter and return ##
-        apply_filters( 'q/report/api/admin_fields', self::$api_admin_fields );
+        apply_filters( 'q/eud/api/admin_fields', self::$api_admin_fields );
 
         // test it ##
         self::log( self::$api_admin_fields );

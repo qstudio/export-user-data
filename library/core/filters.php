@@ -1,12 +1,12 @@
 <?php
 
-namespace q\report\core;
+namespace q\eud\core;
 
-use q\report\core\core as core;
-use q\report\core\helper as helper;
+use q\eud\core\core as core;
+use q\eud\core\helper as helper;
 
 // load it up ##
-\q\report\core\filters::run();
+\q\eud\core\filters::run();
 
 class filters extends \q_export_user_data {
 
@@ -16,7 +16,7 @@ class filters extends \q_export_user_data {
         if ( \is_admin() ) {
 
             // EUD - filter key shown ##
-            \add_filter( 'q/report/admin/display_key', [ get_class(), 'display_key' ], 1, 1 );
+            \add_filter( 'q/eud/admin/display_key', [ get_class(), 'display_key' ], 1, 1 );
 
         }
 

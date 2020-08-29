@@ -12,15 +12,6 @@
  * GitHub Plugin URI: qstudio/export-user-data
 */
 
-/*
-This plugin will add a "Report" sub menu to the users tab and provide a screen which lists a sent of pre-built report buttons - in some cases with options or filtered by program
-Exports will print to the screen first - and then have a "Download" button to export csv / xls formatted data
-
-- rebuild export user data with filters, defaults and tweaks to make it most relevant to Club Data ##
-- read reports on WP and address all issues in release ##
-- move all custom filters / hacks to filter system - controlled from q_club ( or functions.php for most theme based controls ) ##
-*/
-
 defined( 'ABSPATH' ) OR exit;
 
 if ( ! class_exists( 'q_export_user_data' ) ) {
@@ -34,12 +25,12 @@ if ( ! class_exists( 'q_export_user_data' ) ) {
         private static $instance = null;
                        
         // Plugin Settings
-        const version = '2.0.3';
-		static $debug = true;
+        const version = '2.1.0';
+		static $debug = false;
         const text_domain = 'q-export-user-data'; // for translation ##
         
         /* properties */
-        public static $q_report_exports = ''; // export settings ##
+        public static $q_eud_exports = ''; // export settings ##
         public static $usermeta_saved_fields = array();
         public static $bp_fields_saved_fields = array();
         public static $bp_fields_update_time_saved_fields = array();
@@ -104,7 +95,7 @@ if ( ! class_exists( 'q_export_user_data' ) ) {
         // the form for sites have to be 1-column-layout
         public function register_activation_hook() {
 
-            \add_option( 'q_report_configured' );
+            \add_option( 'q_eud_configured' );
 
             // flush rewrites ##
             #global $wp_rewrite;
@@ -115,7 +106,7 @@ if ( ! class_exists( 'q_export_user_data' ) ) {
 
         public function register_deactivation_hook() {
 
-            \delete_option( 'q_report_configured' );
+            \delete_option( 'q_eud_configured' );
 
         }
 
@@ -184,12 +175,15 @@ if ( ! class_exists( 'q_export_user_data' ) ) {
 		private static function load_libraries()
         {
 
+			// vendor ##
+            require_once self::get_plugin_path( 'vendor/PHP_XLSXWriter/xlsxwriter.class.php' );
+
             // methods ##
             require_once self::get_plugin_path( 'library/core/helper.php' );
             require_once self::get_plugin_path( 'library/core/core.php' );
             require_once self::get_plugin_path( 'library/core/user.php' );
             require_once self::get_plugin_path( 'library/core/buddypress.php' );
-            require_once self::get_plugin_path( 'library/core/excel2003.php' );
+            // require_once self::get_plugin_path( 'library/core/excel2003.php' );
             require_once self::get_plugin_path( 'library/core/export.php' );
             require_once self::get_plugin_path( 'library/core/filters.php' );
 

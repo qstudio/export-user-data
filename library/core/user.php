@@ -1,12 +1,12 @@
 <?php
 
-namespace q\report\core;
+namespace q\eud\core;
 
-use q\report\core\core as core;
-use q\report\core\helper as helper;
+use q\eud\core\core as core;
+use q\eud\core\helper as helper;
 
 // load it up ##
-\q\report\core\user::run();
+\q\eud\core\user::run();
 
 class user extends \q_export_user_data {
 
@@ -33,14 +33,33 @@ class user extends \q_export_user_data {
     public static function load()
     {
 
-        return self::$q_report_exports =
-            \get_user_meta( \get_current_user_id(), 'q_report_exports' ) ?
-            \get_user_meta( \get_current_user_id(), 'q_report_exports', true ) :
-            array() ;
+		// convert outdated stored meta from q_report to q_eud_exports ##
+		if(
+			\get_user_meta( \get_current_user_id(), 'q_report', true )
+			&& ! \get_user_meta( \get_current_user_id(), 'q_eud_exports' )
+		){
 
-        #self::log( $this->q_report_exports );
+			// get old data ##
+			$old_data = \get_user_meta( \get_current_user_id(), 'q_report', true );
 
-    }
+			// add to user meta, as they do not have any stored values ##
+			\add_user_meta( \get_current_user_id(), 'q_eud_exports', $old_data );
+
+			// delete old data ---? perhaps better to leave it, even if it redundant?
+			// \delete_user_meta( \get_current_user_id(), 'q_eud_exports' );
+
+		}
+
+		// test # 
+		// helper::log( \get_user_meta( \get_current_user_id(), 'q_eud_exports', true ) );
+
+        return self::$q_eud_exports =
+            \get_user_meta( \get_current_user_id(), 'q_eud_exports' ) ?
+            \get_user_meta( \get_current_user_id(), 'q_eud_exports', true ) :
+			array() ;
+			
+	}
+
 
 
 
@@ -54,23 +73,23 @@ class user extends \q_export_user_data {
     {
 
         // get the stored options - filter empty array items ##
-        $q_report_exports = array_filter( self::$q_report_exports );
+        $q_eud_exports = array_filter( self::$q_eud_exports );
 
         // quick check if the array is empty ##
-        if ( empty ( $q_report_exports ) ) {
+        if ( empty ( $q_eud_exports ) ) {
 
             return false;
 
         }
 
         // test the array of saved exports ##
-        #$this->pr( $q_report_exports );
+        #$this->pr( $q_eud_exports );
 
         // start with an empty array ##
         $exports = array();
 
         // loop over each saved export and grab each key ##
-        foreach ( $q_report_exports as $key => $value ) {
+        foreach ( $q_eud_exports as $key => $value ) {
 
             $exports[] = $key;
 
@@ -94,22 +113,22 @@ class user extends \q_export_user_data {
         // sanity check ##
         if ( is_null ( $export ) ) { return false; }
 
-        if ( isset( self::$q_report_exports[$export] ) ) {
+        if ( isset( self::$q_eud_exports[$export] ) ) {
 
-            self::$usermeta_saved_fields = self::$q_report_exports[$export]['usermeta_saved_fields'];
-            self::$bp_fields_saved_fields = self::$q_report_exports[$export]['bp_fields_saved_fields'];
-            self::$bp_fields_update_time_saved_fields = self::$q_report_exports[$export]['bp_fields_update_time_saved_fields'];
-            self::$updated_since_date = isset( self::$q_report_exports[$export]['updated_since_date'] ) ? self::$q_report_exports[$export]['updated_since_date'] : null ;
-            self::$field_updated_since = isset( self::$q_report_exports[$export]['field_updated_since'] ) ? self::$q_report_exports[$export]['field_updated_since'] : null ;
-            self::$role = self::$q_report_exports[$export]['role'];
-            self::$roles = self::$q_report_exports[$export]['roles'];
-            self::$groups = self::$q_report_exports[$export]['groups'];
-            self::$user_fields = isset( self::$q_report_exports[$export]['user_fields'] ) ? self::$q_report_exports[$export]['user_fields'] : null ;
-            self::$start_date = self::$q_report_exports[$export]['start_date'];
-            self::$end_date = self::$q_report_exports[$export]['end_date'];
-            self::$limit_offset = self::$q_report_exports[$export]['limit_offset'];
-            self::$limit_total = self::$q_report_exports[$export]['limit_total'];
-            self::$format = self::$q_report_exports[$export]['format'];
+            self::$usermeta_saved_fields = self::$q_eud_exports[$export]['usermeta_saved_fields'];
+            self::$bp_fields_saved_fields = self::$q_eud_exports[$export]['bp_fields_saved_fields'];
+            self::$bp_fields_update_time_saved_fields = self::$q_eud_exports[$export]['bp_fields_update_time_saved_fields'];
+            self::$updated_since_date = isset( self::$q_eud_exports[$export]['updated_since_date'] ) ? self::$q_eud_exports[$export]['updated_since_date'] : null ;
+            self::$field_updated_since = isset( self::$q_eud_exports[$export]['field_updated_since'] ) ? self::$q_eud_exports[$export]['field_updated_since'] : null ;
+            self::$role = self::$q_eud_exports[$export]['role'];
+            self::$roles = self::$q_eud_exports[$export]['roles'];
+            self::$groups = self::$q_eud_exports[$export]['groups'];
+            self::$user_fields = isset( self::$q_eud_exports[$export]['user_fields'] ) ? self::$q_eud_exports[$export]['user_fields'] : null ;
+            self::$start_date = self::$q_eud_exports[$export]['start_date'];
+            self::$end_date = self::$q_eud_exports[$export]['end_date'];
+            self::$limit_offset = self::$q_eud_exports[$export]['limit_offset'];
+            self::$limit_total = self::$q_eud_exports[$export]['limit_total'];
+            self::$format = self::$q_eud_exports[$export]['format'];
 
         } else {
 
@@ -156,7 +175,7 @@ class user extends \q_export_user_data {
         #$this->pr( $options );
 
         // for now, I'm simply allowing keys to be resaved - but this is not so logical ##
-        if ( array_key_exists( $key, self::$q_report_exports ) ) {
+        if ( array_key_exists( $key, self::$q_eud_exports ) ) {
 
             #$this->pr( 'key exists, skipping save' );
             #return false;
@@ -185,20 +204,20 @@ class user extends \q_export_user_data {
 
             }
 
-            // assign the sanitized array of values to the class property $q_report_exports as a new array with key $key ##
-            self::$q_report_exports[$key] = $options;
+            // assign the sanitized array of values to the class property $q_eud_exports as a new array with key $key ##
+            self::$q_eud_exports[$key] = $options;
 
             // update stored user_meta values, if previous key found ##
-            if ( \get_user_meta( \get_current_user_id(), 'q_report_exports' ) !== false ) {
+            if ( \get_user_meta( \get_current_user_id(), 'q_eud_exports' ) !== false ) {
 
-                #update_option( 'q_report_exports', $this->q_report_exports );
-                \update_user_meta( \get_current_user_id(), 'q_report_exports', self::$q_report_exports );
+                #update_option( 'q_eud_exports', $this->q_eud_exports );
+                \update_user_meta( \get_current_user_id(), 'q_eud_exports', self::$q_eud_exports );
 
             // create new user meta key ##
             } else {
 
-                #add_option( 'q_report_exports', $this->q_report_exports, $deprecated, $autoload );
-                \add_user_meta( \get_current_user_id(), 'q_report_exports', self::$q_report_exports );
+                #add_option( 'q_eud_exports', $this->q_eud_exports, $deprecated, $autoload );
+                \add_user_meta( \get_current_user_id(), 'q_eud_exports', self::$q_eud_exports );
 
             }
 
@@ -218,7 +237,7 @@ class user extends \q_export_user_data {
     {
 
         // sanity check ##
-        if ( is_null ( $key ) || ! array_key_exists( $key, self::$q_report_exports ) ) { return false; }
+        if ( is_null ( $key ) || ! array_key_exists( $key, self::$q_eud_exports ) ) { return false; }
 
         // clean it up ##
         $key = \sanitize_text_field( $key );
@@ -227,10 +246,10 @@ class user extends \q_export_user_data {
         #$this->pr( $key );
 
         // drop the array by it's key name from the class property ##
-        unset( self::$q_report_exports[$key] );
+        unset( self::$q_eud_exports[$key] );
 
         // update the saved data ##
-        \update_user_meta( \get_current_user_id(), 'q_report_exports', self::$q_report_exports );
+        \update_user_meta( \get_current_user_id(), 'q_eud_exports', self::$q_eud_exports );
 
     }
 

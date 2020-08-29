@@ -1,12 +1,12 @@
 <?php
 
-namespace q\report\core;
+namespace q\eud\core;
 
-use q\report\core\core as core;
-use q\report\core\helper as helper;
+use q\eud\core\core as core;
+use q\eud\core\helper as helper;
 
 // load it up ##
-\q\report\core\buddypress::run();
+\q\eud\core\buddypress::run();
 
 class buddypress extends \q_export_user_data {
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace q\report\core;
+namespace q\eud\core;
 
-use q\report\core\core as core;
-use q\report\core\helper as helper;
+use q\eud\core\core as core;
+use q\eud\core\helper as helper;
 
 // load it up ##
-#\q\report\core\core::run();
+#\q\eud\core\core::run();
 
 class core extends \q_export_user_data {
 
@@ -63,7 +63,7 @@ class core extends \q_export_user_data {
         }
 
         // kick back values via filter ##
-        return \apply_filters( 'q/report/export/user_fields', $user_fields );
+        return \apply_filters( 'q/eud/export/user_fields', $user_fields );
 
     }
 
@@ -97,7 +97,7 @@ class core extends \q_export_user_data {
         }
 
         // kick back the array via filter ##
-        return \apply_filters( 'q/report/export/special_fields', $special_fields );
+        return \apply_filters( 'q/eud/export/special_fields', $special_fields );
 
     }
 
@@ -116,7 +116,7 @@ class core extends \q_export_user_data {
         );
 
         // kick back array via filter ##
-        return \apply_filters( 'q/report/export/exclude_fields', $exclude_fields );
+        return \apply_filters( 'q/eud/export/exclude_fields', $exclude_fields );
 
     }
 
@@ -304,7 +304,7 @@ class core extends \q_export_user_data {
         #return htmlentities( $string, ENT_COMPAT, 'UTF-8' );
         
         // kick it back via a filter to allow custom formatting ##
-        return \apply_filters( 'q/report/export/format_value', $string );
+        return \apply_filters( 'q/eud/export/format_value', $string );
 
     }
 
@@ -418,7 +418,7 @@ class core extends \q_export_user_data {
         );
 
         // kick back via filter ##
-        return \apply_filters( 'q/report/export/allowed_tags', $allowed_tags );
+        return \apply_filters( 'q/eud/export/allowed_tags', $allowed_tags );
 
     }
 
