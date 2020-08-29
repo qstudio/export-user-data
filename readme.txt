@@ -4,7 +4,7 @@ Tags: user, users, xprofile, usermeta csv, excel, batch, export, save, download
 Requires PHP: 6.0  
 Requires at least: 4.8  
 Tested up to: 5.5  
-Stable tag: 2.1.0    
+Stable tag: 2.1.1    
 License: GPLv2  
 
 Export users data and metadata to a csv or Excel file
