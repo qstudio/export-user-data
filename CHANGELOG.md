@@ -2,9 +2,10 @@
 
 *** 2.1.0 ***
 
-* Excel 2003 update options - thanks to @reyneke-vosz - https://github.com/qstudio/export-user-data/pull/5
+* Excel 2007 export option added - thanks to @reyneke-vosz - https://github.com/qstudio/export-user-data/pull/5
+* Excell 2003 export option removed, as no suitable open-source library available
 * Validated as working in WP 5.5.0
-* BuddyPress support almost removed... - sorry, but we can't continue to support due to testing complexity
+* BuddyPress support removed... sorry, but this plugin now only supports exporting data from native WordPress tables
 
 *** 2.0.3 ***
 
