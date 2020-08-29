@@ -1,5 +1,9 @@
 ## Changelog ##
 
+*** 2.1.1 ***
+
+* FIX: saving and loading selected usermeta fields works as expected.
+
 *** 2.1.0 ***
 
 * Excel 2007 export option added - thanks to @reyneke-vosz - https://github.com/qstudio/export-user-data/pull/5
@@ -33,7 +37,7 @@
 
 *** 1.3.0 ***
 
-* Added extra data sanitization before outputting to file - thanks to Hely Shah <helyhshah@gmail.com> for te heads-up
+* Added extra data sanitization before outputting to file - thanks to Hely Shah <helyhshah@gmail.com> for the heads-up
 
 *** 1.2.8 ***
 

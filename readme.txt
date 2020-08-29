@@ -17,12 +17,21 @@ Includes an option to export the users by role, registration date range, usermet
 
 This plugin is designed to export user data stored in the 2 standard WordPress user data tables wp_users and wp_usermeta, if you use a plugin which stores data in its own database tables, this plugin will not export this data, without customization.
 
+In version 2.1.0 we added some additional filters and API controls which control the returned value formats, pulling data from custom post types and builinf lists of "common" usermeta fields to export - you can read more on the [Q Studio Website](https://qstudio.us/releases/export-user-data-wordpress-plugin/)
+
+---
+
+For feature request and bug reports, [please use the Q Support Website](https://qstudio.us/support/categories/export-user-data).
+
+Please do not use the Wordpress.org forum to report bugs, as we no longer monitor or respond to questions there.
+
 == Features ==
 
 * Exports all standard users fields
 * Exports users meta
 * Exports users by role
 * Exports users by date range
+* NEW: Filters to control format, add common
 
 == Screenshots ==
 
@@ -30,12 +39,17 @@ This plugin is designed to export user data stored in the 2 standard WordPress u
 
 == Changelog ==
 
+= 2.1.1 =
+
+* FIX: saving and loading selected usermeta fields works as expected.
+
 = 2.1.0 =
 
 * Excel 2007 export option added - thanks to @reyneke-vosz - https://github.com/qstudio/export-user-data/pull/5
 * Excell 2003 export option removed, as no suitable open-source library available
 * Validated as working in WP 5.5.0
 * BuddyPress support removed... sorry, but this plugin now only supports exporting data from native WordPress tables
+* FIX: saving and loading selected usermeta fields works as expected.
 
 = 2.0.3 =
 
