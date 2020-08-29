@@ -5,7 +5,7 @@
 **Requires PHP:** 6.0  
 **Requires at least:** 5.0  
 **Tested up to:** 5.5  
-**Stable tag:** 2.1.1  
+**Stable tag:** 2.1.2  
 **License:** GPLv2  
 
 Export users data and metadata to a csv or Excel file
@@ -18,7 +18,7 @@ Includes an option to export the users by role, registration date range, usermet
 
 This plugin is designed to export user data stored in the 2 standard WordPress user data tables wp_users and wp_usermeta, if you use a plugin which stores data in its own database tables, this plugin will not export this data, without customization.
 
-In version 2.1.0 we added some additional filters and API controls which control the returned value formats, pulling data from custom post types and builinf lists of "common" usermeta fields to export - you can read more on the [Q Studio Website](https://qstudio.us/releases/export-user-data-wordpress-plugin/)
+In version 2+ we added some additional filters and API controls which control the returned value formats, pulling data from custom post types and builinf lists of "common" usermeta fields to export - you can read more on the [Q Studio Website](https://qstudio.us/releases/export-user-data-wordpress-plugin/)
 
 ---
 

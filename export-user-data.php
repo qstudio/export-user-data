@@ -3,7 +3,7 @@
 /*
  * Plugin Name:     Export User Date
  * Description:     Export User data and metadata.
- * Version:         2.1.1
+ * Version:         2.1.2
  * Author:          Q Studio
  * Author URI:      http://qstudio.us/
  * License:         GPL2
@@ -25,7 +25,7 @@ if ( ! class_exists( 'q_export_user_data' ) ) {
         private static $instance = null;
                        
         // Plugin Settings
-        const version = '2.1.1';
+        const version = '2.1.2';
 		static $debug = false;
         const text_domain = 'q-export-user-data'; // for translation ##
         

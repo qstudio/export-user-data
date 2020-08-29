@@ -1,6 +1,6 @@
 {
 	"name": "export-user-data",
-	"version": "2.1.1",
+	"version": "2.1.2",
 	"description": "Q Plugins ~ Export User data and metadata",
 	"author": "Q Studio",
 	"homepage": "https://qstudio.us",
@@ -8,5 +8,5 @@
 		"type": "git",
 		"url": "qstudio/export-user-data"
 	},
-	"license": "GPL-3.0-or-later",
+	"license": "GPL-3.0-or-later"
 }

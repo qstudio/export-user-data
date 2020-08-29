@@ -1,5 +1,9 @@
 ## Changelog ##
 
+*** 2.1.2 ***
+
+* Readme updates
+
 *** 2.1.1 ***
 
 * FIX: saving and loading selected usermeta fields works as expected.
