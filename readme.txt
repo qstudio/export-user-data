@@ -21,7 +21,7 @@ In version 2 + we added some additional filters and API controls which control a
 
 ---
 
-For feature request and bug reports, [please use the Q Support Website](https://qstudio.us/support/topic/export-user-data/).
+For feature requests and bug reports, [please use the Q Support Website](https://qstudio.us/support/topic/export-user-data/).
 
 Please do not use the Wordpress.org forum to report bugs, as we no longer monitor or respond to questions there.
 
