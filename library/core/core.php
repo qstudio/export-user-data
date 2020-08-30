@@ -304,7 +304,7 @@ class core extends \q_export_user_data {
         #return htmlentities( $string, ENT_COMPAT, 'UTF-8' );
         
         // kick it back via a filter to allow custom formatting ##
-        return \apply_filters( 'q/eud/export/value', $string );
+        return \apply_filters( 'q/eud/export/format_value', $string );
 
     }
 
