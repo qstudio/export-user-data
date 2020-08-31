@@ -4,7 +4,7 @@ Tags: users, export, usermeta, excel
 Requires PHP: 6.0  
 Requires at least: 4.8  
 Tested up to: 5.5  
-Stable tag: 2.1.2    
+Stable tag: 2.1.3    
 License: GPLv2  
 
 Export users data and metadata to a csv or Excel file

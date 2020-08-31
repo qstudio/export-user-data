@@ -1,5 +1,9 @@
 ## Changelog ##
 
+*** 2.1.3 ***
+
+* FIX - wrong name for our own plugin :( thanks @kgagne !
+
 *** 2.1.2 ***
 
 * Readme updates
