@@ -2,28 +2,25 @@
 
 namespace q\eud\core;
 
-use q\eud\core\core as core;
-use q\eud\core\helper as helper;
-// use q\eud\core\excel2003 as excel2003;
+// import classes ##
+use q\eud;
+use q\eud\plugin as plugin;
+use q\eud\core\helper as h;
+use q\eud\core\method;
 use XLSXWriter;
 
 // load it up ##
-\q\eud\core\export::run();
+// \export_user_data\core\export::run();
 
-class export extends \q_export_user_data {
+class export {
 
-    public static function run()
-    {
+	private $plugin;
 
-        if ( \is_admin() ) {
+	function __construct(){
 
-            // run export ##
-            \add_action( 'admin_init', array( get_class(), 'render' ), 1000003 );
+		$this->plugin = plugin::get_instance(); 
 
-        }
-
-    }
-
+	}
 
     /**
     * Attempt to generate the export file based on the passed arguements
@@ -31,8 +28,7 @@ class export extends \q_export_user_data {
     * @since 0.1
     * @return Mixes
     **/
-    public static function render()
-    {
+    function render(){
 
         // Check if the user clicked on the Save, Load, or Delete Settings buttons ##
         if (
@@ -74,7 +70,7 @@ class export extends \q_export_user_data {
                 $args['number'] = $limit_total; // number - Limit the total number of users returned ##
 
                 // test it ##
-                helper::log( $args );
+                // h::log( $args );
 
             }
 
@@ -83,15 +79,15 @@ class export extends \q_export_user_data {
         // add custom args via filters ##
         $args = \apply_filters( 'q/eud/export/args', $args );
 
-        #helper::log( $args );
+        #h::log( $args );
 
         // pre_user query ##
-        \add_action( 'pre_user_query', array( get_class(), 'pre_user_query' ) );
+        \add_action( 'pre_user_query', [ $this, 'pre_user_query' ] );
         $users = \get_users( $args );
-        \remove_action( 'pre_user_query', array( get_class(), 'pre_user_query' ) );
+        \remove_action( 'pre_user_query', [ $this, 'pre_user_query' ] );
 
         // test args ##
-        #if ( self::$debug ) helper::log ( $users );
+        #h::log ( $users );
 
         // no users found, so chuck an error into the args array and exit the export ##
         if ( ! $users ) {
@@ -201,7 +197,7 @@ class export extends \q_export_user_data {
                 $breaker    = "";
                 $doc_end    = "";
 
-                $writer = new XLSXWriter();
+                $writer = new \XLSXWriter();
 				
 			break;
 
@@ -210,7 +206,7 @@ class export extends \q_export_user_data {
 
         // check for selected usermeta fields ##
         $usermeta = isset( $_POST['usermeta'] ) ? $_POST['usermeta']: '';
-        #helper::log( $usermeta );
+        #h::log( $usermeta );
         $usermeta_fields = array();
 
         // loop over each field and sanitize ## @todo - user array_map ##
@@ -220,7 +216,7 @@ class export extends \q_export_user_data {
             }
         }
 
-        #helper::log( $usermeta_fields );
+        #h::log( $usermeta_fields );
         #exit;
 
         // check for selected x profile fields ##
@@ -261,34 +257,34 @@ class export extends \q_export_user_data {
         global $wpdb;
 
         // debug ##
-        #helper::log( 'merging array' );
+        #h::log( 'merging array' );
 
         // compile final fields list ##
         $fields = array_merge(
-                core::get_user_fields() // standard wp_user fields ##
-            ,	core::get_special_fields() // 'special' fields - which are controlled via dedicated checks ##
+				method::get_user_fields() // standard wp_user fields ##
+            ,	method::get_special_fields() // 'special' fields - which are controlled via dedicated checks ##
             ,	$usermeta_fields // wp_user_meta fields ##
             ,	$bp_fields_passed // selected buddypress fields ##
             ,	$bp_fields_update_passed // update date for buddypress fields ##
         );
 
         // test field array ##
-        #helper::log( $fields );
+        #h::log( $fields );
 
         // build the document headers ##
         $headers = array();
 
         foreach ( $fields as $key => $field ) {
 
-            #helper::log( 'Field: '. $field );
+            #h::log( 'Field: '. $field );
 
             // filter field name ##
             $field = \apply_filters( 'q/eud/export/field', $field );
 
             // grab fields to exclude from exports - filterable ##
-            if ( in_array( $fields[$key], core::get_exclude_fields() ) ) {
+            if ( in_array( $fields[$key], method::get_exclude_fields() ) ) {
 
-                #helper::log( 'Dump Field: '. $fields[$key] );
+                #h::log( 'Dump Field: '. $fields[$key] );
 
                 // ditch 'em ##
                 unset( $fields[$key] );
@@ -310,15 +306,15 @@ class export extends \q_export_user_data {
         }
 
         // quick check ##
-        #helper::log( $fields );
-        #if ( self::$debug ) #helper::log( $bp_fields_passed );
+        #h::log( $fields );
+        #h::log( $bp_fields_passed );
 
         // no more buffering while spitting back the export data ##
         if( ob_get_level() > 0 ) ob_end_flush();
 
         // get the value in bytes allocated for Memory via php.ini ##
         // @link http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue
-        $memory_limit = core::return_bytes( ini_get('memory_limit') ) * .75;
+        $memory_limit = method::return_bytes( ini_get('memory_limit') ) * .75;
 
         // we need to disable caching while exporting because we export so much data that it could blow the memory cache
         // if we can't override the cache here, we'll have to clear it later...
@@ -346,7 +342,7 @@ class export extends \q_export_user_data {
             // echo headers ##
             echo $pre . implode( $seperator, $headers ) . $breaker;
 
-            #helper::log( $users );
+            #h::log( $users );
         } else {
 
             $xlsx_header = array_flip($headers);
@@ -361,7 +357,7 @@ class export extends \q_export_user_data {
         // build row values for each user ##
         foreach ( $users as $user ) {
 
-            #helper::log( $user );
+            #h::log( $user );
 
             // check if we're hitting any Memory limits, if so flush them out ##
             // per http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue?replies=2
@@ -374,7 +370,7 @@ class export extends \q_export_user_data {
 
             // BP loaded ? ##
             if (
-                ! self::$bp_data_available
+                ! $this->plugin->get( '_bp_data_available' )
                 && function_exists ( 'bp_is_active' )
                 && \bp_is_active( 'xprofile' )
                 && class_exists( 'BP_XProfile_ProfileData' )
@@ -382,27 +378,27 @@ class export extends \q_export_user_data {
                 && is_callable ( array( 'BP_XProfile_ProfileData', 'get_all_for_user' ) )
             ) {
 
-                helper::log( 'XProfile Accessible' );
-                self::$bp_data_available = true; // we only need to check for BP once ##
+                // h::log( 'XProfile Accessible' );
+                $this->plugin->set( '_bp_data_available', true ); // we only need to check for BP once ##
 
             }
 
             // grab all user data ##
             if (
-                self::$bp_data_available
+                $this->plugin->get( '_bp_data_available' )
                 && ! $bp_data = \BP_XProfile_ProfileData::get_all_for_user( $user->ID )
             ) {
 
                 // null the data to be sure ##
                 $bp_data = false;
 
-                helper::log( 'XProfile returned no data ID#: '.$user->ID );
+                // h::log( 'XProfile returned no data ID#: '.$user->ID );
 
             }
 
             // single query method - get all user_meta data ##
             $get_user_meta = (array)\get_user_meta( $user->ID );
-            #helper::log( $get_user_meta );
+            #h::log( $get_user_meta );
 
             // loop over each field ##
             foreach ( $fields as $field ) {
@@ -442,9 +438,7 @@ class export extends \q_export_user_data {
                     #$value = $this->sanitize($value);
 
                 // check if this is a BP field we want the updated date for ##
-                }
-                elseif ( in_array( $field, $bp_fields_update_passed ) )
-                {
+                } elseif ( in_array( $field, $bp_fields_update_passed ) ) {
 
                     global $bp;
 
@@ -463,9 +457,7 @@ class export extends \q_export_user_data {
                             );
 
                 // include the user's role in the export ##
-                }
-                elseif ( isset( $_POST['roles'] ) && '1' == $_POST['roles'] && $field == 'roles' )
-                {
+                } elseif ( isset( $_POST['roles'] ) && '1' == $_POST['roles'] && $field == 'roles' ) {
 
 					// empty array ##
 					$user_roles = [];
@@ -481,23 +473,20 @@ class export extends \q_export_user_data {
 					}
 
 					// test ##
-					// helper::log( $user_roles );
+					// h::log( $user_roles );
 
-                     // empty value if no role found - or flat array of user roles ##
+					// empty value if no role found - or flat array of user roles ##
                     $value = ! empty( $user_roles ) ? implode( $user_roles, '|' ) : '';
 
                 // include the user's BP group in the export ##
-                }
-                elseif ( isset( $_POST['groups'] ) && '1' == $_POST['groups'] && $field == 'groups' )
-                {
+                } elseif ( isset( $_POST['groups'] ) && '1' == $_POST['groups'] && $field == 'groups' ) {
 
                     if ( function_exists( 'groups_get_user_groups' ) ) {
 
                         // check if user is a member of any groups ##
                         $group_ids = \groups_get_user_groups( $user->ID );
 
-                        #$this->pr( $group_ids );
-                        #wp_die( pr( 'loaded group data.' ));
+                        #h::log( $group_ids );
 
                         if ( ! $group_ids || $group_ids == '' ) {
 
@@ -526,17 +515,13 @@ class export extends \q_export_user_data {
 
                     }
 
-                }
-                elseif ( $field == 'bp_latest_update' || $field == 'last_activity' )
-                {
+                } elseif ( $field == 'bp_latest_update' || $field == 'last_activity' ) {
 
                     // https://bpdevel.wordpress.com/2014/02/21/user-last_activity-data-and-buddypress-2-0/ ##
                     $value = \bp_get_user_last_activity( $user->ID );
 
                 // user or usermeta field ##
-                }
-                else
-                {
+                } else {
 
                     // the user_meta key isset ##
                     if ( isset( $get_user_meta[$field] ) ) {
@@ -554,13 +539,13 @@ class export extends \q_export_user_data {
 
 
                     // the $value might be serialized ##
-                    $value = core::unserialize( $value );
+                    $value = method::unserialize( $value );
 
                     // the value is an array ##
                     if ( is_array ( $value ) ) {
 
                         // recursive implode it ##
-                        $value = core::recursive_implode( $value );
+                        $value = method::recursive_implode( $value );
 
                     }
 
@@ -573,55 +558,56 @@ class export extends \q_export_user_data {
                 $value = \apply_filters( 'q/eud/export/value', $value, $field );
 
                 // sanitize ##
-                $value = core::sanitize( $value );
+                $value = method::sanitize( $value );
 
                 // wrap values in quotes and add to array ##
                 if ( $is_csv ) {
 
-                    $data[] = '"' . str_replace( '"', '""', core::format_value( $value ) ) . '"';
+                    $data[] = '"' . str_replace( '"', '""', method::format_value( $value ) ) . '"';
 
                 // just add to array ##
                 } else {
 
-                    $data[] = core::format_value( $value );
+                    $data[] = method::format_value( $value );
                 }
 
             }
 
-            if ($export_method !== "excel2007") {
-                // echo row data ##
-                echo $pre . implode( $seperator, $data ) . $breaker;
+            if ( $export_method !== "excel2007" ) {
+				
+				// echo row data ##
+				echo $pre . implode( $seperator, $data ) . $breaker;
+				
             } else {
-                $writer->writeSheetRow('Sheet1', $data);
+
+				$writer->writeSheetRow( 'Sheet1', $data );
+				
             }
 
         }
 
-        if ($export_method !== "excel2007") {
+        if ( $export_method !== "excel2007" ) {
+
             // close doc wrapper..
-            echo $doc_end;
+			echo $doc_end;
+			
         } else {
-            //$writer->writeSheet($rows,'Sheet1', $header); //or write the whole sheet in 1 call
-            //$writer->writeToFile('xlsx-simple.xlsx');
-            //$writer->writeToStdOut();
-            echo $writer->writeToString();
+			
+			echo $writer->writeToString();
+			
         }
 
         // stop PHP, so file can export correctly ##
         exit;
 
     }
-
-
-    
     
     /**
     * Pre User Query
     *
     * @since        2.0.0
     */
-    public static function pre_user_query( $user_search = null )
-    {
+    function pre_user_query( $user_search = null ){
 
         global $wpdb;
 
@@ -651,12 +637,19 @@ class export extends \q_export_user_data {
             && (isset ($_POST['bp_field_updated_since'] ) && $_POST['bp_field_updated_since'] != '' )
         ) {
 
-            $last_updated_date = new \DateTime( \sanitize_text_field ( $_POST['updated_since_date'] ) . ' 00:00:00' );
-            self::$updated_since_date = $last_updated_date->format( 'Y-m-d H:i:s' );
-            self::$field_updated_since = \sanitize_text_field ( $_POST['bp_field_updated_since'] );
-            $field_updated_since_id = \BP_Xprofile_Field::get_id_from_name( self::$field_updated_since );
-            $user_search->query_from .=  " JOIN `wp_bp_xprofile_data` XP ON XP.user_id = wp_users.ID ";
-            $where .= $wpdb->prepare( " AND XP.field_id = %s AND XP.last_updated >= %s", $field_updated_since_id, self::$updated_since_date );
+			// get last update string ##
+			$last_updated_date = new \DateTime( \sanitize_text_field ( $_POST['updated_since_date'] ) . ' 00:00:00' );
+			
+			// set date ##
+			$this->plugin->set( '_updated_since_date', $last_updated_date->format( 'Y-m-d H:i:s' ) );
+			
+			// set field ##
+            $this->plugin->set( '_field_updated_since', \sanitize_text_field ( $_POST['bp_field_updated_since'] ) );
+            $field_updated_since_id = \BP_Xprofile_Field::get_id_from_name( $this->plugin->get( '_field_updated_since' ) );
+			$user_search->query_from .=  " JOIN `wp_bp_xprofile_data` XP ON XP.user_id = wp_users.ID ";
+			
+			// set where string ##
+            $where .= $wpdb->prepare( " AND XP.field_id = %s AND XP.last_updated >= %s", $field_updated_since_id, $this->plugin->get( '_updated_since_date' ) );
 
         }
 
@@ -666,11 +659,9 @@ class export extends \q_export_user_data {
 
         }
 
-        #wp_die( self::$pr( $user_search ) );
+        #h::log( $user_search ) );
         return $user_search;
 
     }
-
-
 
 }

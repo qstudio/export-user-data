@@ -2,39 +2,23 @@
 
 namespace q\eud\core;
 
-use q\eud\core\core as core;
-use q\eud\core\helper as helper;
+// import classes ##
+use q\eud;
+use q\eud\plugin as plugin;
+use q\eud\core\helper as h;
 
-// load it up ##
-#\q\eud\core\core::run();
+class method {
 
-class core extends \q_export_user_data {
-
-    public static function run()
-    {
-
-        if ( \is_admin() ) {
-
-            // load user options ##
-            #\add_action( 'admin_init', array( get_class(), 'load_user_options' ), 1000002 );
-
-        }
-
-    }
-
-
-    
     /**
     * Get the array of standard WP_User fields to return
     */
-    public static function get_user_fields()
-    {
+    public static function get_user_fields(){
 
         // standard wp_users fields ##
         if ( isset( $_POST['user_fields'] ) && '1' == $_POST['user_fields'] ) {
 
             // debug ##
-            #self::log( 'full' );
+            #h::log( 'full' );
 
             // exportable user data ##
             $user_fields = array(
@@ -53,7 +37,7 @@ class core extends \q_export_user_data {
         } else {
 
             // debug ##
-            #self::log( 'reduced' );
+            #h::log( 'reduced' );
 
             // just return the user ID
             $user_fields = array(
@@ -67,14 +51,10 @@ class core extends \q_export_user_data {
 
     }
 
-
-
-    
     /**
     * Get the array of special user fields to return
     */
-    public static function get_special_fields()
-    {
+    public static function get_special_fields(){
 
         // exportable user data ##
         $special_fields = array(
@@ -101,13 +81,10 @@ class core extends \q_export_user_data {
 
     }
 
-
-    
     /**
     * Data to exclude from export
     */
-    public static function get_exclude_fields()
-    {
+    public static function get_exclude_fields(){
 
         $exclude_fields = array (
                 'user_pass'
@@ -119,9 +96,6 @@ class core extends \q_export_user_data {
         return \apply_filters( 'q/eud/export/exclude_fields', $exclude_fields );
 
     }
-
-
-
     
     /**
     * Return Byte count of $val
@@ -129,8 +103,7 @@ class core extends \q_export_user_data {
     * @link        http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue?replies=2
     * @since       0.9.6
     */
-    public static function return_bytes( $val )
-    {
+    public static function return_bytes( $val ){
 
         $val = trim( $val );
         $last = strtolower($val[strlen($val)-1]);
@@ -155,7 +128,6 @@ class core extends \q_export_user_data {
 
     }
 
-
     /**
     * Recursively implodes an array
     *
@@ -167,8 +139,7 @@ class core extends \q_export_user_data {
     * @param    bool        $trim_all       trim ALL whitespace from string
     * @return   string      imploded array
     */
-    public static function recursive_implode( $array, $return = null, $glue = '|' )
-    {
+    public static function recursive_implode( $array, $return = null, $glue = '|' ){
 
         // unserialize ##
         $array = self::unserialize( $array );
@@ -242,16 +213,12 @@ class core extends \q_export_user_data {
 
     }
 
-
-
-
     /**
     * Save Unserializer
     *
     * @since       1.1.4
     */
-    public static function unserialize( $value = null )
-    {
+    public static function unserialize( $value = null ){
 
         // the $value is serialized ##
         if ( \is_serialized( $value ) ) {
@@ -280,9 +247,6 @@ class core extends \q_export_user_data {
 
     }
 
-
-
-
     /**
     * Encode special characters
     *
@@ -290,8 +254,7 @@ class core extends \q_export_user_data {
     * @return		string		Encoding string
     * @since		1.2.3
     */
-    public static function format_value( $string = null )
-    {
+    public static function format_value( $string = null ){
 
         // sanity check ##
         if ( is_null( $string ) ) {
@@ -308,25 +271,22 @@ class core extends \q_export_user_data {
 
     }
 
-
-
     /**
     * Quote array elements and separate with commas
     *
     * @since       0.9.6
     * @return      String
     */
-    public static function quote_array( $array )
-    {
+    public static function quote_array( $array ){
 
         $prefix = ''; // starts empty ##
-        $elementlist = '';
+        $string = '';
 
         if ( is_array( $array ) ) {
         
             foreach( $array as $element ) {
         
-                $elementlist .= $prefix . "'" . $element . "'";
+                $string .= $prefix . "'" . $element . "'";
                 $prefix = ','; // prefix all remaining items with a comma ##
         
             }
@@ -334,20 +294,19 @@ class core extends \q_export_user_data {
         }
 
         // kick back string to function caller ##
-        return( $elementlist );
+        return( $string );
 
     }
-
 
     /**
     * Export Date Options
     *
     * @since       0.9.6
     * @global      type    $wpdb
-    * @return      Array of objects
+	* @return      Array of objects
+	* @todo			Remove max date, as this makes little sense for exports not based on user reg dates.. ??	
     */
-    public static function get_user_registered_dates()
-    {
+    public static function get_user_registered_dates(){
 
         // invite in global objects ##
         global $wpdb;
@@ -370,16 +329,13 @@ class core extends \q_export_user_data {
 
     }
 
-
-
     /**
     * Sanitize data
     *
     * @since 1.2.8
     * @return string
     */
-    public static function sanitize( $value )
-    {
+    public static function sanitize( $value ){
 
         // emove line breaks ##
         $value = str_replace("\r", '', $value);
@@ -397,30 +353,27 @@ class core extends \q_export_user_data {
 
     }
 
-
     /**
     * Get allowed tags for wp_kses
     *
     * @since  1.2.8
     * @return Array
     */
-    public static function get_allowed_tags()
-    {
+    public static function get_allowed_tags(){
 
-        $allowed_tags = array(
-            'a' => array(
-                'href' => array(),
-                'title' => array()
-            ),
-            'br' => array(),
-            'em' => array(),
-            'strong' => array(),
-        );
+        $allowed_tags = [
+            'a' => [
+                'href' => [],
+                'title' => []
+			],
+            'br' => [],
+            'em' => [],
+            'strong' => [],
+		];
 
         // kick back via filter ##
         return \apply_filters( 'q/eud/export/allowed_tags', $allowed_tags );
 
     }
-
 
 }

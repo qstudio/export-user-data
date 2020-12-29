@@ -1,200 +1,113 @@
 <?php
 
-/*
+/**
+ * Export User Data
+ *
+ * @package         Export User Data
+ * @author          Q Studio <social@qstudio.us>
+ * @license         GPL-2.0+
+ * @copyright       2020 Q Studio
+ *
+ * @wordpress-plugin
  * Plugin Name:     Export User Data
+ * Plugin URI:      http://qstudio.us/releases/export-user-data
  * Description:     Export User data and metadata.
- * Version:         2.1.3
+ * Version:         2.2.0
  * Author:          Q Studio
- * Author URI:      http://qstudio.us/
- * License:         GPL2
- * Class:           q_export_user_data
- * Text Domain:     q-export-user-data
+ * Author URI:      https://qstudio.us
+ * License:         GPL-2.0+
+ * Requires PHP:    7.0 
+ * Copyright:       Q Studio
+ * Namespace:		q\eud
+ * API:        		export_user_data
+ * Text Domain:     export-user-data
+ * Domain Path:     /languages
  * GitHub Plugin URI: qstudio/export-user-data
 */
 
-defined( 'ABSPATH' ) OR exit;
+// namespace plugin ##
+namespace q\eud;
 
-if ( ! class_exists( 'q_export_user_data' ) ) {
-    
-    // instatiate plugin via WP plugins_loaded - init is too late for CPT ##
-    add_action( 'init', array ( 'q_export_user_data', 'get_instance' ), 1000000 );
-    
-    class q_export_user_data {
-                
-        // Refers to a single instance of this class. ##
-        private static $instance = null;
-                       
-        // Plugin Settings
-        const version = '2.1.3';
-		static $debug = false;
-        const text_domain = 'q-export-user-data'; // for translation ##
-        
-        /* properties */
-        public static $q_eud_exports = ''; // export settings ##
-        public static $usermeta_saved_fields = array();
-        public static $bp_fields_saved_fields = array();
-        public static $bp_fields_update_time_saved_fields = array();
-        public static $role = '';
-        public static $roles = '0';
-		public static $user_fields = '1';
-        public static $groups = '0';
-        public static $start_date = '';
-        public static $end_date = '';
-        public static $limit_offset = '';
-        public static $limit_total = '';
-		public static $updated_since_date = '';
-		public static $field_updated_since = '';
-        public static $format = '';
-        public static $bp_data_available = false;
-        public static $allowed_tags = '';
+// import ##
+use q\eud;
 
-        // api ##
-        public static $api_admin_fields = false;
+// If this file is called directly, Bulk!
+if ( ! defined( 'ABSPATH' ) ) {
+	return;
+}
 
-        /**
-         * Creates or returns an instance of this class.
-         *
-         * @return  Foo     A single instance of this class.
-         */
-        public static function get_instance() 
-        {
+// plugin activation hook to store current application and plugin state ##
+\register_activation_hook( __FILE__, [ '\\q\\eud\\plugin', 'activation_hook' ] );
 
-            if ( null == self::$instance ) {
-                self::$instance = new self;
-            }
+// plugin deactivation hook - clear stored data ##
+\register_deactivation_hook( __FILE__, [ '\\q\\eud\\plugin', 'deactivation_hook' ] );
 
-            return self::$instance;
+// required bits to get set-up ##
+require_once __DIR__ . '/library/api/function.php';
+require_once __DIR__ . '/autoload.php';
+require_once __DIR__ . '/plugin.php';
+// require_once __DIR__ . '/factory.php';
+require_once __DIR__ . '/vendor/PHP_XLSXWriter/xlsxwriter.class.php';
 
-        }
-        
-        
-        /**
-         * Instatiate Class
-         * 
-         * @since       0.2
-         * @return      void
-         */
-        private function __construct() 
-        {
-            
-            // activation ##
-            register_activation_hook( __FILE__, array ( $this, 'register_activation_hook' ) );
+// get plugin instance ##
+$plugin = plugin::get_instance();
 
-            // deactvation ##
-            register_deactivation_hook( __FILE__, array ( $this, 'register_deactivation_hook' ) );
+// validate instance ##
+if( ! ( $plugin instanceof \q\eud\plugin ) ) {
 
-            // set text domain ##
-            add_action( 'init', array( $this, 'load_plugin_textdomain' ), 1 );
-            
-            // load libraries ##
-            self::load_libraries();
+	error_log( 'Error in Export User Data plugin instance' );
 
-        }
+	// nothing else to do here ##
+	return;
 
+}
 
-        // the form for sites have to be 1-column-layout
-        public function register_activation_hook() {
+// fire hooks - build log, helper and config objects and translations ## 
+\add_action( 'init', function() use( $plugin ){
 
-            \add_option( 'q_eud_configured' );
+	// set text domain on init hook ##
+	\add_action( 'init', [ $plugin, 'load_plugin_textdomain' ], 1 );
+	
+	// check debug settings ##
+	\add_action( 'plugins_loaded', [ $plugin, 'debug' ], 11 );
 
-            // flush rewrites ##
-            #global $wp_rewrite;
-            #$wp_rewrite->flush_rules();
+}, 0 );
 
-        }
+// build export object ##
+$export = new \q\eud\core\export();
 
+// build filters object ##
+$filters = new \q\eud\core\filters();
 
-        public function register_deactivation_hook() {
+// build user object ##
+$user = new \q\eud\core\user();
 
-            \delete_option( 'q_eud_configured' );
+// build admin object ##
+$admin = new \q\eud\admin\method();
 
-        }
+// build buddypress object ##
+$buddypress = new \q\eud\core\buddypress();
 
+if ( \is_admin() ){
 
-        
-        /**
-         * Load Text Domain for translations
-         * 
-         * @since       1.7.0
-         * 
-         */
-        public function load_plugin_textdomain() 
-        {
-            
-            // set text-domain ##
-            $domain = self::text_domain;
-            
-            // The "plugin_locale" filter is also used in load_plugin_textdomain()
-            $locale = apply_filters('plugin_locale', get_locale(), $domain);
+	// run export ##
+	\add_action( 'admin_init', [ $export, 'render' ], 1000003 );
 
-            // try from global WP location first ##
-            load_textdomain( $domain, WP_LANG_DIR.'/plugins/'.$domain.'-'.$locale.'.mo' );
-            
-            // try from plugin last ##
-            load_plugin_textdomain( $domain, FALSE, plugin_dir_path( __FILE__ ).'library/languages/' );
-            
-        }
-        
-        
-        
-        /**
-         * Get Plugin URL
-         * 
-         * @since       0.1
-         * @param       string      $path   Path to plugin directory
-         * @return      string      Absoulte URL to plugin directory
-         */
-        public static function get_plugin_url( $path = '' ) 
-        {
+	// load BP ##
+	\add_action( 'admin_init', [ $buddypress, 'load' ], 1000001 );
 
-            return plugins_url( $path, __FILE__ );
+	// EUD - filter key shown ##
+	\add_filter( 'q/eud/admin/display_key', [ $filters, 'display_key' ], 1, 1 );
 
-        }
-        
-        
-        /**
-         * Get Plugin Path
-         * 
-         * @since       0.1
-         * @param       string      $path   Path to plugin directory
-         * @return      string      Absoulte URL to plugin directory
-         */
-        public static function get_plugin_path( $path = '' ) 
-        {
+	// user option ##
+	\add_action( 'admin_init', [ $user, 'load' ], 1000002 );
 
-            return plugin_dir_path( __FILE__ ).$path;
+	// add export menu inside admin ##
+	\add_action( 'admin_menu', [ $admin, 'add_menu' ] );
 
-        }
-        
-
-        /**
-        * Load Libraries
-        *
-        * @since        2.0
-        */
-		private static function load_libraries()
-        {
-
-			// vendor ##
-            require_once self::get_plugin_path( 'vendor/PHP_XLSXWriter/xlsxwriter.class.php' );
-
-            // methods ##
-            require_once self::get_plugin_path( 'library/core/helper.php' );
-            require_once self::get_plugin_path( 'library/core/core.php' );
-            require_once self::get_plugin_path( 'library/core/user.php' );
-            require_once self::get_plugin_path( 'library/core/buddypress.php' );
-            // require_once self::get_plugin_path( 'library/core/excel2003.php' );
-            require_once self::get_plugin_path( 'library/core/export.php' );
-            require_once self::get_plugin_path( 'library/core/filters.php' );
-
-            // api ##
-            require_once self::get_plugin_path( 'library/api/admin.php' );
-
-            // backend ##
-            require_once self::get_plugin_path( 'library/admin/admin.php' );
-            
-        }
-
-    }
+	// UI style and functionality ##
+	\add_action( 'admin_enqueue_scripts', [ $admin, 'admin_enqueue_scripts' ], 1 );
+	\add_action( 'admin_footer', [ $admin, 'jquery' ], 100000 );
+	\add_action( 'admin_footer', [ $admin, 'css' ], 100000 );
 
 }

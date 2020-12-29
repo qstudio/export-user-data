@@ -2,27 +2,21 @@
 
 namespace q\eud\api;
 
-use q\eud\core\core as core;
-use q\eud\core\helper as helper;
+// import classes ##
+use q\eud;
+use q\eud\plugin;
+use q\eud\core\core;
+use q\eud\core\helper as h;
 
-// load it up ##
-#\q\eud\api\admin::run();
+class admin {
 
-class admin extends \q_export_user_data {
+	private $plugin;
 
-    public static function run()
-    {
+	function __construct(){
 
-        if ( \is_admin() ) {
+		$this->plugin = plugin::get_instance(); 
 
-            // load standard fields ##
-            #\add_action( 'admin_init', array( get_class(), 'load' ), 1 );
-
-        }
-
-    }
-
-
+	}
 
     /**
     * Render admin fields
@@ -30,8 +24,7 @@ class admin extends \q_export_user_data {
     * @since       2.0.0.
     * @return      HTML
     */
-    public static function render( $array = null )
-    {
+    function render( $array = null ){
 
         // check if we have any fields to show ##
         if ( 
@@ -39,13 +32,13 @@ class admin extends \q_export_user_data {
             || ! is_array( $array )    
         ) {
 
-            #helper::log( 'No fields found' );
+            #h::log( 'No fields found' );
 
             return false;
 
         }
 
-        #helper::log( $array );
+        #h::log( $array );
 
         // check that we have all required arrays ##
         if ( 
@@ -55,7 +48,7 @@ class admin extends \q_export_user_data {
             #|| ! $array['description']
         ) {
 
-            #helper::log( 'Missing data' );
+            #h::log( 'Missing data' );
 
             return false;
 
@@ -67,12 +60,12 @@ class admin extends \q_export_user_data {
         // keep labels formatted nicely ##
         $array['label'] = \sanitize_key( $array['label'] );
 
-        #helper::log( $array['options'] );
+        #h::log( $array['options'] );
 
         // build out options ##
         if ( ! self::has_options( $array ) ) { 
             
-            #helper::log( 'Missing options for: '.$array['label'] );
+            #h::log( 'Missing options for: '.$array['label'] );
 
             return false;
 
@@ -103,9 +96,7 @@ class admin extends \q_export_user_data {
     
     }
 
-
-    public static function has_options( $array = null )
-    {
+    public static function has_options( $array = null ){
 
         if ( 
             is_null( $array )
@@ -127,10 +118,7 @@ class admin extends \q_export_user_data {
 
     }
 
-
-
-    public static function build_options( $array = null )
-    {
+    public static function build_options( $array = null ){
 
         if ( 
             is_null( $array )
@@ -138,7 +126,7 @@ class admin extends \q_export_user_data {
             || ! isset( $array['type'] )
         ) {
 
-            #helper::log( 'Error building options for: '.$array['label'] );
+            #h::log( 'Error building options for: '.$array['label'] );
 
             return false;
 
@@ -162,10 +150,7 @@ class admin extends \q_export_user_data {
 
     }
 
-
-
-    public static function field_select( $array = null )
-    {
+    public static function field_select( $array = null ){
 
         if ( 
             is_null( $array )
@@ -178,13 +163,13 @@ class admin extends \q_export_user_data {
             || ! isset( $array['label_select'] )
         ) {
 
-            #helper::log( 'Error building select options for: '.$array['label'] );
+            #h::log( 'Error building select options for: '.$array['label'] );
 
             return false;
 
         }
 
-        #helper::log( 'Building select options for: '.$array['label'] );
+        #h::log( 'Building select options for: '.$array['label'] );
 
         // is this a multiselect ? ##
         $multiselect = isset( $array['multiselect'] ) ? ' multiple="multiple"' : '' ;
@@ -226,6 +211,5 @@ class admin extends \q_export_user_data {
 <?php
 
     }
-
 
 }

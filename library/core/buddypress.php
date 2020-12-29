@@ -2,34 +2,27 @@
 
 namespace q\eud\core;
 
-use q\eud\core\core as core;
-use q\eud\core\helper as helper;
+// import classes ##
+use q\eud;
+use q\eud\plugin as plugin;
+use q\eud\core\helper as h;
 
-// load it up ##
-\q\eud\core\buddypress::run();
+class buddypress {
 
-class buddypress extends \q_export_user_data {
+	private $plugin;
 
-    public static function run()
-    {
+	function __construct(){
 
-        if ( \is_admin() ) {
+		$this->plugin = plugin::get_instance(); 
 
-            // load BP ##
-            \add_action( 'admin_init', array( get_class(), 'load' ), 1000001 );
-
-        }
-
-    }
-
+	}
     
     /**
     * Get BP fields from DB, if BuddyPress is installed and active
     *
     * @since    2.0.0
     */
-    public static function get_fields()
-    {
+    public static function get_fields(){
 
         // buddypress support deprecated for now ##
         return false;
@@ -60,8 +53,6 @@ class buddypress extends \q_export_user_data {
 
     }
 
-
-
     /**
     * Load up saved exports for this user
     * Set to public as hooked into action
@@ -69,8 +60,7 @@ class buddypress extends \q_export_user_data {
     * @since       0.9.6
     * @return      Array of saved exports
     */
-    public static function load()
-    {
+    public static function load(){
 
         // do we have a bp object in the globals ##
         if (
@@ -79,10 +69,10 @@ class buddypress extends \q_export_user_data {
             && ! isset( $GLOBALS['bp'] ) // but global unavailble ##
         ) {
 
-            helper::log( 'BP not loaded - calling buddypress()' );
+            h::log( 'BP not loaded - calling buddypress()' );
 
             // call BP
-            buddypress();
+            \buddypress();
 
             return true;
 
@@ -93,7 +83,5 @@ class buddypress extends \q_export_user_data {
         return true;
 
     }
-
-
 
 }

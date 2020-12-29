@@ -2,26 +2,20 @@
 
 namespace q\eud\core;
 
-use q\eud\core\core as core;
-use q\eud\core\helper as helper;
+// import classes ##
+use q\eud;
+use q\eud\plugin as plugin;
+use q\eud\core\helper as h;
 
-// load it up ##
-\q\eud\core\user::run();
+class user {
 
-class user extends \q_export_user_data {
+	private $plugin;
 
-    public static function run()
-    {
+	function __construct(){
 
-        if ( \is_admin() ) {
+		$this->plugin = plugin::get_instance(); 
 
-            // load user options ##
-            \add_action( 'admin_init', array( get_class(), 'load' ), 1000002 );
-
-        }
-
-    }
-
+	}
 
     /**
     * Load up saved exports for this user
@@ -30,8 +24,7 @@ class user extends \q_export_user_data {
     * @since       0.9.6
     * @return      Array of saved exports
     */
-    public static function load()
-    {
+    function load(){
 
 		// convert outdated stored meta from q_report to q_eud_exports ##
 		if(
@@ -51,17 +44,21 @@ class user extends \q_export_user_data {
 		}
 
 		// test # 
-		// helper::log( \get_user_meta( \get_current_user_id(), 'q_eud_exports', true ) );
+		// h::log( \get_user_meta( \get_current_user_id(), 'q_eud_exports', true ) );
 
-        return self::$q_eud_exports =
-            \get_user_meta( \get_current_user_id(), 'q_eud_exports' ) ?
-            \get_user_meta( \get_current_user_id(), 'q_eud_exports', true ) :
-			array() ;
+		// get array ##
+		$array = 
+			\get_user_meta( \get_current_user_id(), 'q_eud_exports' ) ?
+			\get_user_meta( \get_current_user_id(), 'q_eud_exports', true ) :
+			[] ;
+
+		// set prop ##
+		$this->plugin->set( '_q_eud_exports', $array );
+
+		// return bool ##
+        return true;
 			
 	}
-
-
-
 
     /**
     * Get list of saved exports for this user
@@ -69,27 +66,29 @@ class user extends \q_export_user_data {
     * @since       0.9.4
     * @return      Array of saved exports
     */
-    public static function get_user_options()
-    {
+    function get_user_options(){
+
+		// get props ##
+		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );
 
         // get the stored options - filter empty array items ##
-        $q_eud_exports = array_filter( self::$q_eud_exports );
+        $_q_eud_exports = array_filter( $_q_eud_exports );
 
         // quick check if the array is empty ##
-        if ( empty ( $q_eud_exports ) ) {
+        if ( empty ( $_q_eud_exports ) ) {
 
             return false;
 
         }
 
         // test the array of saved exports ##
-        #$this->pr( $q_eud_exports );
+        #h::log( $_q_eud_exports );
 
         // start with an empty array ##
-        $exports = array();
+        $exports = [];
 
         // loop over each saved export and grab each key ##
-        foreach ( $q_eud_exports as $key => $value ) {
+        foreach ( $_q_eud_exports as $key => $value ) {
 
             $exports[] = $key;
 
@@ -100,57 +99,73 @@ class user extends \q_export_user_data {
 
     }
 
-
     /**
     * Check for and load stored user options
     *
     * @since       0.9.3
     * @return      void
     */
-    public static function get_user_options_by_export( $export = null )
-    {
+    function get_user_options_by_export( $export = null ){
 
         // sanity check ##
-        if ( is_null ( $export ) ) { return false; }
+		if ( is_null ( $export ) ) { return false; }
+		
+		// get props ##
+		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );
 
-        if ( isset( self::$q_eud_exports[$export] ) ) {
+        if ( isset( $_q_eud_exports[$export] ) ) {
 
-            self::$usermeta_saved_fields = self::$q_eud_exports[$export]['usermeta_saved_fields'];
-            self::$bp_fields_saved_fields = self::$q_eud_exports[$export]['bp_fields_saved_fields'];
-            self::$bp_fields_update_time_saved_fields = self::$q_eud_exports[$export]['bp_fields_update_time_saved_fields'];
-            self::$updated_since_date = isset( self::$q_eud_exports[$export]['updated_since_date'] ) ? self::$q_eud_exports[$export]['updated_since_date'] : null ;
-            self::$field_updated_since = isset( self::$q_eud_exports[$export]['field_updated_since'] ) ? self::$q_eud_exports[$export]['field_updated_since'] : null ;
-            self::$role = self::$q_eud_exports[$export]['role'];
-            self::$roles = self::$q_eud_exports[$export]['roles'];
-            self::$groups = self::$q_eud_exports[$export]['groups'];
-            self::$user_fields = isset( self::$q_eud_exports[$export]['user_fields'] ) ? self::$q_eud_exports[$export]['user_fields'] : null ;
-            self::$start_date = self::$q_eud_exports[$export]['start_date'];
-            self::$end_date = self::$q_eud_exports[$export]['end_date'];
-            self::$limit_offset = self::$q_eud_exports[$export]['limit_offset'];
-            self::$limit_total = self::$q_eud_exports[$export]['limit_total'];
-            self::$format = self::$q_eud_exports[$export]['format'];
+            $_usermeta_saved_fields = $_q_eud_exports[$export]['usermeta_saved_fields'];
+            $_bp_fields_saved_fields = $_q_eud_exports[$export]['bp_fields_saved_fields'];
+            $_bp_fields_update_time_saved_fields = $_q_eud_exports[$export]['bp_fields_update_time_saved_fields'];
+            $_updated_since_date = $_q_eud_exports[$export]['updated_since_date'] ?? null ;
+            $_field_updated_since = $_q_eud_exports[$export]['field_updated_since'] ?? null ;
+            $_role = $_q_eud_exports[$export]['role'];
+            $_roles = $_q_eud_exports[$export]['roles'];
+            $_groups = $_q_eud_exports[$export]['groups'];
+            $_user_fields = $_q_eud_exports[$export]['user_fields'] ?? null ;
+            $_start_date = $_q_eud_exports[$export]['start_date'];
+            $_end_date = $_q_eud_exports[$export]['end_date'];
+            $_limit_offset = $_q_eud_exports[$export]['limit_offset'];
+            $_limit_total = $_q_eud_exports[$export]['limit_total'];
+            $_format = $_q_eud_exports[$export]['format'];
 
         } else {
 
-            self::$usermeta_saved_fields = array();
-            self::$bp_fields_saved_fields = array();
-            self::$bp_fields_update_time_saved_fields = array();
-            self::$updated_since_date = '';
-            self::$field_updated_since = '';
-            self::$role = '';
-            self::$user_fields = '1';
-            self::$roles = '1';
-            self::$groups = '1';
-            self::$start_date = '';
-            self::$end_date = '';
-            self::$limit_offset = '';
-            self::$limit_total = '';
-            self::$format = '';
+            $_usermeta_saved_fields = [];
+            $_bp_fields_saved_fields = [];
+            $_bp_fields_update_time_saved_fields = [];
+            $_updated_since_date = '';
+            $_field_updated_since = '';
+            $_role = '';
+            $_user_fields = '1';
+            $_roles = '1';
+            $_groups = '1';
+            $_start_date = '';
+            $_end_date = '';
+            $_limit_offset = '';
+            $_limit_total = '';
+            $_format = '';
 
-        }
+		}
+		
+		// set props ##
+		$this->plugin->set( '_usermeta_saved_fields', $_usermeta_saved_fields );
+		$this->plugin->set( '_bp_fields_saved_fields', $_bp_fields_saved_fields );
+		$this->plugin->set( '_bp_fields_update_time_saved_fields', $_bp_fields_update_time_saved_fields );
+		$this->plugin->set( '_updated_since_date', $_updated_since_date );
+		$this->plugin->set( '_field_updated_since', $_field_updated_since );
+		$this->plugin->set( '_role', $_role );
+		$this->plugin->set( '_user_fields', $_user_fields );
+		$this->plugin->set( '_roles', $_roles );
+		$this->plugin->set( '_groups', $_groups );
+		$this->plugin->set( '_start_date', $_start_date );
+		$this->plugin->set( '_end_date', $_end_date );
+		$this->plugin->set( '_limit_offset', $_limit_offset );
+		$this->plugin->set( '_limit_total', $_limit_total );
+		$this->plugin->set( '_format', $_format );
 
     }
-
 
     /**
     * Method to store user options
@@ -160,24 +175,26 @@ class user extends \q_export_user_data {
     * @since       0.9.3
     * @return      void
     */
-    public static function set_user_options( $key = null, $options = null )
-    {
+    function set_user_options( $key = null, $options = null ){
 
         // sanity check ##
         if ( is_null ( $key ) || is_null ( $options ) ) {
 
-            #$this->pr( 'missing save values' );
+            #h::log( 'missing save values' );
             return false;
 
         }
 
-        #$this->pr( $key );
-        #$this->pr( $options );
+        #h::log( $key );
+		#h::log( $options );
+
+		// get prop ##
+		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );
 
         // for now, I'm simply allowing keys to be resaved - but this is not so logical ##
-        if ( array_key_exists( $key, self::$q_eud_exports ) ) {
+        if ( array_key_exists( $key, $_q_eud_exports ) ) {
 
-            #$this->pr( 'key exists, skipping save' );
+            #h::log( 'key exists, skipping save' );
             #return false;
 
         }
@@ -205,26 +222,26 @@ class user extends \q_export_user_data {
             }
 
             // assign the sanitized array of values to the class property $q_eud_exports as a new array with key $key ##
-            self::$q_eud_exports[$key] = $options;
+			$_q_eud_exports[$key] = $options;
+			
+			// set prop ##
+			$this->plugin->set( '_q_eud_exports', $_q_eud_exports );
 
             // update stored user_meta values, if previous key found ##
-            if ( \get_user_meta( \get_current_user_id(), 'q_eud_exports' ) !== false ) {
+            if ( false !== \get_user_meta( \get_current_user_id(), 'q_eud_exports' ) ) {
 
-                #update_option( 'q_eud_exports', $this->q_eud_exports );
-                \update_user_meta( \get_current_user_id(), 'q_eud_exports', self::$q_eud_exports );
+                \update_user_meta( \get_current_user_id(), 'q_eud_exports', $_q_eud_exports );
 
             // create new user meta key ##
             } else {
 
-                #add_option( 'q_eud_exports', $this->q_eud_exports, $deprecated, $autoload );
-                \add_user_meta( \get_current_user_id(), 'q_eud_exports', self::$q_eud_exports );
+                \add_user_meta( \get_current_user_id(), 'q_eud_exports', $_q_eud_exports );
 
             }
 
         }
 
     }
-
 
     /**
     * method to delete user options
@@ -233,26 +250,32 @@ class user extends \q_export_user_data {
     * @since       0.9.3
     * @return      void
     */
-    public static function delete_user_options( $key = null )
-    {
+    function delete_user_options( $key = null ){
+
+		// get prop ##
+		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );
 
         // sanity check ##
-        if ( is_null ( $key ) || ! array_key_exists( $key, self::$q_eud_exports ) ) { return false; }
+        if ( is_null ( $key ) || ! array_key_exists( $key, $_q_eud_exports ) ) { return false; }
 
         // clean it up ##
         $key = \sanitize_text_field( $key );
 
         // check it out ##
-        #$this->pr( $key );
+        #h::log( $key );
 
         // drop the array by it's key name from the class property ##
-        unset( self::$q_eud_exports[$key] );
+        unset( $_q_eud_exports[$key] );
 
         // update the saved data ##
-        \update_user_meta( \get_current_user_id(), 'q_eud_exports', self::$q_eud_exports );
+		\update_user_meta( \get_current_user_id(), 'q_eud_exports', $_q_eud_exports );
+		
+		// set prop ##
+		$this->plugin->set( '_q_eud_exports', $_q_eud_exports );
+
+		// done ##
+		return true;
 
     }
-
-
 
 }

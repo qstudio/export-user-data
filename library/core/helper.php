@@ -7,19 +7,17 @@ namespace q\eud\core;
  * helper Class
  * @package   q_eud\core
  */
-class helper extends \q_export_user_data {
+class helper {
 
-     
     /**
      * Write to WP Error Log
      *
      * @since       1.5.0
      * @return      void
      */
-    public static function log( $log )
-    {
+    public static function log( $log ){
 
-        if ( true === WP_DEBUG ) {
+        if ( true === \WP_DEBUG ) {
 
             $trace = debug_backtrace();
             $caller = $trace[1];
@@ -41,6 +39,5 @@ class helper extends \q_export_user_data {
         }
 
     }
-
 
 }

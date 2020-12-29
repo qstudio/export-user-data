@@ -2,8 +2,10 @@
 
 namespace q\eud\core;
 
-use q\eud\core\core as core;
-use q\eud\core\helper as helper;
+// import classes ##
+use q\eud;
+use q\eud\core\core;
+use q\eud\core\helper as h;
 
 /**
  * XML template for excel file format
@@ -11,7 +13,7 @@ use q\eud\core\helper as helper;
  * @since 0.7.7
  **/
 
-class excel2003 extends \q_export_user_data {
+class excel2003 {
 
   	public static function begin(){
 

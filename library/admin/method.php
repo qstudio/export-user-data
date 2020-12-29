@@ -2,74 +2,60 @@
 
 namespace q\eud\admin;
 
-use q\eud\core\core as core;
-use q\eud\core\helper as helper;
+// import classes ##
+use q\eud;
+use q\eud\plugin;
+use q\eud\core\helper as h;
 use q\eud\core\user as user;
 use q\eud\core\buddypress as buddypress;
 use q\eud\api\admin as api_admin;
 
-// load it up ##
-\q\eud\admin\admin::run();
+class method {
 
-class admin extends \q_export_user_data {
+	private $plugin;
 
-    public static function run()
-    {
+	function __construct(){
 
-        #global $pagenow;
+		$this->plugin = plugin::get_instance(); 
 
-        if ( \is_admin() ) {
-
-            // add export menu inside admin ##
-            \add_action( 'admin_menu', array( get_class(), 'add_menu' ) );
-
-            // UI style and functionality ##
-            \add_action( 'admin_enqueue_scripts', array( get_class(), 'admin_enqueue_scripts' ), 1 );
-            \add_action( 'admin_footer', array( get_class(), 'jquery' ), 100000 );
-            \add_action( 'admin_footer', array( get_class(), 'css' ), 100000 );
-
-        }            
-
-    }
-
-
+	}
 
     /**
     * Add administration menus
     *
     * @since 0.1
     **/
-    public static function add_menu()
-    {
+    function add_menu(){
 
-        add_users_page ( 
+        \add_users_page ( 
             __( 'Export User Data', 'q-export-user-data' ), 
             __( 'Export User Data', 'q-export-user-data' ), 
             \apply_filters( 'q/eud/admin_capability', 'list_users' ), 
             'q-export-user-data', 
             array( 
-                get_class(), 
+                $this, 
                 'admin_page' 
             ) 
         );
 
     }
 
-
     /**
     * Content of the admin page
     *
     * @since    0.1
     */
-    public static function admin_page()
-    {
+    function admin_page(){
 
         // quick security check ##
         if ( ! \current_user_can( \apply_filters( 'q/eud/admin_capability', 'list_users' ) ) ) {
 
             \wp_die( __( 'You do not have sufficient permissions to access this page.', 'q-export-user-data' ) );
 
-        }
+		}
+		
+		// build user object ##
+		$user = new \q\eud\core\user();
 
         // Save settings button was pressed ##
         if (
@@ -175,7 +161,7 @@ class admin extends \q_export_user_data {
                 );
 
                 // store the options, for next load ##
-                user::set_user_options( $save_export, $save_array );
+                $user->set_user_options( $save_export, $save_array );
 
                 // Display the settings the user just saved instead of blanking the form ##
                 $_POST['load_export'] = 'Load Settings';
@@ -192,7 +178,7 @@ class admin extends \q_export_user_data {
             && \check_admin_referer( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' )
         ) {
 
-            user::get_user_options_by_export( \sanitize_text_field( $_POST['export_name'] ) );
+            $user->get_user_options_by_export( \sanitize_text_field( $_POST['export_name'] ) );
 
         }
 
@@ -203,7 +189,7 @@ class admin extends \q_export_user_data {
             && \check_admin_referer( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' )
         ) {
 
-            user::delete_user_options( \sanitize_text_field( $_POST['export_name'] ) );
+            $user->delete_user_options( \sanitize_text_field( $_POST['export_name'] ) );
 
         }
 
@@ -215,7 +201,24 @@ class admin extends \q_export_user_data {
     // nothing happening? ##
     if ( isset( $_GET['error'] ) ) {
         echo '<div class="updated"><p><strong>' . \__( 'No users found.', 'q-export-user-data' ) . '</strong></p></div>';
-    }
+	}
+	
+	// get props
+	$_groups = $this->plugin->get( '_groups' );
+	$_user_fields = $this->plugin->get( '_user_fields' );
+	$_role = $this->plugin->get( '_role' );
+	$_roles = $this->plugin->get( '_roles' );
+	$_start_date = $this->plugin->get( '_start_date' );
+	$_end_date = $this->plugin->get( '_end_date' );
+	$_limit_offset = $this->plugin->get( '_limit_offset' );
+	$_limit_total = $this->plugin->get( '_limit_total' );
+	$_updated_since_date = $this->plugin->get( '_updated_since_date' );
+	$_format = $this->plugin->get( '_format' );
+	$_field_updated_since = $this->plugin->get( '_field_updated_since' );
+
+
+
+	$_updated_since_date = $this->plugin->get( '_updated_since_date' );
 
 ?>
     <form method="post" action="" enctype="multipart/form-data">
@@ -382,7 +385,7 @@ class admin extends \q_export_user_data {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label for="groups"><?php \_e( 'BP User Groups', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input id='groups' type='checkbox' name='groups' value='1' <?php \checked( isset ( self::$groups ) ? intval ( self::$groups ) : '', 1 ); ?> />
+                    <input id='groups' type='checkbox' name='groups' value='1' <?php \checked( isset ( $_groups ) ? intval ( $_groups ) : '', 1 ); ?> />
                     <p class="description"><?php
                         printf(
                             \__( 'Include BuddyPress Group Data. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
@@ -400,11 +403,10 @@ class admin extends \q_export_user_data {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label for="user_fields"><?php \_e( 'Standard User Fields', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input id='user_fields' type='checkbox' name='user_fields' value='1' <?php \checked( isset ( self::$user_fields ) ? intval ( self::$user_fields ) : '', 1 ); ?> />
+                    <input id='user_fields' type='checkbox' name='user_fields' value='1' <?php \checked( isset ( $_user_fields ) ? intval ( $_user_fields ) : '', 1 ); ?> />
                     <p class="description"><?php
 
-                        #self::log( 'user_fields: '.self::$user_fields );
-                        #echo 'user_fields: '. self::$user_fields;
+                        #h::log( 'user_fields: '.$_user_fields );
 
                         printf(
                             \__( 'Include Standard user profile fields, such as user_login. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
@@ -428,7 +430,7 @@ class admin extends \q_export_user_data {
 
                         foreach ( $wp_roles->role_names as $role => $name ) {
 
-                            if ( isset ( self::$role ) && ( self::$role == $role ) ) {
+                            if ( isset ( $_role ) && ( $_role == $role ) ) {
 
                                 echo "\n\t<option selected value='" . \esc_attr( $role ) . "'>$name</option>";
 
@@ -455,7 +457,7 @@ class admin extends \q_export_user_data {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label for="roles"><?php \_e( 'User Roles', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input id='roles' type='checkbox' name='roles' value='1' <?php \checked( isset ( self::$roles ) ? intval ( self::$roles ) : '', 1 ); ?> />
+                    <input id='roles' type='checkbox' name='roles' value='1' <?php \checked( isset ( $_roles ) ? intval ( $_roles ) : '', 1 ); ?> />
                     <p class="description"><?php
                         printf(
                             \__( 'Include all of the users <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
@@ -469,8 +471,8 @@ class admin extends \q_export_user_data {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Registered', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input type="text" id="q_eud_users_start_date" name="start_date" value="<?php echo self::$start_date; ?>" class="start-datepicker" />
-                    <input type="text" id="q_eud_users_end_date" name="end_date" value="<?php echo self::$end_date; ?>" class="end-datepicker" />
+                    <input type="text" id="q_eud_users_start_date" name="start_date" value="<?php echo $_start_date; ?>" class="start-datepicker" />
+                    <input type="text" id="q_eud_users_end_date" name="end_date" value="<?php echo $_end_date; ?>" class="end-datepicker" />
                     <p class="description"><?php
                         printf(
                             \__( 'Pick a start and end user registration date to limit the results.', 'q-export-user-data' )
@@ -482,8 +484,8 @@ class admin extends \q_export_user_data {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Limit Range', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php echo( self::$limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', 'q-export-user-data' ); ?>">
-                    <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php echo ( self::$limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', 'q-export-user-data' ); ?>">
+                    <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php echo( $_limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', 'q-export-user-data' ); ?>">
+                    <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php echo ( $_limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', 'q-export-user-data' ); ?>">
                     <p class="description"><?php
                         printf(
                             \__( 'Enter an offset start number and a total number of users to export. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
@@ -502,13 +504,13 @@ class admin extends \q_export_user_data {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Updated Since', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input type="text" id="q_eud_updated_since_date" name="updated_since_date" value="<?php echo self::$updated_since_date; ?>" class="updated-datepicker" />
+                    <input type="text" id="q_eud_updated_since_date" name="updated_since_date" value="<?php echo $_updated_since_date; ?>" class="updated-datepicker" />
                     <select id="bp_field_updated_since" name="bp_field_updated_since">
 <?php
 
                     foreach ( $bp_fields as $key ) {
                         
-                        if ( self::$field_updated_since == $key ) {
+                        if ( $_field_updated_since == $key ) {
                             
                             echo "<option value='".\esc_attr( $key )."' title='".\esc_attr( $key )."' selected>$key</option>";
                        
@@ -536,10 +538,13 @@ class admin extends \q_export_user_data {
 
         // pull in extra export options from api ##
         if ( $api_fields = \apply_filters( 'q/eud/api/admin/fields', [] ) ) {
+
+			// create api instance #
+			$api_admin = new \q\eud\api\admin();
             
             foreach( $api_fields as $field ) {
              
-                api_admin::render( $field );
+                $api_admin->render( $field );
 
             }
 
@@ -551,19 +556,8 @@ class admin extends \q_export_user_data {
                 <td>
                     <select name="format" id="q_eud_users_format">
 <?php
-						/*
-						if ( isset ( self::$format ) && ( self::$format == 'excel2003' ) ) {
 
-                            echo '<option selected value="excel2003">' . __( 'Excel 2003 (xls)', 'q-export-user-data' ) . '</option>';
-
-                        } else {
-
-                            echo '<option value="excel2003">' . __( 'Excel 2003 (xls)', 'q-export-user-data' ) . '</option>';
-
-						}
-						*/
-
-                        if ( isset ( self::$format ) && ( self::$format == 'excel2007' ) ) {
+                        if ( isset ( $_format ) && ( $_format == 'excel2007' ) ) {
 
                             echo '<option selected value="excel2007">' . __( 'Excel 2007 (xlsx)', 'q-export-user-data' ) . '</option>';
 
@@ -573,7 +567,7 @@ class admin extends \q_export_user_data {
 
                         }
 
-                        if ( isset ( self::$format ) && ( self::$format == 'csv' ) ) {
+                        if ( isset ( $_format ) && ( $_format == 'csv' ) ) {
 
                             echo '<option selected value="csv">' . __( 'CSV', 'q-export-user-data' ) . '</option>';
 
@@ -602,8 +596,8 @@ class admin extends \q_export_user_data {
                     </div>
                     <?php
 
-                    // check if the user has any saved exports ##
-                    if ( user::get_user_options() ) {
+					// check if the user has any saved exports ##
+                    if ( $user->get_user_options() ) {
 
 ?>
                     <div class="row">
@@ -611,7 +605,7 @@ class admin extends \q_export_user_data {
 <?php
 
                             // loop over each saved export ##
-                            foreach( user::get_user_options() as $export ) {
+                            foreach( $user->get_user_options() as $export ) {
 
                                 // select Loaded export name, if selected ##
                                 if (
@@ -669,13 +663,10 @@ class admin extends \q_export_user_data {
 <?php
     }
 
-
-
     /**
     * style and interaction
     */
-    public static function admin_enqueue_scripts( $hook )
-    {
+    function admin_enqueue_scripts( $hook ){
 
         // load the scripts on only the plugin admin page ##
         if ( 
@@ -688,7 +679,7 @@ class admin extends \q_export_user_data {
 
         }
 
-        \wp_register_style( 'q-eud-css', \plugins_url( 'css/q-eud.css' ,__FILE__ ), '', self::version );
+        \wp_register_style( 'q-eud-css', \plugins_url( 'css/q-eud.css' ,__FILE__ ), '', $this->plugin->get( '_version' ) );
         \wp_enqueue_style( 'q-eud-css' );
         \wp_enqueue_script( 'q_eud_multi_select_js', \plugins_url( 'javascript/jquery.multi-select.js', __FILE__ ), array('jquery'), '0.9.8', false );
 
@@ -697,21 +688,13 @@ class admin extends \q_export_user_data {
     	\wp_register_style('jquery-ui', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css');
     	\wp_enqueue_style('jquery-ui');
 
-        // add style ##
-        // \wp_enqueue_style( 'jquery-ui-datepicker' );
-        // \wp_enqueue_style('jquery-ui-css', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/smoothness/jquery-ui.css');
-
     }
-
-
-
     
     /**
     * Inline jQuery
     * @since       0.8.2
     */
-    public static function jquery()
-    {
+    function jquery(){
 
         // load the scripts on only the plugin admin page
         if (
@@ -721,7 +704,11 @@ class admin extends \q_export_user_data {
 
             return false;
 
-        }
+		}
+		
+		$_usermeta_saved_fields = $this->plugin->get( '_usermeta_saved_fields' );
+		$_bp_fields_saved_fields = $this->plugin->get( '_bp_fields_saved_fields' );
+		$_bp_fields_update_time_saved_fields = $this->plugin->get( '_bp_fields_update_time_saved_fields' );
 
 ?>
     <script>
@@ -733,9 +720,9 @@ class admin extends \q_export_user_data {
         jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
 
         // Select any fields from saved settings ##
-        jQuery('#usermeta').multiSelect('select',([<?php echo( core::quote_array( self::$usermeta_saved_fields ) ); ?>]));
-        jQuery('#bp_fields').multiSelect('select',([<?php echo( core::quote_array( self::$bp_fields_saved_fields ) ); ?>]));
-        jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( core::quote_array( self::$bp_fields_update_time_saved_fields ) ); ?>]));
+        jQuery('#usermeta').multiSelect('select',([<?php echo( \q\eud\core\method::quote_array( $_usermeta_saved_fields ) ); ?>]));
+        jQuery('#bp_fields').multiSelect('select',([<?php echo( \q\eud\core\method::quote_array( $_bp_fields_saved_fields ) ); ?>]));
+        jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( \q\eud\core\method::quote_array( $_bp_fields_update_time_saved_fields ) ); ?>]));
 
         // show only common ##
         jQuery('.usermeta-common').click(function(e){
@@ -820,7 +807,7 @@ class admin extends \q_export_user_data {
 <?php
 
         // method returns an object with "first" & "last" keys ##
-        $dates = core::get_user_registered_dates();
+        $dates = \q\eud\core\method::get_user_registered_dates();
 
         // get date format from WP settings #
         $date_format = 'yy-mm-dd' ; // get_option('date_format') ? get_option('date_format') : 'yy-mm-dd' ;
@@ -861,17 +848,13 @@ class admin extends \q_export_user_data {
 <?php
 
     }
-
-
-
    
     /**
     * Inline CSS
     *
     * @since       0.8.2
     */
-    public static function css()
-    {
+    function css(){
 
         // load the scripts on only the plugin admin page
         if (
@@ -884,10 +867,10 @@ class admin extends \q_export_user_data {
         }
 
 ?>
-        <style>
-            .toggleable { display: none; }
-            .hidden { display: none; }
-        </style>
+	<style>
+		.toggleable { display: none; }
+		.hidden { display: none; }
+	</style>
 <?php
             
     }

@@ -2,34 +2,27 @@
 
 namespace q\eud\core;
 
-use q\eud\core\core as core;
-use q\eud\core\helper as helper;
+// import classes ##
+use q\eud;
+use q\eud\plugin as plugin;
+use q\eud\core\helper as h;
 
-// load it up ##
-\q\eud\core\filters::run();
+class filters {
 
-class filters extends \q_export_user_data {
+	private $plugin;
 
-    public static function run()
-    {
+	function __construct(){
 
-        if ( \is_admin() ) {
+		$this->plugin = plugin::get_instance(); 
 
-            // EUD - filter key shown ##
-            \add_filter( 'q/eud/admin/display_key', [ get_class(), 'display_key' ], 1, 1 );
-
-        }
-
-    }
-
+	}
 
     /**
     * Filter keys in EUD plugin
     *
     * @since 2.0.0
     */
-    public static function display_key( $string = null ) 
-    {
+    public static function display_key( $string = null ){
 
         #helper::log( 'string from filter: '.$string );
 

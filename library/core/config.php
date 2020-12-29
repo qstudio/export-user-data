@@ -2,27 +2,23 @@
 
 namespace q\eud\core;
 
-use q\eud\core\core as core;
-use q\eud\core\helper as helper;
+// import classes ##
+use q\eud;
+use q\eud\plugin as plugin;
+use q\eud\core\helper as h;
 
-// load it up ##
-// \q\eud\core\config::run();
+// load standard fields ##
+// \add_action( 'admin_init', array( get_class(), 'load' ), 1 );
 
-class config extends \q_export_user_data {
+class config {
 
-    public static function run()
-    {
+	private $plugin;
 
-        if ( \is_admin() ) {
+	function __construct(){
 
-            // load standard fields ##
-            \add_action( 'admin_init', array( get_class(), 'load' ), 1 );
+		$this->plugin = plugin::get_instance(); 
 
-        }
-
-    }
-
-
+	}
 
     /**
     * Load up saved exports for this user
@@ -31,8 +27,7 @@ class config extends \q_export_user_data {
     * @since       0.9.6
     * @return      Array of saved exports
     */
-    public static function load()
-    {
+    public static function load(){
 
         // load api admin fields ##
         self::get_admin_fields();
@@ -42,8 +37,6 @@ class config extends \q_export_user_data {
 
     }
 
-
-
     /**
     * Load up saved exports for this user
     * Set to public as hooked into action
@@ -51,8 +44,7 @@ class config extends \q_export_user_data {
     * @since       0.9.6
     * @return      Array of saved exports
     */
-    public static function get_admin_fields()
-    {
+    function get_admin_fields(){
 
         // build array ##
         $array = array(
@@ -70,19 +62,19 @@ class config extends \q_export_user_data {
         // test it ##
         #self::log( $array );
 
-        // add to static property ##
-        self::$api_admin_fields = $array;
-
         // filter and return ##
-        apply_filters( 'q/eud/api/admin_fields', self::$api_admin_fields );
+        apply_filters( 'q/eud/api/admin_fields', $array );
 
         // test it ##
-        self::log( self::$api_admin_fields );
+		// h::log( $array );
+		
+		// add to static property ##
+		// self::$api_admin_fields = $array;
+		$this->plugin->set( '_api_admin_fields', $array );
 
-        // kick it back ##
+        // kick back true ##
         return true;
 
     }
-
 
 }
