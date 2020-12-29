@@ -1,8 +1,13 @@
 ## Changelog ##
 
+*** 2.2.0 ***
+
+* New: Move to cleaner OOP pattern and PHP version bump to 7.0
+* Update: Tested on WP 5.6
+
 *** 2.1.3 ***
 
-* FIX - wrong name for our own plugin :( thanks @kgagne !
+* FIX: wrong name for our own plugin :( thanks @kgagne !
 
 *** 2.1.2 ***
 
