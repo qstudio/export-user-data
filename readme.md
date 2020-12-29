@@ -4,7 +4,7 @@
 **Tags:** users, export, usermeta, excel  
 **Requires PHP:** 6.0  
 **Requires at least:** 5.0  
-**Tested up to:** 5.5  
+**Tested up to:** 5.6  
 **Stable tag:** 2.2.0  
 **License:** GPLv2  
 
