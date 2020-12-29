@@ -334,8 +334,7 @@ class export {
 
         }
 
-
-        if ($export_method !== "excel2007") {
+        if ( $export_method !== "excel2007" ) {
             // open doc wrapper.. ##
             echo $doc_begin;
 
@@ -345,13 +344,14 @@ class export {
             #h::log( $users );
         } else {
 
-            $xlsx_header = array_flip($headers);
+            $xlsx_header = array_flip( $headers );
 
             foreach($xlsx_header as $k => $v) {
                 $xlsx_header[$k] = "string";
             }
 
-            $writer->writeSheetHeader('Sheet1', $xlsx_header);
+			$writer->writeSheetHeader('Sheet1', $xlsx_header);
+			
         }
 
         // build row values for each user ##
