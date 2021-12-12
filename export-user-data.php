@@ -74,19 +74,19 @@ if( ! ( $plugin instanceof \q\eud\plugin ) ) {
 }, 0 );
 
 // build export object ##
-$export = new \q\eud\core\export( $plugin );
+$export = new eud\core\export( $plugin );
 
 // build filters object ##
-$filters = new \q\eud\core\filters( $plugin );
+$filters = new eud\core\filters( $plugin );
 
 // build user object ##
-$user = new \q\eud\core\user( $plugin );
+$user = new eud\core\user( $plugin );
 
 // build admin object ##
-$admin = new \q\eud\admin\render( $plugin, $user );
+$admin = new eud\admin\render( $plugin, $user );
 
 // build buddypress object ##
-// $buddypress = new \q\eud\core\buddypress();
+// $buddypress = new eud\core\buddypress();
 
 if ( \is_admin() ){
 
