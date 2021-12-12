@@ -1,5 +1,10 @@
 ## Changelog ##
 
+*** 2.2.1 ***
+
+* New: cleanup export methods, improvied sanitization 
+* New: array and object data is now passed in JSON_ENCODED string object
+
 *** 2.2.0 ***
 
 * New: Move to cleaner OOP pattern and PHP version bump to 7.0

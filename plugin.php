@@ -27,7 +27,7 @@ final class plugin {
 	public static 
 	
 		// current tag ##
-		$_version = '2.2.0',
+		$_version = '2.2.1',
 
 		// debugging control ##
 		$_debug = \WP_DEBUG
