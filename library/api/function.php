@@ -33,7 +33,7 @@ if ( ! function_exists( 'export_user_data' ) ) {
 		) {
 
 			// get stored export_user_data instance from filter ##
-			$export_user_data = \apply_filters( 'export_user_data/instance', NULL );
+			$export_user_data = \apply_filters( 'q/eud/instance', NULL );
 
 			// sanity - make sure export_user_data instance returned ##
 			if( 

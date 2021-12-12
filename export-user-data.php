@@ -12,7 +12,7 @@
  * Plugin Name:     Export User Data
  * Plugin URI:      http://qstudio.us/releases/export-user-data
  * Description:     Export User data and metadata.
- * Version:         2.2.0
+ * Version:         2.2.1
  * Author:          Q Studio
  * Author URI:      https://qstudio.us
  * License:         GPL-2.0+
@@ -30,6 +30,7 @@ namespace q\eud;
 
 // import ##
 use q\eud;
+use q\eud\core\helper as h;
 
 // If this file is called directly, Bulk!
 if ( ! defined( 'ABSPATH' ) ) {
@@ -44,9 +45,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // required bits to get set-up ##
 require_once __DIR__ . '/library/api/function.php';
-require_once __DIR__ . '/autoload.php';
+require_once __DIR__ . '/autoload.php'; 
 require_once __DIR__ . '/plugin.php';
-// require_once __DIR__ . '/factory.php';
 require_once __DIR__ . '/vendor/PHP_XLSXWriter/xlsxwriter.class.php';
 
 // get plugin instance ##
@@ -74,19 +74,19 @@ if( ! ( $plugin instanceof \q\eud\plugin ) ) {
 }, 0 );
 
 // build export object ##
-$export = new \q\eud\core\export();
+$export = new \q\eud\core\export( $plugin );
 
 // build filters object ##
-$filters = new \q\eud\core\filters();
+$filters = new \q\eud\core\filters( $plugin );
 
 // build user object ##
-$user = new \q\eud\core\user();
+$user = new \q\eud\core\user( $plugin );
 
 // build admin object ##
-$admin = new \q\eud\admin\method();
+$admin = new \q\eud\admin\render( $plugin, $user );
 
 // build buddypress object ##
-$buddypress = new \q\eud\core\buddypress();
+// $buddypress = new \q\eud\core\buddypress();
 
 if ( \is_admin() ){
 
@@ -94,7 +94,7 @@ if ( \is_admin() ){
 	\add_action( 'admin_init', [ $export, 'render' ], 1000003 );
 
 	// load BP ##
-	\add_action( 'admin_init', [ $buddypress, 'load' ], 1000001 );
+	// \add_action( 'admin_init', [ $buddypress, 'load' ], 1000001 );
 
 	// EUD - filter key shown ##
 	\add_filter( 'q/eud/admin/display_key', [ $filters, 'display_key' ], 1, 1 );

@@ -7,9 +7,6 @@ use q\eud;
 use q\eud\plugin as plugin;
 use q\eud\core\helper as h;
 
-// load standard fields ##
-// \add_action( 'admin_init', array( get_class(), 'load' ), 1 );
-
 class config {
 
 	private $plugin;
@@ -44,20 +41,20 @@ class config {
     * @since       0.9.6
     * @return      Array of saved exports
     */
-    function get_admin_fields(){
+    public function get_admin_fields(){
 
         // build array ##
-        $array = array(
-            'program' => array(
+        $array = [
+            'program' => [
                 'title'             => \_e( 'Programs', 'export-user-data' ),
                 'label'             => 'program',
                 'description'       => \__( 'Select the program that you wish to export.', 'export-user-data' ),
                 'label_select'      => \__( 'All Programs', 'export-user-data' ),
-                'options'           => \get_posts( array( 'post_type'=> 'program', 'posts_per_page' => -1 ) ),
+                'options'           => \get_posts([ 'post_type'=> 'program', 'posts_per_page' => -1 ]),
                 'options_ID'        => 'ID',
                 'options_title'     => 'post_title'
-            )
-        );
+			]
+		];
 
         // test it ##
         #self::log( $array );

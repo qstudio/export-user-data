@@ -9,26 +9,23 @@ use q\eud\core\helper as h;
 use q\eud\core\method;
 use XLSXWriter;
 
-// load it up ##
-// \export_user_data\core\export::run();
-
 class export {
 
 	private $plugin;
 
-	function __construct(){
+	function __construct( \q\eud\plugin $plugin ){
 
-		$this->plugin = plugin::get_instance(); 
+		$this->plugin = $plugin; 
 
 	}
 
     /**
-    * Attempt to generate the export file based on the passed arguements
-    *
-    * @since 0.1
-    * @return Mixes
-    **/
-    function render(){
+     * Attempt to generate the export file based on the passed arguements
+     *
+     * @since 	0.1
+     * @return 	mixed
+     */
+    public function render(){
 
         // Check if the user clicked on the Save, Load, or Delete Settings buttons ##
         if (
@@ -53,7 +50,7 @@ class export {
         $args = array(
             'fields'    => ( isset( $_POST['user_fields'] ) && '1' == $_POST['user_fields'] ) ? 
                             'all' : 
-                            array( 'ID' ), // exclude standard wp_users fields from get_users query ##
+                            [ 'ID' ], // exclude standard wp_users fields from get_users query ##
             'role'      => \sanitize_text_field( $_POST['role'] )
         );
 
@@ -207,7 +204,7 @@ class export {
         // check for selected usermeta fields ##
         $usermeta = isset( $_POST['usermeta'] ) ? $_POST['usermeta']: '';
         #h::log( $usermeta );
-        $usermeta_fields = array();
+        $usermeta_fields = [];
 
         // loop over each field and sanitize ## @todo - user array_map ##
         if ( $usermeta && is_array( $usermeta ) ) {
@@ -261,11 +258,11 @@ class export {
 
         // compile final fields list ##
         $fields = array_merge(
-				method::get_user_fields() // standard wp_user fields ##
-            ,	method::get_special_fields() // 'special' fields - which are controlled via dedicated checks ##
+				get::user_fields() // standard wp_user fields ##
+            ,	get::special_fields() // 'special' fields - which are controlled via dedicated checks ##
             ,	$usermeta_fields // wp_user_meta fields ##
-            ,	$bp_fields_passed // selected buddypress fields ##
-            ,	$bp_fields_update_passed // update date for buddypress fields ##
+            // ,	$bp_fields_passed // selected buddypress fields ##
+            // ,	$bp_fields_update_passed // update date for buddypress fields ##
         );
 
         // test field array ##
@@ -282,7 +279,7 @@ class export {
             $field = \apply_filters( 'q/eud/export/field', $field );
 
             // grab fields to exclude from exports - filterable ##
-            if ( in_array( $fields[$key], method::get_exclude_fields() ) ) {
+            if ( in_array( $fields[$key], get::exclude_fields() ) ) {
 
                 #h::log( 'Dump Field: '. $fields[$key] );
 
@@ -314,7 +311,7 @@ class export {
 
         // get the value in bytes allocated for Memory via php.ini ##
         // @link http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue
-        $memory_limit = method::return_bytes( ini_get('memory_limit') ) * .75;
+        $memory_limit = helper::return_bytes( ini_get('memory_limit') ) * .75;
 
         // we need to disable caching while exporting because we export so much data that it could blow the memory cache
         // if we can't override the cache here, we'll have to clear it later...
@@ -476,7 +473,10 @@ class export {
 					// h::log( $user_roles );
 
 					// empty value if no role found - or flat array of user roles ##
-                    $value = ! empty( $user_roles ) ? implode( $user_roles, '|' ) : '';
+                    $value = 
+						! empty( $user_roles ) ? 
+						helper::json_encode( $user_roles ) /*implode( '|', $user_roles )*/ : 
+						'';
 
                 // include the user's BP group in the export ##
                 } elseif ( isset( $_POST['groups'] ) && '1' == $_POST['groups'] && $field == 'groups' ) {
@@ -505,7 +505,8 @@ class export {
                             }
 
                             // implode it ##
-                            $value = implode( $groups, '|' );
+                            // $value = implode( $groups, '|' );
+							$value = helper::json_encode( $groups );
 
                         }
 
@@ -515,16 +516,24 @@ class export {
 
                     }
 
-                } elseif ( $field == 'bp_latest_update' || $field == 'last_activity' ) {
+				/*
+                } elseif ( 
+					( $field == 'bp_latest_update' && function_exists( 'bp_get_user_last_activity' ) )
+					|| $field == 'last_activity' 
+				){
 
                     // https://bpdevel.wordpress.com/2014/02/21/user-last_activity-data-and-buddypress-2-0/ ##
                     $value = \bp_get_user_last_activity( $user->ID );
+				*/
 
                 // user or usermeta field ##
                 } else {
 
                     // the user_meta key isset ##
-                    if ( isset( $get_user_meta[$field] ) ) {
+                    if ( 
+						isset( $get_user_meta[$field] ) 
+						&& is_array( $get_user_meta[$field] )
+					){
 
                         // take from the bulk get_user_meta call - this returns an array in all cases, so we take the first key ##
                         $value = $get_user_meta[$field][0];
@@ -537,38 +546,79 @@ class export {
 
                     }
 
-
-                    // the $value might be serialized ##
-                    $value = method::unserialize( $value );
-
-                    // the value is an array ##
-                    if ( is_array ( $value ) ) {
-
-                        // recursive implode it ##
-                        $value = method::recursive_implode( $value );
-
-                    }
-
-                    // sanitize ##
-                    #$value = $this->sanitize($value);
-
                 }
 
+				// ---------- cleanup and format the value, before exporting ##
+
+				// the $value might be serialized, so try to unserialize ##
+				$value = helper::unserialize( $value );
+
+				// the value is an array ##
+				if ( 
+					is_array ( $value ) 
+					|| is_object ( $value ) 
+				){
+
+					helper::log( 'is_array || is_object' );
+					helper::log( $value );
+
+					// recursive implode it ##
+					// $value = helper::recursive_implode( $value );
+
+					// json_encode value to object
+					$value = helper::json_encode( $value );
+
+				// } else {
+
+				}
+
+					// sanitize string value ##
+					$value = helper::sanitize( $value );
+
+				// }
+
                 // filter $value ##
-                $value = \apply_filters( 'q/eud/export/value', $value, $field );
+                // $value = \apply_filters( 'q/eud/export/value', $value, $field );
 
                 // sanitize ##
-                $value = method::sanitize( $value );
+                // $value = helper::sanitize( $value );
+
+				// if no filter is added, apply default sanitiziation ##
+				// if( has_filter( 'q/eud/export/value' ) ){
+
+					// $value = \apply_filters( 'q/eud/export/value', $value );
+
+				// } else {
+
+					// $value = helper::format_value( $value );
+
+				// }	
+
+				// helper::log( $value );
 
                 // wrap values in quotes and add to array ##
                 if ( $is_csv ) {
 
-                    $data[] = '"' . str_replace( '"', '""', method::format_value( $value ) ) . '"';
+					// replace single-double quotes with double-double quotes, if not dealing with a JSON string ###
+					// if( ! helper::is_json( $value ) ) {
+					
+						// $value = str_replace( '"', '\"', $value );
+
+					// }
+
+					// wrap value in double quotes ##
+					$value = '"' . $value . '"';
+
+					// helper::log( $value );
+
+					// add value to $data array  ##
+                    $data[] = $value;
 
                 // just add to array ##
                 } else {
 
-                    $data[] = method::format_value( $value );
+                    $data[] = $value;
+
                 }
 
             }

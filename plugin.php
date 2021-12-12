@@ -117,7 +117,8 @@ final class plugin {
      * @since   0.0.2
      * @return  Mixed
     */
-    public function get( $key = null ) {
+    public function get( string $key = null )
+	{
 
         // check if key set ##
         if( is_null( $key ) ){
@@ -141,7 +142,8 @@ final class plugin {
      * @since   0.0.2
      * @return  Mixed
     */
-    public function set( $key = null, $value = null ) {
+    public function set( string $key = null, $value = null )
+	{
 
         // sanity ##
         if( 
@@ -174,7 +176,7 @@ final class plugin {
         \load_textdomain( 'export-user-data', WP_LANG_DIR.'/plugins/export-user-data-'.$locale.'.mo' );
 
         // try from plugin last ##
-        \load_plugin_textdomain( 'export-user-data', FALSE, \plugin_dir_path( __FILE__ ).'src/languages/' );
+        \load_plugin_textdomain( 'export-user-data', FALSE, \plugin_dir_path( __FILE__ ).'library/languages/' );
 
     }
 

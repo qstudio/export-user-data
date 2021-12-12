@@ -11,9 +11,9 @@ class filters {
 
 	private $plugin;
 
-	function __construct(){
+	function __construct( \q\eud\plugin $plugin ){
 
-		$this->plugin = plugin::get_instance(); 
+		$this->plugin = $plugin; 
 
 	}
 

@@ -7,16 +7,18 @@ use q\eud;
 use q\eud\plugin;
 use q\eud\core\helper as h;
 use q\eud\core\user as user;
-use q\eud\core\buddypress as buddypress;
+// use q\eud\core\buddypress as buddypress;
 use q\eud\api\admin as api_admin;
 
-class method {
+class render {
 
-	private $plugin;
+	private $plugin, $user;
 
-	function __construct(){
+	function __construct( \q\eud\plugin $plugin, \q\eud\core\user $user ){
 
-		$this->plugin = plugin::get_instance(); 
+		$this->plugin = $plugin; 
+
+		$this->user = $user;
 
 	}
 
@@ -25,17 +27,14 @@ class method {
     *
     * @since 0.1
     **/
-    function add_menu(){
+    public function add_menu(){
 
         \add_users_page ( 
             __( 'Export User Data', 'q-export-user-data' ), 
             __( 'Export User Data', 'q-export-user-data' ), 
             \apply_filters( 'q/eud/admin_capability', 'list_users' ), 
             'q-export-user-data', 
-            array( 
-                $this, 
-                'admin_page' 
-            ) 
+            [ $this, 'admin_page' ] // callback method ## 
         );
 
     }
@@ -45,7 +44,7 @@ class method {
     *
     * @since    0.1
     */
-    function admin_page(){
+    public function admin_page(){
 
         // quick security check ##
         if ( ! \current_user_can( \apply_filters( 'q/eud/admin_capability', 'list_users' ) ) ) {
@@ -54,9 +53,6 @@ class method {
 
 		}
 		
-		// build user object ##
-		$user = new \q\eud\core\user();
-
         // Save settings button was pressed ##
         if (
             isset( $_POST['save_export'] )
@@ -83,20 +79,22 @@ class method {
             // Build array of $options to save and save them ##
             if ( isset( $save_export ) ) {
 
+				// h::log( 'user_fields: '. $_POST['user_fields'] );
+
 				// prepare all array values ##
 				$usermeta = 
 					isset( $_POST['usermeta'] ) ? 
 					array_map( 'sanitize_text_field', 
 					$_POST['usermeta'] ) : 
 					'';
-                $bp_fields = 
-                    isset( $_POST['bp_fields'] ) ? 
-                    array_map( 'sanitize_text_field', $_POST['bp_fields'] ) : 
-                    '' ;
-                $bp_fields_update = 
-                    isset( $_POST['bp_fields_update_time'] ) ? 
-                    array_map( 'sanitize_text_field', $_POST['bp_fields_update_time'] ) : 
-                    '' ;
+                // $bp_fields = 
+                //     isset( $_POST['bp_fields'] ) ? 
+                //     array_map( 'sanitize_text_field', $_POST['bp_fields'] ) : 
+                //     '' ;
+                // $bp_fields_update = 
+                //     isset( $_POST['bp_fields_update_time'] ) ? 
+                //     array_map( 'sanitize_text_field', $_POST['bp_fields_update_time'] ) : 
+                //     '' ;
                 $format = 
                     isset( $_POST['format'] ) ? 
                     \sanitize_text_field( $_POST['format'] ) :
@@ -111,8 +109,8 @@ class method {
                     '' ;
                 $user_fields = 
                     isset( $_POST['user_fields'] ) ? 
-                    array_map( 'sanitize_text_field', $_POST['user_fields'] ) : 
-                    '0' ;
+					\sanitize_text_field( $_POST['user_fields'] ) :
+                    '1' ;
                 $groups = 
                     isset( $_POST['groups'] ) ? 
                     \sanitize_text_field( $_POST['groups'] ) :
@@ -145,8 +143,8 @@ class method {
                 // assign all values to an array ##
                 $save_array = array (
                     'usermeta_saved_fields' => $usermeta,
-                    'bp_fields_saved_fields' => $bp_fields,
-                    'bp_fields_update_time_saved_fields' => $bp_fields_update,
+                    // 'bp_fields_saved_fields' => $bp_fields,
+                    // 'bp_fields_update_time_saved_fields' => $bp_fields_update,
                     'role' => $role,
                     'roles' => $roles,
                     'user_fields' => $user_fields,
@@ -161,7 +159,7 @@ class method {
                 );
 
                 // store the options, for next load ##
-                $user->set_user_options( $save_export, $save_array );
+                $this->user->set_user_options( $save_export, $save_array );
 
                 // Display the settings the user just saved instead of blanking the form ##
                 $_POST['load_export'] = 'Load Settings';
@@ -178,7 +176,7 @@ class method {
             && \check_admin_referer( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' )
         ) {
 
-            $user->get_user_options_by_export( \sanitize_text_field( $_POST['export_name'] ) );
+            $this->user->get_user_options_by_export( \sanitize_text_field( $_POST['export_name'] ) );
 
         }
 
@@ -189,7 +187,7 @@ class method {
             && \check_admin_referer( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' )
         ) {
 
-            $user->delete_user_options( \sanitize_text_field( $_POST['export_name'] ) );
+            $this->user->delete_user_options( \sanitize_text_field( $_POST['export_name'] ) );
 
         }
 
@@ -215,9 +213,6 @@ class method {
 	$_updated_since_date = $this->plugin->get( '_updated_since_date' );
 	$_format = $this->plugin->get( '_format' );
 	$_field_updated_since = $this->plugin->get( '_field_updated_since' );
-
-
-
 	$_updated_since_date = $this->plugin->get( '_updated_since_date' );
 
 ?>
@@ -300,7 +295,11 @@ class method {
                             }
 
                             // print key ##
-                            echo "<option value='".\esc_attr( $key )."' title='".\esc_attr( $key )."' class='".$usermeta_class."'>$display_key</option>";
+                            ?>
+							<option value="<?php \esc_attr_e( $key ); ?>" title="<?php \esc_attr_e( $key ); ?>" class="<?php \esc_attr_e( $usermeta_class ); ?>">
+								<?php \esc_attr_e( $display_key ); ?>
+							</option>
+							<?php
 
                         }
 ?>
@@ -319,6 +318,7 @@ class method {
 ?>
 <?php
 
+		/*
         // buddypress x profile data ##
         if ( $bp_fields = buddypress::get_fields() ) {
             
@@ -398,6 +398,7 @@ class method {
 <?php
 
         } // BP installed and active ##
+		*/
 
 ?>
             <tr valign="top" class="toggleable">
@@ -498,6 +499,7 @@ class method {
 <?php
 
         // buddypress x profile data ##
+		/*
         if ( $bp_fields = buddypress::get_fields() ) {
             
 ?>
@@ -535,6 +537,7 @@ class method {
 <?php
 
         } // bp date ##
+		*/
 
         // pull in extra export options from api ##
         if ( $api_fields = \apply_filters( 'q/eud/api/admin/fields', [] ) ) {
@@ -597,7 +600,7 @@ class method {
                     <?php
 
 					// check if the user has any saved exports ##
-                    if ( $user->get_user_options() ) {
+                    if ( $this->user->get_user_options() ) {
 
 ?>
                     <div class="row">
@@ -605,7 +608,7 @@ class method {
 <?php
 
                             // loop over each saved export ##
-                            foreach( $user->get_user_options() as $export ) {
+                            foreach( $this->user->get_user_options() as $export ) {
 
                                 // select Loaded export name, if selected ##
                                 if (
@@ -720,9 +723,9 @@ class method {
         jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
 
         // Select any fields from saved settings ##
-        jQuery('#usermeta').multiSelect('select',([<?php echo( \q\eud\core\method::quote_array( $_usermeta_saved_fields ) ); ?>]));
-        jQuery('#bp_fields').multiSelect('select',([<?php echo( \q\eud\core\method::quote_array( $_bp_fields_saved_fields ) ); ?>]));
-        jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( \q\eud\core\method::quote_array( $_bp_fields_update_time_saved_fields ) ); ?>]));
+        jQuery('#usermeta').multiSelect('select',([<?php echo( \q\eud\core\helper::quote_array( $_usermeta_saved_fields ) ); ?>]));
+        jQuery('#bp_fields').multiSelect('select',([<?php echo( \q\eud\core\helper::quote_array( $_bp_fields_saved_fields ) ); ?>]));
+        jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( \q\eud\core\helper::quote_array( $_bp_fields_update_time_saved_fields ) ); ?>]));
 
         // show only common ##
         jQuery('.usermeta-common').click(function(e){
@@ -807,7 +810,7 @@ class method {
 <?php
 
         // method returns an object with "first" & "last" keys ##
-        $dates = \q\eud\core\method::get_user_registered_dates();
+        $dates = \q\eud\core\get::user_registered_dates();
 
         // get date format from WP settings #
         $date_format = 'yy-mm-dd' ; // get_option('date_format') ? get_option('date_format') : 'yy-mm-dd' ;
@@ -818,18 +821,18 @@ class method {
 
         // start date picker ##
         jQuery('.start-datepicker').datepicker( {
-            dateFormat  : '<?php echo $date_format; ?>',
+            dateFormat  : '<?php \esc_attr_e( $date_format ); ?>',
             minDate     : '<?php echo substr( $dates["0"]->first, 0, 10 ); ?>',
             maxDate     : '<?php echo substr( $dates["0"]->last, 0, 10 ); ?>',
-            firstDay    : '<?php echo $start_of_week; ?>'
+            firstDay    : '<?php \esc_attr_e( $start_of_week ); ?>'
         } );
 
         // end date picker ##
         jQuery('.end-datepicker').datepicker( {
-            dateFormat  : '<?php echo $date_format; ?>',
+            dateFormat  : '<?php \esc_attr_e( $date_format ); ?>',
             minDate     : '<?php echo substr( $dates["0"]->first, 0, 10 ); ?>',
             maxDate     : '<?php echo substr( $dates["0"]->last, 0, 10 ); ?>',
-            firstDay    : '<?php echo $start_of_week; ?>'
+            firstDay    : '<?php \esc_attr_e( $start_of_week ); ?>'
         } );
 
         // end date picker ##

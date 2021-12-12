@@ -11,9 +11,9 @@ class user {
 
 	private $plugin;
 
-	function __construct(){
+	public function __construct( \q\eud\plugin $plugin ){
 
-		$this->plugin = plugin::get_instance(); 
+		$this->plugin = $plugin; 
 
 	}
 
@@ -24,7 +24,7 @@ class user {
     * @since       0.9.6
     * @return      Array of saved exports
     */
-    function load(){
+    public function load(){
 
 		// convert outdated stored meta from q_report to q_eud_exports ##
 		if(
@@ -116,8 +116,8 @@ class user {
         if ( isset( $_q_eud_exports[$export] ) ) {
 
             $_usermeta_saved_fields = $_q_eud_exports[$export]['usermeta_saved_fields'];
-            $_bp_fields_saved_fields = $_q_eud_exports[$export]['bp_fields_saved_fields'];
-            $_bp_fields_update_time_saved_fields = $_q_eud_exports[$export]['bp_fields_update_time_saved_fields'];
+            // $_bp_fields_saved_fields = $_q_eud_exports[$export]['bp_fields_saved_fields'];
+            // $_bp_fields_update_time_saved_fields = $_q_eud_exports[$export]['bp_fields_update_time_saved_fields'];
             $_updated_since_date = $_q_eud_exports[$export]['updated_since_date'] ?? null ;
             $_field_updated_since = $_q_eud_exports[$export]['field_updated_since'] ?? null ;
             $_role = $_q_eud_exports[$export]['role'];
@@ -133,8 +133,8 @@ class user {
         } else {
 
             $_usermeta_saved_fields = [];
-            $_bp_fields_saved_fields = [];
-            $_bp_fields_update_time_saved_fields = [];
+            // $_bp_fields_saved_fields = [];
+            // $_bp_fields_update_time_saved_fields = [];
             $_updated_since_date = '';
             $_field_updated_since = '';
             $_role = '';
@@ -151,8 +151,8 @@ class user {
 		
 		// set props ##
 		$this->plugin->set( '_usermeta_saved_fields', $_usermeta_saved_fields );
-		$this->plugin->set( '_bp_fields_saved_fields', $_bp_fields_saved_fields );
-		$this->plugin->set( '_bp_fields_update_time_saved_fields', $_bp_fields_update_time_saved_fields );
+		// $this->plugin->set( '_bp_fields_saved_fields', $_bp_fields_saved_fields );
+		// $this->plugin->set( '_bp_fields_update_time_saved_fields', $_bp_fields_update_time_saved_fields );
 		$this->plugin->set( '_updated_since_date', $_updated_since_date );
 		$this->plugin->set( '_field_updated_since', $_field_updated_since );
 		$this->plugin->set( '_role', $_role );
