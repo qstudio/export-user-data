@@ -3,8 +3,8 @@ Contributors: qlstudio
 Tags: users, export, usermeta, excel   
 Requires PHP: 7.0  
 Requires at least: 4.8  
-Tested up to: 5.6  
-Stable tag: 2.2.0    
+Tested up to: 5.8.2  
+Stable tag: 2.2.2    
 License: GPLv2  
 
 Export users data and metadata to a csv or Excel file
@@ -38,6 +38,20 @@ Please do not use the Wordpress.org forum to report bugs, as we no longer monito
 1. Example of Admin Export View 
 
 == Changelog ==
+
+= 2.2.1 =
+
+* New: cleanup export methods, improvied sanitization 
+* New: array and object data is now passed in JSON_ENCODED string object
+
+= 2.2.0 =
+
+* New: Move to cleaner OOP pattern and PHP version bump to 7.0
+* Update: Tested on WP 5.6
+
+= 2.1.3 =
+
+* FIX: wrong name for our own plugin :( thanks @kgagne !
 
 = 2.1.2 = 
 

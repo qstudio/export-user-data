@@ -1,5 +1,9 @@
 ## Changelog ##
 
+*** 2.2.2 ***
+
+* New: WordPress Security release 
+
 *** 2.2.1 ***
 
 * New: cleanup export methods, improvied sanitization 

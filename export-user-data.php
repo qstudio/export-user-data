@@ -12,7 +12,7 @@
  * Plugin Name:     Export User Data
  * Plugin URI:      http://qstudio.us/releases/export-user-data
  * Description:     Export User data and metadata.
- * Version:         2.2.1
+ * Version:         2.2.2
  * Author:          Q Studio
  * Author URI:      https://qstudio.us
  * License:         GPL-2.0+
