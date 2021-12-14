@@ -4,7 +4,7 @@ Tags: users, export, usermeta, excel
 Requires PHP: 7.0  
 Requires at least: 4.8  
 Tested up to: 5.8.2  
-Stable tag: 2.2.2    
+Stable tag: 2.2.3    
 License: GPLv2  
 
 Export users data and metadata to a csv or Excel file
@@ -39,7 +39,7 @@ Please do not use the Wordpress.org forum to report bugs, as we no longer monito
 
 == Changelog ==
 
-= 2.2.2 =
+= 2.2.3 =
 
 * New: WordPress Security release 
 

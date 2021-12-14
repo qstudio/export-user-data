@@ -176,7 +176,7 @@ class helper {
 				&& $value !== 'b:0;' 
 			){
 
-				h::log( $unserialized );
+				// self::log( $unserialized );
 
                 #$value = 'UNSERIALIZED_'.$unserialized;
                 $value = $unserialized;
