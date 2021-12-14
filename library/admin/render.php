@@ -65,16 +65,16 @@ class render {
             if ( ! empty( $_POST['save_new_export_name'] ) ) {
 
                 // assign value ##
-                $save_export = $_POST['save_new_export_name'];
+                $save_export = \sanitize_text_field( $_POST['save_new_export_name'] );
 
             } elseif ( ! empty( $_POST['export_name'] ) ) {
 
-                $save_export = $_POST['export_name'];
+                $save_export = \sanitize_text_field( $_POST['export_name'] );
 
             }
 
             // clean up $save_export ##
-            $save_export = \sanitize_text_field( $save_export );
+            // $save_export = \sanitize_text_field( $save_export );
 
             // Build array of $options to save and save them ##
             if ( isset( $save_export ) ) {
@@ -594,7 +594,7 @@ class render {
                 <td>
 
                     <div class="row">
-                        <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php \_e( 'Export Name', 'q-export-user-data' ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? \sanitize_text_field( $_POST['export_name'] ) : '' ; ?>">
+                        <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php \_e( 'Export Name', 'q-export-user-data' ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? \esc_attr( $_POST['export_name'] ) : '' ; ?>">
                         <input type="submit" id="save_export" class="button-primary" name="save_export" value="<?php \_e( 'Save', 'q-export-user-data' ); ?>" />
                     </div>
                     <?php
@@ -669,7 +669,7 @@ class render {
     /**
     * style and interaction
     */
-    function admin_enqueue_scripts( $hook ){
+    public function admin_enqueue_scripts( $hook ){
 
         // load the scripts on only the plugin admin page ##
         if ( 
@@ -682,13 +682,14 @@ class render {
 
         }
 
-        \wp_register_style( 'q-eud-css', \plugins_url( 'css/q-eud.css' ,__FILE__ ), '', $this->plugin->get( '_version' ) );
+        \wp_register_style( 'q-eud-css', $this->plugin::get_plugin_url( 'library/admin/css/q-eud.css' ), '', $this->plugin->get( '_version' ) );
         \wp_enqueue_style( 'q-eud-css' );
-        \wp_enqueue_script( 'q_eud_multi_select_js', \plugins_url( 'javascript/jquery.multi-select.js', __FILE__ ), array('jquery'), '0.9.8', false );
+        \wp_enqueue_script( 'q-eud-multi-select', $this->plugin::get_plugin_url( 'library/admin/javascript/jquery.multi-select.js' ), array('jquery'), '0.9.8', false );
 
         // add script ##
         \wp_enqueue_script('jquery-ui-datepicker');
-    	\wp_register_style('jquery-ui', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css');
+    	// \wp_register_style('jquery-ui', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css');
+		\wp_register_style('jquery-ui', $this->plugin::get_plugin_url( 'library/admin/css/jquery-ui.css' ), array(), '1.8.0' );
     	\wp_enqueue_style('jquery-ui');
 
     }
@@ -697,7 +698,7 @@ class render {
     * Inline jQuery
     * @since       0.8.2
     */
-    function jquery(){
+    public function jquery(){
 
         // load the scripts on only the plugin admin page
         if (
@@ -723,9 +724,9 @@ class render {
         jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
 
         // Select any fields from saved settings ##
-        jQuery('#usermeta').multiSelect('select',([<?php echo( \q\eud\core\helper::quote_array( $_usermeta_saved_fields ) ); ?>]));
-        jQuery('#bp_fields').multiSelect('select',([<?php echo( \q\eud\core\helper::quote_array( $_bp_fields_saved_fields ) ); ?>]));
-        jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( \q\eud\core\helper::quote_array( $_bp_fields_update_time_saved_fields ) ); ?>]));
+        jQuery('#usermeta').multiSelect('select',([<?php echo( h::quote_array( $_usermeta_saved_fields ) ); ?>]));
+        jQuery('#bp_fields').multiSelect('select',([<?php echo( h::quote_array( $_bp_fields_saved_fields ) ); ?>]));
+        jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( h::quote_array( $_bp_fields_update_time_saved_fields ) ); ?>]));
 
         // show only common ##
         jQuery('.usermeta-common').click(function(e){

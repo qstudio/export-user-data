@@ -202,21 +202,25 @@ class export {
 
 
         // check for selected usermeta fields ##
-        $usermeta = isset( $_POST['usermeta'] ) ? $_POST['usermeta']: '';
-        #h::log( $usermeta );
-        $usermeta_fields = [];
+        $usermeta_fields = 
+			isset( $_POST['usermeta'] ) && is_array( $_POST['usermeta'] ) ? 
+			array_map( 'sanitize_text_field', $_POST['usermeta'] ) : 
+			[];
+        // h::log( $usermeta_fields );
+        // $usermeta_fields = [];
 
         // loop over each field and sanitize ## @todo - user array_map ##
-        if ( $usermeta && is_array( $usermeta ) ) {
-            foreach( $usermeta as $field ) {
-                $usermeta_fields[] = \sanitize_text_field ( $field  );
-            }
-        }
+        // if ( $usermeta && is_array( $usermeta ) ) {
+        //     foreach( $usermeta as $field ) {
+        //         $usermeta_fields[] = \sanitize_text_field( $field  );
+        //     }
+        // }
 
-        #h::log( $usermeta_fields );
+        // h::log( $usermeta_fields );
         #exit;
 
         // check for selected x profile fields ##
+		/*
         $bp_fields = isset( $_POST['bp_fields'] ) ? $_POST['bp_fields'] : '';
         $bp_fields_passed = array();
         if ( $bp_fields && is_array( $bp_fields ) ) {
@@ -249,6 +253,7 @@ class export {
             }
 
         }
+		*/
 
         // global wpdb object ##
         global $wpdb;
@@ -288,15 +293,15 @@ class export {
 
             } else {
 
-                if ( $is_csv ) {
+                // if ( $is_csv ) {
 
-                    $headers[] = '"' . $field . '"';
+                    // $headers[] = '"' . $field . '"';
 
-                } else {
+                // } else {
 
                     $headers[] = $field;
 
-                }
+                // }
 
             }
 
@@ -311,7 +316,7 @@ class export {
 
         // get the value in bytes allocated for Memory via php.ini ##
         // @link http://wordpress.org/support/topic/how-to-exporting-a-lot-of-data-out-of-memory-issue
-        $memory_limit = helper::return_bytes( ini_get('memory_limit') ) * .75;
+        $memory_limit = h::return_bytes( ini_get('memory_limit') ) * .75;
 
         // we need to disable caching while exporting because we export so much data that it could blow the memory cache
         // if we can't override the cache here, we'll have to clear it later...
@@ -331,12 +336,28 @@ class export {
 
         }
 
-        if ( $export_method !== "excel2007" ) {
+        if ( 
+			$is_csv
+			// $export_method !== "excel2007" 
+		){
+			
             // open doc wrapper.. ##
-            echo $doc_begin;
+            \esc_html_e( $doc_begin );
+
+			$headers = array_map(function($x){
+			 	return esc_attr($x);
+			}, $headers);
+
+			// h::log( $headers );
+
+			// get header string ##
+			$headers_string = $pre.implode( $seperator, $headers ).$breaker;
+
+			// h::log( $headers_string );
+			// h::log( \esc_html( $headers_string ) );
 
             // echo headers ##
-            echo $pre . implode( $seperator, $headers ) . $breaker;
+            \esc_html_e( $headers_string );
 
             #h::log( $users );
         } else {
@@ -400,6 +421,7 @@ class export {
             // loop over each field ##
             foreach ( $fields as $field ) {
 
+				/*
                 // check if this is a BP field ##
                 if ( 
                     isset( $bp_data ) 
@@ -415,16 +437,6 @@ class export {
                         $value = \maybe_unserialize( $value['field_data'] ); // suggested by @grexican ##
                         #$value = $value['field_data'];
 
-                        /**
-                            * cwjordan
-                            * after unserializing it we then
-                            * need to implode it so
-                            * that we have something readable?
-                            * Going to use :: as a separator
-                            * because that's what Buddypress Members Import
-                            * expects, but we might want to make that
-                            * configurable.
-                        */
                         if ( is_array( $value ) ) {
                             $value =  implode( "::", $value );
                         }
@@ -454,7 +466,10 @@ class export {
                             );
 
                 // include the user's role in the export ##
-                } elseif ( isset( $_POST['roles'] ) && '1' == $_POST['roles'] && $field == 'roles' ) {
+                } else
+				*/
+
+				if ( isset( $_POST['roles'] ) && '1' == $_POST['roles'] && $field == 'roles' ) {
 
 					// empty array ##
 					$user_roles = [];
@@ -475,7 +490,7 @@ class export {
 					// empty value if no role found - or flat array of user roles ##
                     $value = 
 						! empty( $user_roles ) ? 
-						helper::json_encode( $user_roles ) /*implode( '|', $user_roles )*/ : 
+						h::json_encode( $user_roles ) /*implode( '|', $user_roles )*/ : 
 						'';
 
                 // include the user's BP group in the export ##
@@ -506,7 +521,7 @@ class export {
 
                             // implode it ##
                             // $value = implode( $groups, '|' );
-							$value = helper::json_encode( $groups );
+							$value = h::json_encode( $groups );
 
                         }
 
@@ -551,7 +566,7 @@ class export {
 				// ---------- cleanup and format the value, before exporting ##
 
 				// the $value might be serialized, so try to unserialize ##
-				$value = helper::unserialize( $value );
+				$value = h::unserialize( $value );
 
 				// the value is an array ##
 				if ( 
@@ -559,21 +574,21 @@ class export {
 					|| is_object ( $value ) 
 				){
 
-					// helper::log( 'is_array || is_object' );
-					// helper::log( $value );
+					// h::log( 'is_array || is_object' );
+					// h::log( $value );
 
 					// recursive implode it ##
-					// $value = helper::recursive_implode( $value );
+					// $value = h::recursive_implode( $value );
 
 					// json_encode value to object
-					$value = helper::json_encode( $value );
+					$value = h::json_encode( $value );
 
 				// } else {
 
 				}
 
 					// sanitize string value ##
-					$value = helper::sanitize( $value );
+					$value = h::sanitize( $value );
 
 				// }
 
@@ -581,7 +596,7 @@ class export {
                 // $value = \apply_filters( 'q/eud/export/value', $value, $field );
 
                 // sanitize ##
-                // $value = helper::sanitize( $value );
+                // $value = h::sanitize( $value );
 
 				// if no filter is added, apply default sanitiziation ##
 				// if( has_filter( 'q/eud/export/value' ) ){
@@ -590,26 +605,26 @@ class export {
 
 				// } else {
 
-					// $value = helper::format_value( $value );
+					// $value = h::format_value( $value );
 
 				// }	
 
-				// helper::log( $value );
+				// h::log( $value );
 
                 // wrap values in quotes and add to array ##
                 if ( $is_csv ) {
 
 					// replace single-double quotes with double-double quotes, if not dealing with a JSON string ###
-					// if( ! helper::is_json( $value ) ) {
+					// if( ! h::is_json( $value ) ) {
 					
 						// $value = str_replace( '"', '\"', $value );
 
 					// }
 
 					// wrap value in double quotes ##
-					$value = '"' . $value . '"';
+					// $value = '"' . $value . '"';
 
-					// helper::log( $value );
+					// h::log( $value );
 
 					// add value to $data array  ##
                     $data[] = $value;
@@ -623,10 +638,26 @@ class export {
 
             }
 
-            if ( $export_method !== "excel2007" ) {
+			// escape array values ##
+			$data = array_map(function($x){
+				return esc_attr($x);
+			   }, $data);
+
+			h::log( $data );
+
+            if ( $is_csv ) {
+
+				// get row string ##
+				$row_string = $pre.implode( $seperator, $data ).$breaker;
+
+				// h::log( $row_string );
+				// h::log( \esc_html( $headers_string ) );
+
+				// echo headers ##
+				\esc_html_e( $row_string );
 				
 				// echo row data ##
-				echo $pre . implode( $seperator, $data ) . $breaker;
+				// echo $pre . implode( $seperator, $data ) . $breaker;
 				
             } else {
 
@@ -636,14 +667,15 @@ class export {
 
         }
 
-        if ( $export_method !== "excel2007" ) {
+        if ( $is_csv ) {
 
             // close doc wrapper..
-			echo $doc_end;
+			\esc_html_e( $doc_end );
 			
         } else {
 			
 			echo $writer->writeToString();
+			// $writer->writeToFile( $filename.'.xlsx' );
 			
         }
 
