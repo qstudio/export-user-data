@@ -100,9 +100,9 @@ class get {
     /**
     * Export Date Options
     *
-    * @since       0.9.6
-    * @global      type    $wpdb
-	* @return      Array of objects
+    * @since       	0.9.6
+    * @global      	type    $wpdb
+	* @return      	Array of objects
 	* @todo			Remove max date, as this makes little sense for exports not based on user reg dates.. ??	
     */
     public static function user_registered_dates(){

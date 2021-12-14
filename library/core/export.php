@@ -559,8 +559,8 @@ class export {
 					|| is_object ( $value ) 
 				){
 
-					helper::log( 'is_array || is_object' );
-					helper::log( $value );
+					// helper::log( 'is_array || is_object' );
+					// helper::log( $value );
 
 					// recursive implode it ##
 					// $value = helper::recursive_implode( $value );
