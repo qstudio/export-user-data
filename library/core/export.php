@@ -30,21 +30,33 @@ class export {
         // Check if the user clicked on the Save, Load, or Delete Settings buttons ##
         if (
             ! isset( $_POST['_wpnonce-q-eud-admin-page'] )
-            || isset( $_POST['load_export'] )
-            || isset( $_POST['save_export'] )
-            || isset( $_POST['delete_export'] ) )
-        {
+		){
+
+			h::log( 'No nonce set' );
 
             return false;
 
         }
 
-        // Increase maximum execution time to prevent "Maximum execution time exceeded" error ##
-        ini_set( 'max_execution_time', -1 );
-        ini_set( 'memory_limit', -1 ); // bad idea? ##
+		// Check if the user clicked on the Save, Load, or Delete Settings buttons ##
+        if (
+            isset( $_POST['load_export'] )
+            || isset( $_POST['save_export'] )
+            || isset( $_POST['delete_export'] ) )
+        {
+
+			h::log( 'Not exporting, so return...' );
+
+            return false;
+
+        }
 
         // check admin referer ##
         \check_admin_referer( 'q-eud-admin-page', '_wpnonce-q-eud-admin-page' );
+
+		// Increase maximum execution time to prevent "Maximum execution time exceeded" error ##
+        ini_set( 'max_execution_time', -1 );
+        ini_set( 'memory_limit', -1 );
 
         // build argument array ##
         $args = array(
@@ -89,7 +101,7 @@ class export {
         // no users found, so chuck an error into the args array and exit the export ##
         if ( ! $users ) {
 
-            \wp_redirect( \add_query_arg( 'error', 'empty', \wp_get_referer() ) );
+            \wp_redirect( \add_query_arg( 'qeud_error', 'empty', \wp_get_referer() ) );
             exit;
 
         }
@@ -117,8 +129,8 @@ class export {
 
                 // to csv ##
                 header( 'Content-Description: File Transfer' );
-                header( 'Content-Disposition: attachment; filename='.$filename.'.csv' );
-                header( 'Content-Type: text/csv; charset=' . \get_option( 'blog_charset' ), true );
+                header( 'Content-Disposition: attachment; filename='.\esc_attr_e( $filename ).'.csv' );
+                header( 'Content-Type: text/csv; charset=' . \esc_attr_e( \get_option( 'blog_charset' ) ), true );
 
                 // set a csv check flag
                 $is_csv = true;
@@ -176,7 +188,7 @@ class export {
                 // to xlsx ##
                 header( 'Content-Description: File Transfer' );
                 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                header("Content-Disposition: attachment; filename=$filename.xlsx");
+                header("Content-Disposition: attachment; filename=".\esc_attr_e( $filename ).".xlsx");
                 header('Content-Transfer-Encoding: binary');
                 //header('Content-Length: ' . filesize($file));
                 //header('Cache-Control: must-revalidate');
@@ -274,7 +286,7 @@ class export {
         #h::log( $fields );
 
         // build the document headers ##
-        $headers = array();
+        $headers = [];
 
         foreach ( $fields as $key => $field ) {
 
@@ -290,6 +302,8 @@ class export {
 
                 // ditch 'em ##
                 unset( $fields[$key] );
+
+				continue;
 
             } else {
 
@@ -344,6 +358,7 @@ class export {
             // open doc wrapper.. ##
             \esc_html_e( $doc_begin );
 
+			// escape each header value ##
 			$headers = array_map(function($x){
 			 	return esc_attr($x);
 			}, $headers);
@@ -384,9 +399,10 @@ class export {
             }
 
             // open up a new empty array ##
-            $data = array();
+            $data = [];
 
             // BP loaded ? ##
+			/*
             if (
                 ! $this->plugin->get( '_bp_data_available' )
                 && function_exists ( 'bp_is_active' )
@@ -400,8 +416,10 @@ class export {
                 $this->plugin->set( '_bp_data_available', true ); // we only need to check for BP once ##
 
             }
+			*/
 
             // grab all user data ##
+			/*
             if (
                 $this->plugin->get( '_bp_data_available' )
                 && ! $bp_data = \BP_XProfile_ProfileData::get_all_for_user( $user->ID )
@@ -413,6 +431,7 @@ class export {
                 // h::log( 'XProfile returned no data ID#: '.$user->ID );
 
             }
+			*/
 
             // single query method - get all user_meta data ##
             $get_user_meta = (array)\get_user_meta( $user->ID );
@@ -494,6 +513,7 @@ class export {
 						'';
 
                 // include the user's BP group in the export ##
+				/*
                 } elseif ( isset( $_POST['groups'] ) && '1' == $_POST['groups'] && $field == 'groups' ) {
 
                     if ( function_exists( 'groups_get_user_groups' ) ) {
@@ -510,7 +530,7 @@ class export {
                         } else {
 
                             // new empty array ##
-                            $groups = array();
+                            $groups = [];
 
                             // loop over all groups ##
                             foreach( $group_ids["groups"] as $group_id ) {
@@ -531,6 +551,7 @@ class export {
 
                     }
 
+				*/
 				/*
                 } elseif ( 
 					( $field == 'bp_latest_update' && function_exists( 'bp_get_user_last_activity' ) )
@@ -612,7 +633,7 @@ class export {
 				// h::log( $value );
 
                 // wrap values in quotes and add to array ##
-                if ( $is_csv ) {
+                // if ( $is_csv ) {
 
 					// replace single-double quotes with double-double quotes, if not dealing with a JSON string ###
 					// if( ! h::is_json( $value ) ) {
@@ -627,14 +648,14 @@ class export {
 					// h::log( $value );
 
 					// add value to $data array  ##
-                    $data[] = $value;
+                    // $data[] = $value;
 
                 // just add to array ##
-                } else {
+                // } else {
 
                     $data[] = $value;
 
-                }
+                // }
 
             }
 
@@ -643,7 +664,7 @@ class export {
 				return esc_attr($x);
 			   }, $data);
 
-			h::log( $data );
+			// h::log( $data );
 
             if ( $is_csv ) {
 
@@ -661,6 +682,7 @@ class export {
 				
             } else {
 
+				// each value in the $data array has already been escaped via esc_attr ##
 				$writer->writeSheetRow( 'Sheet1', $data );
 				
             }
@@ -673,9 +695,9 @@ class export {
 			\esc_html_e( $doc_end );
 			
         } else {
-			
+
+			// all column headers and data values have bene escaped previously ##
 			echo $writer->writeToString();
-			// $writer->writeToFile( $filename.'.xlsx' );
 			
         }
 
@@ -713,6 +735,7 @@ class export {
         }
 
         // search by last update time of BP extended fields ##
+		/*
         if (
             class_exists( 'BP_Xprofile_Field' )
             && ( isset ($_POST['updated_since_date'] ) && $_POST['updated_since_date'] != '' )
@@ -734,6 +757,7 @@ class export {
             $where .= $wpdb->prepare( " AND XP.field_id = %s AND XP.last_updated >= %s", $field_updated_since_id, $this->plugin->get( '_updated_since_date' ) );
 
         }
+		*/
 
         if ( ! empty( $where ) ) {
 

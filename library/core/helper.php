@@ -293,7 +293,7 @@ class helper {
         
             foreach( $array as $element ) {
         
-                $string .= $prefix . "'" . $element . "'";
+                $string .= $prefix . "'" . \esc_attr( $element ) . "'";
                 $prefix = ','; // prefix all remaining items with a comma ##
         
             }

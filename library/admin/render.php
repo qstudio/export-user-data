@@ -30,8 +30,8 @@ class render {
     public function add_menu(){
 
         \add_users_page ( 
-            __( 'Export User Data', 'q-export-user-data' ), 
-            __( 'Export User Data', 'q-export-user-data' ), 
+            \__( 'Export User Data', 'q-export-user-data' ), 
+            \__( 'Export User Data', 'q-export-user-data' ), 
             \apply_filters( 'q/eud/admin_capability', 'list_users' ), 
             'q-export-user-data', 
             [ $this, 'admin_page' ] // callback method ## 
@@ -197,8 +197,12 @@ class render {
 <?php
 
     // nothing happening? ##
-    if ( isset( $_GET['error'] ) ) {
-        echo '<div class="updated"><p><strong>' . \__( 'No users found.', 'q-export-user-data' ) . '</strong></p></div>';
+    if ( isset( $_GET['qeud_error'] ) && 'empty' == $_GET['qeud_error'] ) {
+        
+	?>
+	<div class="updated"><p><strong><?php \_e( 'No users found to export in passed query.', 'q-export-user-data' ); ?></strong></p></div>
+	<?php
+	
 	}
 	
 	// get props
@@ -423,32 +427,34 @@ class render {
                 <th scope="row"><label for="q_eud_users_role"><?php \_e( 'Role', 'q-export-user-data' ); ?></label></th>
                 <td>
                     <select name="role" id="q_eud_users_role">
-<?php
+						<option value=""><?php \_e( 'All Roles', 'q-export-user-data' ); ?></option>
+						<?php
 
-                        echo '<option value="">' . \__( 'All Roles', 'q-export-user-data' ) . '</option>';
+					global $wp_roles;
 
-                        global $wp_roles;
+					foreach ( $wp_roles->role_names as $role => $name ) {
 
-                        foreach ( $wp_roles->role_names as $role => $name ) {
+						if ( isset ( $_role ) && ( $_role == $role ) ) {
 
-                            if ( isset ( $_role ) && ( $_role == $role ) ) {
+						?>
+						<option selected value="<?php \esc_attr_e( $role ); ?>"><?php \esc_attr_e( $name ); ?></option>
+						<?php
 
-                                echo "\n\t<option selected value='" . \esc_attr( $role ) . "'>$name</option>";
+						} else {
 
-                            } else {
+						?>
+						<option value="<?php \esc_attr_e( $role ); ?>"><?php \esc_attr_e( $name ); ?></option>
+						<?php
 
-                                echo "\n\t<option value='" . \esc_attr( $role ) . "'>$name</option>";
+						}
+					}
 
-                            }
-                        }
-
-
-?>
+					?>
                     </select>
                     <p class="description"><?php
                         printf(
                             \__( 'Filter the exported users by a WordPress Role. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
-                            ,   \esc_html('http://codex.wordpress.org/Roles_and_Capabilities')
+                            ,   \esc_url('http://codex.wordpress.org/Roles_and_Capabilities')
                             ,   'Codex'
                         );
                     ?></p>
@@ -462,7 +468,7 @@ class render {
                     <p class="description"><?php
                         printf(
                             \__( 'Include all of the users <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
-                            ,   \esc_html('http://codex.wordpress.org/Roles_and_Capabilities')
+                            ,   \esc_url('http://codex.wordpress.org/Roles_and_Capabilities')
                             ,   'Roles'
                         );
                     ?></p>
@@ -472,8 +478,8 @@ class render {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Registered', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input type="text" id="q_eud_users_start_date" name="start_date" value="<?php echo $_start_date; ?>" class="start-datepicker" />
-                    <input type="text" id="q_eud_users_end_date" name="end_date" value="<?php echo $_end_date; ?>" class="end-datepicker" />
+                    <input type="text" id="q_eud_users_start_date" name="start_date" value="<?php \esc_attr_e( $_start_date ); ?>" class="start-datepicker" />
+                    <input type="text" id="q_eud_users_end_date" name="end_date" value="<?php \esc_attr_e( $_end_date ); ?>" class="end-datepicker" />
                     <p class="description"><?php
                         printf(
                             \__( 'Pick a start and end user registration date to limit the results.', 'q-export-user-data' )
@@ -485,12 +491,12 @@ class render {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Limit Range', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php echo( $_limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', 'q-export-user-data' ); ?>">
-                    <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php echo ( $_limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', 'q-export-user-data' ); ?>">
+                    <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php \esc_attr_e( $_limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', 'q-export-user-data' ); ?>">
+                    <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php \esc_attr_e ( $_limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', 'q-export-user-data' ); ?>">
                     <p class="description"><?php
                         printf(
                             \__( 'Enter an offset start number and a total number of users to export. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
-                            ,   \esc_html('http://codex.wordpress.org/Function_Reference/get_users#Parameters')
+                            ,   \esc_url('http://codex.wordpress.org/Function_Reference/get_users#Parameters')
                             ,   'Codex'
                         );
                     ?></p>
@@ -558,28 +564,37 @@ class render {
                 <th scope="row"><label for="q_eud_users_format"><?php \_e( 'Format', 'q-export-user-data' ); ?></label></th>
                 <td>
                     <select name="format" id="q_eud_users_format">
-<?php
+					<?php
 
-                        if ( isset ( $_format ) && ( $_format == 'excel2007' ) ) {
+					if ( isset ( $_format ) && ( $_format == 'excel2007' ) ) {
 
-                            echo '<option selected value="excel2007">' . __( 'Excel 2007 (xlsx)', 'q-export-user-data' ) . '</option>';
+						?>
+						<option selected value="excel2007"><?php \_e( 'Excel 2007 (xlsx)', 'q-export-user-data' ); ?></option>
+						<?php
+					
+					} else {
 
-                        } else {
+						?>
+						<option value="excel2007"><?php \_e( 'Excel 2007 (xlsx)', 'q-export-user-data' ); ?></option>
+						<?php
 
-                            echo '<option value="excel2007">' . __( 'Excel 2007 (xlsx)', 'q-export-user-data' ) . '</option>';
+					}
 
-                        }
+					if ( isset ( $_format ) && ( $_format == 'csv' ) ) {
 
-                        if ( isset ( $_format ) && ( $_format == 'csv' ) ) {
+						?>
+						<option selected value="csv"><?php \_e( 'CSV', 'q-export-user-data' ); ?></option>
+						<?php
 
-                            echo '<option selected value="csv">' . __( 'CSV', 'q-export-user-data' ) . '</option>';
+					} else {
 
-                        } else {
+						?>
+						<option value="csv"><?php \_e( 'CSV', 'q-export-user-data' ); ?></option>
+						<?php
 
-                            echo '<option value="csv">' . __( 'CSV', 'q-export-user-data' ) . '</option>';
+					}
 
-                        }
-?>
+					?>
                     </select>
                     <p class="description"><?php
                         printf(
@@ -594,7 +609,7 @@ class render {
                 <td>
 
                     <div class="row">
-                        <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php \_e( 'Export Name', 'q-export-user-data' ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? \esc_attr( $_POST['export_name'] ) : '' ; ?>">
+                        <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php \_e( 'Export Name', 'q-export-user-data' ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? \esc_attr_e( $_POST['export_name'] ) : '' ; ?>">
                         <input type="submit" id="save_export" class="button-primary" name="save_export" value="<?php \_e( 'Save', 'q-export-user-data' ); ?>" />
                     </div>
                     <?php
@@ -602,37 +617,41 @@ class render {
 					// check if the user has any saved exports ##
                     if ( $this->user->get_user_options() ) {
 
-?>
+					?>
                     <div class="row">
                         <select name="export_name" id="q_eud_save_options" class="regular-text">
-<?php
+						<?php
 
-                            // loop over each saved export ##
-                            foreach( $this->user->get_user_options() as $export ) {
+					// loop over each saved export ##
+					foreach( $this->user->get_user_options() as $export ) {
 
-                                // select Loaded export name, if selected ##
-                                if (
-                                    isset( $_POST['load_export'] )
-                                    && isset( $_POST['export_name'] )
-                                    && ( \sanitize_text_field( $_POST['export_name'] ) == $export )
-                                ) {
+						// select Loaded export name, if selected ##
+						if (
+							isset( $_POST['load_export'] )
+							&& isset( $_POST['export_name'] )
+							&& ( $_POST['export_name'] == $export )
+						) {
 
-                                    echo "<option selected value='$export'>".$export."</option>";
+							?>
+							<option selected value='<?php \esc_attr_e( $export ); ?>'><?php \esc_attr_e( $export ); ?></option>
+							<?php
 
-                                // just list previous export name ##
-                                } else {
+						// just list previous export name ##
+						} else {
 
-                                    echo "<option value='$export'>".$export."</option>";
+							?>
+							<option value='<?php \esc_attr_e( $export ); ?>'><?php \esc_attr_e( $export ); ?></option>
+							<?php
 
-                                }
+						}
 
-                            }
+					}
 
-?>
+						?>
                         </select>
 
-                        <input type="submit" id="load_export" class="button-primary" name="load_export" value="<?php _e( 'Load', 'q-export-user-data' ); ?>" />
-                        <input type="submit" id="delete_export" class="button-primary" name="delete_export" value="<?php _e( 'Delete', 'q-export-user-data' ); ?>" />
+                        <input type="submit" id="load_export" class="button-primary" name="load_export" value="<?php \_e( 'Load', 'q-export-user-data' ); ?>" />
+                        <input type="submit" id="delete_export" class="button-primary" name="delete_export" value="<?php \_e( 'Delete', 'q-export-user-data' ); ?>" />
 <?php
 
                         }
@@ -657,19 +676,20 @@ class render {
 
         </table>
         <p class="submit">
-            <input type="hidden" name="_wp_http_referer" value="<?php echo \esc_url( $_SERVER['REQUEST_URI'] ); ?>" />
+            <input type="hidden" name="_wp_http_referer" value="<?php echo isset( $_SERVER['REQUEST_URI'] ) ? \esc_url( $_SERVER['REQUEST_URI'] ) : '' ; ?>" />
             <input type="submit" class="button-primary" value="<?php \_e( 'Run Export', 'q-export-user-data' ); ?>" />
         </p>
     </form>
     </div>
-
-<?php
-    }
+	<?php
+    
+	}
 
     /**
     * style and interaction
     */
-    public function admin_enqueue_scripts( $hook ){
+    public function admin_enqueue_scripts( $hook ):void
+	{
 
         // load the scripts on only the plugin admin page ##
         if ( 
@@ -678,7 +698,7 @@ class render {
         
         ) {
 
-            return false;
+            return;
 
         }
 
@@ -688,7 +708,6 @@ class render {
 
         // add script ##
         \wp_enqueue_script('jquery-ui-datepicker');
-    	// \wp_register_style('jquery-ui', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css');
 		\wp_register_style('jquery-ui', $this->plugin::get_plugin_url( 'library/admin/css/jquery-ui.css' ), array(), '1.8.0' );
     	\wp_enqueue_style('jquery-ui');
 
@@ -700,19 +719,19 @@ class render {
     */
     public function jquery(){
 
-        // load the scripts on only the plugin admin page
+        // load the scripts only on the plugin admin page
         if (
             ! isset( $_GET['page'] ) 
-            || $_GET['page'] != 'q-export-user-data' 
+            || \sanitize_text_field( $_GET['page'] ) != 'q-export-user-data' 
         ) {
 
-            return false;
+            return ;
 
 		}
 		
-		$_usermeta_saved_fields = $this->plugin->get( '_usermeta_saved_fields' );
-		$_bp_fields_saved_fields = $this->plugin->get( '_bp_fields_saved_fields' );
-		$_bp_fields_update_time_saved_fields = $this->plugin->get( '_bp_fields_update_time_saved_fields' );
+		$_usermeta_saved_fields = h::quote_array( $this->plugin->get( '_usermeta_saved_fields' ) );
+		$_bp_fields_saved_fields = h::quote_array( $this->plugin->get( '_bp_fields_saved_fields' ) );
+		$_bp_fields_update_time_saved_fields = h::quote_array( $this->plugin->get( '_bp_fields_update_time_saved_fields' ) );
 
 ?>
     <script>
@@ -724,9 +743,9 @@ class render {
         jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
 
         // Select any fields from saved settings ##
-        jQuery('#usermeta').multiSelect('select',([<?php echo( h::quote_array( $_usermeta_saved_fields ) ); ?>]));
-        jQuery('#bp_fields').multiSelect('select',([<?php echo( h::quote_array( $_bp_fields_saved_fields ) ); ?>]));
-        jQuery('#bp_fields_update_time').multiSelect('select',([<?php echo( h::quote_array( $_bp_fields_update_time_saved_fields ) ); ?>]));
+        jQuery('#usermeta').multiSelect('select',([<?php echo $_usermeta_saved_fields; // escaped by quote_array ?>]));
+        // jQuery('#bp_fields').multiSelect('select',([<?php #echo $_bp_fields_saved_fields; // escaped by quote_array ?>]));
+        // jQuery('#bp_fields_update_time').multiSelect('select',([<?php #echo $_bp_fields_update_time_saved_fields; // escaped by quote_array ?>]));
 
         // show only common ##
         jQuery('.usermeta-common').click(function(e){
@@ -780,9 +799,9 @@ class render {
             $toggleable = jQuery("tr.toggleable");
             $toggleable.toggle();
             if ( $toggleable.is(":visible") ) {
-                jQuery(this).text("<?php _e( 'Hide', 'q-export-user-data' ); ?>");
+                jQuery(this).text("<?php \_e( 'Hide', 'q-export-user-data' ); ?>");
             } else {
-                jQuery(this).text("<?php _e( 'Show', 'q-export-user-data' ); ?>");
+                jQuery(this).text("<?php \_e( 'Show', 'q-export-user-data' ); ?>");
             }
         });
 
@@ -808,8 +827,7 @@ class render {
 
         });
 
-<?php
-
+		<?php
         // method returns an object with "first" & "last" keys ##
         $dates = \q\eud\core\get::user_registered_dates();
 
@@ -818,21 +836,20 @@ class render {
         $start_of_week = \get_option('start_of_week') ? \get_option('start_of_week') : 'yy-mm-dd' ;
         #self::log( 'Date format: '.$date_format );
 
-?>
-
+		?>
         // start date picker ##
         jQuery('.start-datepicker').datepicker( {
             dateFormat  : '<?php \esc_attr_e( $date_format ); ?>',
-            minDate     : '<?php echo substr( $dates["0"]->first, 0, 10 ); ?>',
-            maxDate     : '<?php echo substr( $dates["0"]->last, 0, 10 ); ?>',
+            minDate     : '<?php \esc_attr_e( substr( $dates["0"]->first, 0, 10 ) ); ?>',
+            maxDate     : '<?php \esc_attr_e( substr( $dates["0"]->last, 0, 10 ) ); ?>',
             firstDay    : '<?php \esc_attr_e( $start_of_week ); ?>'
         } );
 
         // end date picker ##
         jQuery('.end-datepicker').datepicker( {
             dateFormat  : '<?php \esc_attr_e( $date_format ); ?>',
-            minDate     : '<?php echo substr( $dates["0"]->first, 0, 10 ); ?>',
-            maxDate     : '<?php echo substr( $dates["0"]->last, 0, 10 ); ?>',
+            minDate     : '<?php \esc_attr_e( substr( $dates["0"]->first, 0, 10 ) ); ?>',
+            maxDate     : '<?php \esc_attr_e( substr( $dates["0"]->last, 0, 10 ) ); ?>',
             firstDay    : '<?php \esc_attr_e( $start_of_week ); ?>'
         } );
 
@@ -840,16 +857,16 @@ class render {
         // might want to set minDate to something else, but not sure
         // what would be best for everyone
         jQuery('.updated-datepicker').datepicker( {
-            dateFormat  : '<?php echo $date_format; ?>',
-            minDate     : '<?php echo substr( $dates["0"]->first, 0, 10 ); ?>',
+            dateFormat  : '<?php \esc_attr_e( $date_format ); ?>',
+            minDate     : '<?php \esc_attr_e( substr( $dates["0"]->first, 0, 10 ) ); ?>',
             maxDate	    : '0',
-            firstDay    : '<?php echo $start_of_week; ?>'
+            firstDay    : '<?php \esc_attr_e( $start_of_week ); ?>'
         } );
 
     });
 
     </script>
-<?php
+	<?php
 
     }
    
@@ -870,12 +887,12 @@ class render {
 
         }
 
-?>
+	?>
 	<style>
 		.toggleable { display: none; }
 		.hidden { display: none; }
 	</style>
-<?php
+	<?php
             
     }
 
