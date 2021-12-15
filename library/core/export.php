@@ -27,6 +27,8 @@ class export {
      */
     public function render(){
 
+		h::log( $_POST );
+
         // Check if the user clicked on the Save, Load, or Delete Settings buttons ##
         if (
             ! isset( $_POST['_wpnonce-q-eud-admin-page'] )
@@ -88,7 +90,7 @@ class export {
         // add custom args via filters ##
         $args = \apply_filters( 'q/eud/export/args', $args );
 
-        #h::log( $args );
+        h::log( $args );
 
         // pre_user query ##
         \add_action( 'pre_user_query', [ $this, 'pre_user_query' ] );
@@ -96,7 +98,7 @@ class export {
         \remove_action( 'pre_user_query', [ $this, 'pre_user_query' ] );
 
         // test args ##
-        #h::log ( $users );
+        h::log ( $users );
 
         // no users found, so chuck an error into the args array and exit the export ##
         if ( ! $users ) {
@@ -129,8 +131,8 @@ class export {
 
                 // to csv ##
                 header( 'Content-Description: File Transfer' );
-                header( 'Content-Disposition: attachment; filename='.\esc_attr_e( $filename ).'.csv' );
-                header( 'Content-Type: text/csv; charset=' . \esc_attr_e( \get_option( 'blog_charset' ) ), true );
+                header( 'Content-Disposition: attachment; filename='.\esc_attr( $filename ).'.csv' );
+                header( 'Content-Type: text/csv; charset=' . \esc_attr( \get_option( 'blog_charset' ) ), true );
 
                 // set a csv check flag
                 $is_csv = true;
@@ -188,7 +190,7 @@ class export {
                 // to xlsx ##
                 header( 'Content-Description: File Transfer' );
                 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                header("Content-Disposition: attachment; filename=".\esc_attr_e( $filename ).".xlsx");
+                header("Content-Disposition: attachment; filename=".\esc_attr( $filename ).".xlsx");
                 header('Content-Transfer-Encoding: binary');
                 //header('Content-Length: ' . filesize($file));
                 //header('Cache-Control: must-revalidate');
