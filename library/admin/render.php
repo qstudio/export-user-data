@@ -14,7 +14,7 @@ class render {
 
 	private $plugin, $user;
 
-	function __construct( \q\eud\plugin $plugin, \q\eud\core\user $user ){
+	public function __construct( \q\eud\plugin $plugin, \q\eud\core\user $user ){
 
 		$this->plugin = $plugin; 
 
@@ -27,7 +27,8 @@ class render {
     *
     * @since 0.1
     **/
-    public function add_menu(){
+    public function add_menu():void
+	{
 
         \add_users_page ( 
             \__( 'Export User Data', 'q-export-user-data' ), 
@@ -49,7 +50,7 @@ class render {
         // quick security check ##
         if ( ! \current_user_can( \apply_filters( 'q/eud/admin_capability', 'list_users' ) ) ) {
 
-            \wp_die( __( 'You do not have sufficient permissions to access this page.', 'q-export-user-data' ) );
+            \wp_die( \__( 'You do not have sufficient permissions to access this page.', 'q-export-user-data' ) );
 
 		}
 		
@@ -229,16 +230,19 @@ class render {
             global $wpdb;
     
             // filterable SQL ##
-            $meta_keys = \apply_filters( 
+            $meta_keys_sql = \apply_filters( 
                 'q/eud/admin/sql', 
-                $wpdb->get_results( "SELECT distinct(meta_key) FROM $wpdb->usermeta" ) 
+                "SELECT distinct(meta_key) FROM $wpdb->usermeta" 
             );
 
+			// run Query ##
+			$meta_keys = $wpdb->get_results( $meta_keys_sql );
+
             // filterable sort ##
-            \apply_filters( 
-                'q/eud/admin/sort', 
-                asort( $meta_keys )
-            );
+            // \apply_filters( 
+                // 'q/eud/admin/sort', 
+                asort( $meta_keys );
+            // );
 
             // get meta_key value from object ##
             $meta_keys = \wp_list_pluck( $meta_keys, 'meta_key' );
@@ -415,7 +419,7 @@ class render {
 
                         printf(
                             \__( 'Include Standard user profile fields, such as user_login. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
-                            ,   \esc_html('https://codex.wordpress.org/Database_Description#Table:_wp_users')
+                            ,   \esc_url('https://codex.wordpress.org/Database_Description#Table:_wp_users')
                             ,   'Codex'
                         );
 
@@ -491,8 +495,8 @@ class render {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Limit Range', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php \esc_attr_e( $_limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Offset', 'q-export-user-data' ); ?>">
-                    <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php \esc_attr_e ( $_limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php _e( 'Total', 'q-export-user-data' ); ?>">
+                    <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php \esc_attr_e( $_limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php \_e( 'Offset', 'q-export-user-data' ); ?>">
+                    <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php \esc_attr_e ( $_limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php \_e( 'Total', 'q-export-user-data' ); ?>">
                     <p class="description"><?php
                         printf(
                             \__( 'Enter an offset start number and a total number of users to export. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
@@ -875,7 +879,7 @@ class render {
     *
     * @since       0.8.2
     */
-    function css(){
+    public function css(){
 
         // load the scripts on only the plugin admin page
         if (
@@ -883,7 +887,7 @@ class render {
             || $_GET['page'] != 'q-export-user-data' 
         ) {
 
-            return false;
+            return;
 
         }
 

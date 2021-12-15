@@ -28,7 +28,7 @@ class filters {
 
         if ( is_null( $string ) ) {
 
-            return false;
+            return;
 
         }
 

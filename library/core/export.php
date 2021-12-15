@@ -27,16 +27,16 @@ class export {
      */
     public function render(){
 
-		h::log( $_POST );
+		// h::log( $_POST );
 
         // Check if the user clicked on the Save, Load, or Delete Settings buttons ##
         if (
             ! isset( $_POST['_wpnonce-q-eud-admin-page'] )
 		){
 
-			h::log( 'No nonce set' );
+			// h::log( 'No nonce set' );
 
-            return false;
+            return;
 
         }
 
@@ -47,9 +47,9 @@ class export {
             || isset( $_POST['delete_export'] ) )
         {
 
-			h::log( 'Not exporting, so return...' );
+			// h::log( 'Not exporting, so return...' );
 
-            return false;
+            return;
 
         }
 
@@ -90,20 +90,25 @@ class export {
         // add custom args via filters ##
         $args = \apply_filters( 'q/eud/export/args', $args );
 
-        h::log( $args );
+        // h::log( $args );
 
         // pre_user query ##
         \add_action( 'pre_user_query', [ $this, 'pre_user_query' ] );
+
+		// run WP_User_Query ##
         $users = \get_users( $args );
+
+		// remove pre_user_query again ##
         \remove_action( 'pre_user_query', [ $this, 'pre_user_query' ] );
 
         // test args ##
-        h::log ( $users );
+        // h::log ( $users );
 
         // no users found, so chuck an error into the args array and exit the export ##
         if ( ! $users ) {
 
             \wp_redirect( \add_query_arg( 'qeud_error', 'empty', \wp_get_referer() ) );
+
             exit;
 
         }
@@ -125,8 +130,10 @@ class export {
         // set export filename structure ##
         $filename = $sitename . 'report.' . date( 'Y-m-d-H-i-s' );
 
+		// switch of export methods - csv / excel ##
         switch ( $export_method ) {
 
+			// CSV ##
             case ( 'csv' ):
 
                 // to csv ##
@@ -154,37 +161,7 @@ class export {
 
             break;
 
-			/*
-            case ( 'excel2003' ):
-
-                // to xls ##
-                header( 'Content-Description: File Transfer' );
-                header("Content-Type: application/vnd.ms-excel");
-                header("Content-Disposition: attachment; filename=$filename.xls");
-                header("Pragma: no-cache");
-                header("Expires: 0");
-
-                // set a csv check flag
-                $is_csv = false;
-
-                // open xml
-                $doc_begin  = excel2003::begin();
-
-                //preformat
-                $pre        = excel2003::pre();
-
-                // how to seperate data ##
-                $seperator  = excel2003::seperator();
-
-                // line break ##
-                $breaker    = excel2003::breaker();
-
-                // close xml
-                $doc_end    = excel2003::end();
-
-			break;
-			*/
-
+			// Excel ##
             case ( 'excel2007' ):
 
                 // to xlsx ##
@@ -192,9 +169,6 @@ class export {
                 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
                 header("Content-Disposition: attachment; filename=".\esc_attr( $filename ).".xlsx");
                 header('Content-Transfer-Encoding: binary');
-                //header('Content-Length: ' . filesize($file));
-                //header('Cache-Control: must-revalidate');
-                //header('Pragma: public');
                 header("Pragma: no-cache");
                 header("Expires: 0");
 
@@ -221,17 +195,6 @@ class export {
 			array_map( 'sanitize_text_field', $_POST['usermeta'] ) : 
 			[];
         // h::log( $usermeta_fields );
-        // $usermeta_fields = [];
-
-        // loop over each field and sanitize ## @todo - user array_map ##
-        // if ( $usermeta && is_array( $usermeta ) ) {
-        //     foreach( $usermeta as $field ) {
-        //         $usermeta_fields[] = \sanitize_text_field( $field  );
-        //     }
-        // }
-
-        // h::log( $usermeta_fields );
-        #exit;
 
         // check for selected x profile fields ##
 		/*
@@ -352,40 +315,35 @@ class export {
 
         }
 
+		// escape each header value ##
+		$headers = array_map( function( $header ){
+			return esc_attr( $header );
+		}, $headers );
+
+		// h::log( $headers );
+
         if ( 
 			$is_csv
-			// $export_method !== "excel2007" 
 		){
 			
             // open doc wrapper.. ##
             \esc_html_e( $doc_begin );
 
-			// escape each header value ##
-			$headers = array_map(function($x){
-			 	return esc_attr($x);
-			}, $headers);
-
-			// h::log( $headers );
-
 			// get header string ##
 			$headers_string = $pre.implode( $seperator, $headers ).$breaker;
-
-			// h::log( $headers_string );
-			// h::log( \esc_html( $headers_string ) );
 
             // echo headers ##
             \esc_html_e( $headers_string );
 
-            #h::log( $users );
         } else {
 
             $xlsx_header = array_flip( $headers );
 
-            foreach($xlsx_header as $k => $v) {
+            foreach( $xlsx_header as $k => $v ) {
                 $xlsx_header[$k] = "string";
             }
 
-			$writer->writeSheetHeader('Sheet1', $xlsx_header);
+			$writer->writeSheetHeader( 'Sheet1', $xlsx_header );
 			
         }
 
@@ -600,71 +558,30 @@ class export {
 					// h::log( 'is_array || is_object' );
 					// h::log( $value );
 
-					// recursive implode it ##
-					// $value = h::recursive_implode( $value );
-
-					// json_encode value to object
+					// json_encode value to string  ##
 					$value = h::json_encode( $value );
-
-				// } else {
 
 				}
 
-					// sanitize string value ##
-					$value = h::sanitize( $value );
+				// sanitize string value ##
+				// $value = h::sanitize( $value );
 
-				// }
+				// apply generic filter to value ##
+				if( has_filter( 'q/eud/export/value' ) ){
 
-                // filter $value ##
-                // $value = \apply_filters( 'q/eud/export/value', $value, $field );
+					$value = \apply_filters( 'q/eud/export/value', $value );
 
-                // sanitize ##
-                // $value = h::sanitize( $value );
+				}
 
-				// if no filter is added, apply default sanitiziation ##
-				// if( has_filter( 'q/eud/export/value' ) ){
-
-					// $value = \apply_filters( 'q/eud/export/value', $value );
-
-				// } else {
-
-					// $value = h::format_value( $value );
-
-				// }	
-
-				// h::log( $value );
-
-                // wrap values in quotes and add to array ##
-                // if ( $is_csv ) {
-
-					// replace single-double quotes with double-double quotes, if not dealing with a JSON string ###
-					// if( ! h::is_json( $value ) ) {
-					
-						// $value = str_replace( '"', '\"', $value );
-
-					// }
-
-					// wrap value in double quotes ##
-					// $value = '"' . $value . '"';
-
-					// h::log( $value );
-
-					// add value to $data array  ##
-                    // $data[] = $value;
-
-                // just add to array ##
-                // } else {
-
-                    $data[] = $value;
-
-                // }
+				// add value to new key in $data array ##
+				$data[] = $value;
 
             }
 
 			// escape array values ##
 			$data = array_map(function($x){
 				return esc_attr($x);
-			   }, $data);
+			}, $data);
 
 			// h::log( $data );
 
@@ -673,14 +590,8 @@ class export {
 				// get row string ##
 				$row_string = $pre.implode( $seperator, $data ).$breaker;
 
-				// h::log( $row_string );
-				// h::log( \esc_html( $headers_string ) );
-
 				// echo headers ##
 				\esc_html_e( $row_string );
-				
-				// echo row data ##
-				// echo $pre . implode( $seperator, $data ) . $breaker;
 				
             } else {
 
@@ -698,7 +609,7 @@ class export {
 			
         } else {
 
-			// all column headers and data values have bene escaped previously ##
+			// xss: all column headers and data values have been escaped previously ##
 			echo $writer->writeToString();
 			
         }
@@ -713,8 +624,10 @@ class export {
     *
     * @since        2.0.0
     */
-    function pre_user_query( $user_search = null ){
+    public function pre_user_query( object $user_search = null ):object
+	{
 
+		// import WPDB object ##
         global $wpdb;
 
         $where = '';

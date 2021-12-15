@@ -29,9 +29,6 @@ class config {
         // load api admin fields ##
         self::get_admin_fields();
 
-        // kick it back ##
-        return true;
-
     }
 
     /**

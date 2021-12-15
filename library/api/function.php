@@ -14,7 +14,7 @@ if ( ! function_exists( 'export_user_data' ) ) {
 
 		// sanity ##
 		if(
-			! class_exists( '\export_user_data\plugin' )
+			! class_exists( 'q\eud\plugin' )
 		){
 
 			error_log( 'e:>Export User Data is not available to '.__FUNCTION__ );

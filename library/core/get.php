@@ -41,7 +41,7 @@ class get {
 
             // just return the user ID
             $user_fields = array(
-                    'ID'
+				'ID'
             );
 
         }

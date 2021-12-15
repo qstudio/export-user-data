@@ -12,7 +12,7 @@
  * Plugin Name:     Export User Data
  * Plugin URI:      http://qstudio.us/releases/export-user-data
  * Description:     Export User data and metadata.
- * Version:         2.2.3
+ * Version:         2.2.4
  * Author:          Q Studio
  * Author URI:      https://qstudio.us
  * License:         GPL-2.0+
@@ -50,10 +50,10 @@ require_once __DIR__ . '/plugin.php';
 require_once __DIR__ . '/vendor/PHP_XLSXWriter/xlsxwriter.class.php';
 
 // get plugin instance ##
-$plugin = plugin::get_instance();
+$_plugin = plugin::get_instance();
 
 // validate instance ##
-if( ! ( $plugin instanceof \q\eud\plugin ) ) {
+if( ! ( $_plugin instanceof \q\eud\plugin ) ) {
 
 	error_log( 'Error in Export User Data plugin instance' );
 
@@ -63,51 +63,51 @@ if( ! ( $plugin instanceof \q\eud\plugin ) ) {
 }
 
 // fire hooks - build log, helper and config objects and translations ## 
-\add_action( 'init', function() use( $plugin ){
+\add_action( 'init', function() use( $_plugin ){
 
 	// set text domain on init hook ##
-	\add_action( 'init', [ $plugin, 'load_plugin_textdomain' ], 1 );
+	\add_action( 'init', [ $_plugin, 'load_plugin_textdomain' ], 1 );
 	
 	// check debug settings ##
-	\add_action( 'plugins_loaded', [ $plugin, 'debug' ], 11 );
+	\add_action( 'plugins_loaded', [ $_plugin, 'debug' ], 11 );
 
 }, 0 );
 
 // build export object ##
-$export = new eud\core\export( $plugin );
+$_export = new eud\core\export( $_plugin );
 
 // build filters object ##
-$filters = new eud\core\filters( $plugin );
+$_filters = new eud\core\filters( $_plugin );
 
 // build user object ##
-$user = new eud\core\user( $plugin );
+$_user = new eud\core\user( $_plugin );
 
 // build admin object ##
-$admin = new eud\admin\render( $plugin, $user );
+$_admin = new eud\admin\render( $_plugin, $_user );
 
 // build buddypress object ##
-// $buddypress = new eud\core\buddypress();
+// $_buddypress = new eud\core\buddypress( $_plugin );
 
 if ( \is_admin() ){
 
 	// run export ##
-	\add_action( 'admin_init', [ $export, 'render' ], 1000003 );
+	\add_action( 'admin_init', [ $_export, 'render' ], 1000003 );
 
 	// load BP ##
-	// \add_action( 'admin_init', [ $buddypress, 'load' ], 1000001 );
+	// \add_action( 'admin_init', [ $_buddypress, 'load' ], 1000001 );
 
 	// EUD - filter key shown ##
-	\add_filter( 'q/eud/admin/display_key', [ $filters, 'display_key' ], 1, 1 );
+	\add_filter( 'q/eud/admin/display_key', [ $_filters, 'display_key' ], 1, 1 );
 
 	// user option ##
-	\add_action( 'admin_init', [ $user, 'load' ], 1000002 );
+	\add_action( 'admin_init', [ $_user, 'load' ], 1000002 );
 
 	// add export menu inside admin ##
-	\add_action( 'admin_menu', [ $admin, 'add_menu' ] );
+	\add_action( 'admin_menu', [ $_admin, 'add_menu' ] );
 
 	// UI style and functionality ##
-	\add_action( 'admin_enqueue_scripts', [ $admin, 'admin_enqueue_scripts' ], 1 );
-	\add_action( 'admin_footer', [ $admin, 'jquery' ], 100000 );
-	\add_action( 'admin_footer', [ $admin, 'css' ], 100000 );
+	\add_action( 'admin_enqueue_scripts', [ $_admin, 'admin_enqueue_scripts' ], 1 );
+	\add_action( 'admin_footer', [ $_admin, 'jquery' ], 100000 );
+	\add_action( 'admin_footer', [ $_admin, 'css' ], 100000 );
 
 }

@@ -72,8 +72,8 @@ class admin {
         }
 
 ?>
-        <tr valign="top" class="<?php echo $toggleable; ?>">
-            <th scope="row"><label for="q_eud_<?php echo $array['label']; ?>"><?php echo $array['title']; ?></label></th>
+        <tr valign="top" class="<?php \esc_attr_e( $toggleable ); ?>">
+            <th scope="row"><label for="q_eud_<?php \esc_attr_e( $array['label'] ); ?>"><?php \esc_attr_e( $array['title'] ); ?></label></th>
             <td>
 <?php 
 
@@ -84,7 +84,7 @@ class admin {
                 if ( isset( $array['description'] ) ) {
 
 ?>
-                    <p class="description"><?php echo $array['description']; ?></p>
+                    <p class="description"><?php \esc_attr_e( $array['description'] ); ?></p>
 <?php
 
                 }
@@ -175,11 +175,11 @@ class admin {
         $multiselect = isset( $array['multiselect'] ) ? ' multiple="multiple"' : '' ;
 
 ?>
-        <select <?php echo $multiselect; ?> name="<?php echo $array['label']; ?>" id="q_eud_<?php echo $array['label']; ?>">
-<?php
+        <select <?php \esc_attr_e( $multiselect ); ?> name="<?php \esc_attr_e( $array['label'] ); ?>" id="q_eud_<?php \esc_attr_e( $array['label'] ); ?>">
+		<?php
 
             // label ##
-            echo '<option value="">'.$array['label_select'].'</option>';
+            echo '<option value="">'.\esc_attr( $array['label_select'] ).'</option>';
 
             // loop over all options  ##
             foreach ( $array['options'] as $item ) {
@@ -201,7 +201,7 @@ class admin {
                 }
 
 ?>
-                <option value='<?php echo \esc_attr( $id ); ?>'><?php echo $title; ?></option>
+                <option value='<?php \esc_attr_e( $id ); ?>'><?php esc_attr_e( $title ); ?></option>
 <?php
 
             }

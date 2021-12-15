@@ -20,14 +20,14 @@ final class plugin {
     /**
      * Instance
      *
-     * @var     Object      $instance
+     * @var     Object      $_instance
      */
-	private static $instance;
+	private static $_instance;
 
 	public static 
 	
 		// current tag ##
-		$_version = '2.2.3',
+		$_version = '2.2.4',
 
 		// debugging control ##
 		$_debug = \WP_DEBUG
@@ -74,26 +74,26 @@ final class plugin {
 
         // object defined once --> singleton ##
         if ( 
-            isset( self::$instance ) 
-            && NULL !== self::$instance
+            isset( self::$_instance ) 
+            && NULL !== self::$_instance
         ){
 
-            return self::$instance;
+            return self::$_instance;
 
         }
 
         // create an object, if null ##
-        self::$instance = new self;
+        self::$_instance = new self;
 
         // store instance in filter, for potential external access ##
         \add_filter( __NAMESPACE__.'/instance', function() {
 
-            return self::$instance;
+            return self::$_instance;
             
         });
 
         // return the object ##
-        return self::$instance; 
+        return self::$_instance; 
 
     }
 
@@ -195,11 +195,11 @@ final class plugin {
 
         }
 
-        $plugin = isset( $_REQUEST['plugin'] ) ? \sanitize_text_field( $_REQUEST['plugin'] ) : '';
-        \check_admin_referer( "activate-plugin_{$plugin}" );
+        $_plugin = isset( $_REQUEST['plugin'] ) ? \sanitize_text_field( $_REQUEST['plugin'] ) : '';
+        \check_admin_referer( "activate-plugin_{$_plugin}" );
 
         // store data about the current plugin state at activation point ##
-        $config = [
+        $_config = [
             'configured'            => true , 
             'version'               => self::$_version ,
             'wp'                    => \get_bloginfo( 'version' ) ?? null ,
@@ -207,7 +207,7 @@ final class plugin {
 		];
 		
         // activation running, so update configuration flag ##
-        \update_option( 'plugin_export_user_data', $config, true );
+        \update_option( 'plugin_export_user_data', $_config, true );
 
     }
 
@@ -228,8 +228,8 @@ final class plugin {
         
         }
 
-        $plugin = isset( $_REQUEST['plugin'] ) ? \sanitize_text_field($_REQUEST['plugin'] ) : '';
-        \check_admin_referer( "deactivate-plugin_{$plugin}" );
+        $_plugin = isset( $_REQUEST['plugin'] ) ? \sanitize_text_field($_REQUEST['plugin'] ) : '';
+        \check_admin_referer( "deactivate-plugin_{$_plugin}" );
 
         // de-configure plugin ##
         \delete_option('plugin_export_user_data');

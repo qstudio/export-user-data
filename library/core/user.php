@@ -18,12 +18,12 @@ class user {
 	}
 
     /**
-    * Load up saved exports for this user
-    * Set to public as hooked into action
-    *
-    * @since       0.9.6
-    * @return      Array of saved exports
-    */
+     * Load up saved exports for this user
+     * Set to public as hooked into action
+     *
+     * @since       0.9.6
+     * @return      Array of saved exports
+     */
     public function load(){
 
 		// convert outdated stored meta from q_report to q_eud_exports ##
@@ -61,12 +61,13 @@ class user {
 	}
 
     /**
-    * Get list of saved exports for this user
-    *
-    * @since       0.9.4
-    * @return      Array of saved exports
-    */
-    function get_user_options(){
+     * Get list of saved exports for this user
+     *
+     * @since       0.9.4
+     * @return      Array of saved exports
+     */
+    public function get_user_options():array
+	{
 
 		// get props ##
 		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );
@@ -77,7 +78,7 @@ class user {
         // quick check if the array is empty ##
         if ( empty ( $_q_eud_exports ) ) {
 
-            return false;
+            return [];
 
         }
 
@@ -100,15 +101,21 @@ class user {
     }
 
     /**
-    * Check for and load stored user options
-    *
-    * @since       0.9.3
-    * @return      void
-    */
-    function get_user_options_by_export( $export = null ){
+     * Check for and load stored user options
+     *
+     * @since       	0.9.3
+	 * @param			string
+     * @return      	void
+     */
+    public function get_user_options_by_export( string $export = null ):void
+	{
 
         // sanity check ##
-		if ( is_null ( $export ) ) { return false; }
+		if ( is_null ( $export ) ) { 
+			
+			return; 
+		
+		}
 		
 		// get props ##
 		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );
@@ -168,20 +175,21 @@ class user {
     }
 
     /**
-    * Method to store user options
-    *
-    * @param       string      $save_export        Export Key name
-    * @param       array       $save_options       Array of export options to save
-    * @since       0.9.3
-    * @return      void
-    */
-    function set_user_options( $key = null, $options = null ){
+     * Method to store user options
+     *
+     * @param       string      $save_export        Export Key name
+     * @param       array       $save_options       Array of export options to save
+     * @since       0.9.3
+     * @return      void
+     */
+    public function set_user_options( $key = null, $options = null ):void
+	{
 
         // sanity check ##
         if ( is_null ( $key ) || is_null ( $options ) ) {
 
             #h::log( 'missing save values' );
-            return false;
+            return;
 
         }
 
@@ -192,12 +200,12 @@ class user {
 		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );
 
         // for now, I'm simply allowing keys to be resaved - but this is not so logical ##
-        if ( array_key_exists( $key, $_q_eud_exports ) ) {
+        // if ( array_key_exists( $key, $_q_eud_exports ) ) {
 
             #h::log( 'key exists, skipping save' );
             #return false;
 
-        }
+        // }
 
         if ( isset( $options ) && is_array( $options ) ) {
 
@@ -244,13 +252,14 @@ class user {
     }
 
     /**
-    * method to delete user options
-    *
-    * @param       $key        String      Key name to drop from property
-    * @since       0.9.3
-    * @return      void
-    */
-    function delete_user_options( $key = null ){
+     * delete user options
+     *
+     * @param       $key        String      Key name to drop from property
+     * @since       0.9.3
+     * @return      void
+     */
+    public function delete_user_options( string $key = null ):bool
+	{
 
 		// get prop ##
 		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );

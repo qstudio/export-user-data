@@ -269,7 +269,7 @@ class helper {
 		$value = array_values( $value );
 
 		// encode and escape ##
-		$value = htmlspecialchars( json_encode( $value, JSON_FORCE_OBJECT ) );
+		$value = json_encode( $value, JSON_FORCE_OBJECT );
 
 		// self::log( $value );
 
