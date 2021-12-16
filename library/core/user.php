@@ -193,8 +193,8 @@ class user {
 
         }
 
-        #h::log( $key );
-		#h::log( $options );
+        // h::log( $key );
+		// h::log( $options );
 
 		// get prop ##
 		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );

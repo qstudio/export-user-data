@@ -27,7 +27,7 @@ final class plugin {
 	public static 
 	
 		// current tag ##
-		$_version = '2.2.4',
+		$_version = '2.2.5',
 
 		// debugging control ##
 		$_debug = \WP_DEBUG
@@ -43,8 +43,8 @@ final class plugin {
 
 		$_q_eud_exports = '', // export settings ##
 		$_usermeta_saved_fields = [],
-		$_bp_fields_saved_fields = [],
-		$_bp_fields_update_time_saved_fields = [],
+		// $_bp_fields_saved_fields = [],
+		// $_bp_fields_update_time_saved_fields = [],
 		$_role = '',
 		$_roles = '0',
 		$_user_fields = '1',
@@ -56,7 +56,7 @@ final class plugin {
 		$_updated_since_date = '',
 		$_field_updated_since = '',
 		$_format = '',
-		$_bp_data_available = false,
+		// $_bp_data_available = false,
 		$_allowed_tags = '',
  
 		// api ##

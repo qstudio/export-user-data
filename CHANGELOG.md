@@ -1,6 +1,6 @@
 ## Changelog ##
 
-*** 2.2.4 ***
+*** 2.2.5 ***
 
 * New: WordPress Security release 
 

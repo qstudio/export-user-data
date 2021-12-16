@@ -718,10 +718,12 @@ class render {
     }
     
     /**
-    * Inline jQuery
-    * @since       0.8.2
-    */
-    public function jquery(){
+     * Inline jQuery
+	 *
+     * @since       0.8.2
+     */
+    public function jquery():void
+	{
 
         // load the scripts only on the plugin admin page
         if (
@@ -732,10 +734,13 @@ class render {
             return ;
 
 		}
-		
-		$_usermeta_saved_fields = h::quote_array( $this->plugin->get( '_usermeta_saved_fields' ) );
-		$_bp_fields_saved_fields = h::quote_array( $this->plugin->get( '_bp_fields_saved_fields' ) );
-		$_bp_fields_update_time_saved_fields = h::quote_array( $this->plugin->get( '_bp_fields_update_time_saved_fields' ) );
+
+		// get saved fields ##
+		$_usermeta_saved_fields = $this->plugin->get( '_usermeta_saved_fields' );
+		if ( ! is_array( $_usermeta_saved_fields ) ) {
+			$_usermeta_saved_fields = [];
+		}
+		// h::log( $_usermeta_saved_fields );
 
 ?>
     <script>
@@ -747,9 +752,7 @@ class render {
         jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
 
         // Select any fields from saved settings ##
-        jQuery('#usermeta').multiSelect('select',([<?php echo $_usermeta_saved_fields; // escaped by quote_array ?>]));
-        // jQuery('#bp_fields').multiSelect('select',([<?php #echo $_bp_fields_saved_fields; // escaped by quote_array ?>]));
-        // jQuery('#bp_fields_update_time').multiSelect('select',([<?php #echo $_bp_fields_update_time_saved_fields; // escaped by quote_array ?>]));
+        jQuery('#usermeta').multiSelect('select',([ <?php echo implode( ',', array_map( function( $field ){ return "'".\esc_attr( $field )."'"; }, $_usermeta_saved_fields ) );; // escaped ?>]));
 
         // show only common ##
         jQuery('.usermeta-common').click(function(e){
