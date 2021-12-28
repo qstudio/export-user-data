@@ -24,8 +24,6 @@ class filters {
     */
     public static function display_key( $string = null ){
 
-        #helper::log( 'string from filter: '.$string );
-
         if ( is_null( $string ) ) {
 
             return;

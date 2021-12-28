@@ -53,17 +53,10 @@ class config {
 			]
 		];
 
-        // test it ##
-        #self::log( $array );
-
         // filter and return ##
         apply_filters( 'q/eud/api/admin_fields', $array );
 
-        // test it ##
-		// h::log( $array );
-		
 		// add to static property ##
-		// self::$api_admin_fields = $array;
 		$this->plugin->set( '_api_admin_fields', $array );
 
         // kick back true ##

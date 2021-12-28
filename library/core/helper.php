@@ -178,13 +178,11 @@ class helper {
 
 				// self::log( $unserialized );
 
-                #$value = 'UNSERIALIZED_'.$unserialized;
                 $value = $unserialized;
 
             } else {
 
                 // failed to unserialize - data potentially corrupted in db ##
-                #$value = 'NOT_SERIALIZED_'.$value;
                 $value = $value;
 
             }
@@ -223,27 +221,6 @@ class helper {
 
 		}
 
-		// if value is a JSON_ENCODE'd string, then do not sanitize ##
-		// if( self::is_json( $value ) ){
-
-			// do we need to apply some escpaping ?? ##
-
-			// return $value;
-
-		// }
-
-		// sanitize ##
-		// $value = self::sanitize( $value );
-
-		// if no filter is added, apply default sanitiziation ##
-		// if( ! has_filter( 'q/eud/export/value' ) ){
-
-		
-
-		// }
-
-		// self::log( $value );
-        
         // kick it back via a filter to allow custom formatting ##
         return $value;
 
@@ -270,8 +247,6 @@ class helper {
 
 		// encode and escape ##
 		$value = json_encode( $value, JSON_FORCE_OBJECT );
-
-		// self::log( $value );
 
 		// kick back JSON encoded string ##
 		return $value;
@@ -321,15 +296,13 @@ class helper {
         // query user table for oldest and newest registration ##
         $range =
             $wpdb->get_results (
-                #$wpdb->prepare (
-                    "
-                    SELECT
-                        MIN( user_registered ) AS first,
-                        MAX( user_registered ) AS last
-                    FROM
-                        {$wpdb->users}
-                    "
-                #)
+				"
+				SELECT
+					MIN( user_registered ) AS first,
+					MAX( user_registered ) AS last
+				FROM
+					{$wpdb->users}
+				"
             );
 
         return $range;
@@ -344,17 +317,6 @@ class helper {
     */
     public static function sanitize_value( $value ){
 
-		// if value is a JSON_ENCODE'd string, then do not sanitize ##
-		// if( self::is_json( $value ) ){
-
-		// 	// do we need to apply some escpaping ?? ##
-
-		// 	return $value;
-
-		// }
-
-		// self::log( 'sanitize: '.$value );
-
 		if( has_filter( 'q/eud/export/value' ) ){
 
 			$value = \apply_filters( 'q/eud/export/value', $value );
@@ -365,14 +327,6 @@ class helper {
 			// $value = \esc_attr( $value );
 
 		}
-
-        // remove line breaks ##
-        // $value = str_replace("\r", '', $value);
-        // $value = str_replace("\n", '', $value);
-        // $value = str_replace("\t", '', $value);
-
-        // with wp_kses ##
-        // $value = \wp_kses( $value, self::get_allowed_tags() );
 
         // return value ##
         return $value;
@@ -407,13 +361,9 @@ class helper {
 
 		if ( json_last_error() === JSON_ERROR_NONE ){
 
-			// self::log( 'is_json: '.$string );
-
 			return true;
 
 		}
-
-		// self::log( 'is not json: '.$string );
 
 		return false;
 	

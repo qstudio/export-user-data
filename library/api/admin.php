@@ -32,23 +32,16 @@ class admin {
             || ! is_array( $array )    
         ) {
 
-            #h::log( 'No fields found' );
-
             return false;
 
         }
-
-        #h::log( $array );
 
         // check that we have all required arrays ##
         if ( 
             ! $array['title'] // string ##
             || ! $array['label'] // lowercase string ##
             || ! $array['type']
-            #|| ! $array['description']
         ) {
-
-            #h::log( 'Missing data' );
 
             return false;
 
@@ -60,13 +53,9 @@ class admin {
         // keep labels formatted nicely ##
         $array['label'] = \sanitize_key( $array['label'] );
 
-        #h::log( $array['options'] );
-
         // build out options ##
         if ( ! self::has_options( $array ) ) { 
             
-            #h::log( 'Missing options for: '.$array['label'] );
-
             return false;
 
         }
@@ -126,8 +115,6 @@ class admin {
             || ! isset( $array['type'] )
         ) {
 
-            #h::log( 'Error building options for: '.$array['label'] );
-
             return false;
 
         }
@@ -163,13 +150,9 @@ class admin {
             || ! isset( $array['label_select'] )
         ) {
 
-            #h::log( 'Error building select options for: '.$array['label'] );
-
             return false;
 
         }
-
-        #h::log( 'Building select options for: '.$array['label'] );
 
         // is this a multiselect ? ##
         $multiselect = isset( $array['multiselect'] ) ? ' multiple="multiple"' : '' ;

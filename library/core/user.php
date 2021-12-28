@@ -38,13 +38,7 @@ class user {
 			// add to user meta, as they do not have any stored values ##
 			\add_user_meta( \get_current_user_id(), 'q_eud_exports', $old_data );
 
-			// delete old data ---? perhaps better to leave it, even if it redundant?
-			// \delete_user_meta( \get_current_user_id(), 'q_eud_exports' );
-
 		}
-
-		// test # 
-		// h::log( \get_user_meta( \get_current_user_id(), 'q_eud_exports', true ) );
 
 		// get array ##
 		$array = 
@@ -81,9 +75,6 @@ class user {
             return [];
 
         }
-
-        // test the array of saved exports ##
-        #h::log( $_q_eud_exports );
 
         // start with an empty array ##
         $exports = [];
@@ -123,10 +114,7 @@ class user {
         if ( isset( $_q_eud_exports[$export] ) ) {
 
             $_usermeta_saved_fields = $_q_eud_exports[$export]['usermeta_saved_fields'];
-            // $_bp_fields_saved_fields = $_q_eud_exports[$export]['bp_fields_saved_fields'];
-            // $_bp_fields_update_time_saved_fields = $_q_eud_exports[$export]['bp_fields_update_time_saved_fields'];
             $_updated_since_date = $_q_eud_exports[$export]['updated_since_date'] ?? null ;
-            $_field_updated_since = $_q_eud_exports[$export]['field_updated_since'] ?? null ;
             $_role = $_q_eud_exports[$export]['role'];
             $_roles = $_q_eud_exports[$export]['roles'];
             $_groups = $_q_eud_exports[$export]['groups'];
@@ -140,10 +128,7 @@ class user {
         } else {
 
             $_usermeta_saved_fields = [];
-            // $_bp_fields_saved_fields = [];
-            // $_bp_fields_update_time_saved_fields = [];
             $_updated_since_date = '';
-            $_field_updated_since = '';
             $_role = '';
             $_user_fields = '1';
             $_roles = '1';
@@ -158,10 +143,7 @@ class user {
 		
 		// set props ##
 		$this->plugin->set( '_usermeta_saved_fields', $_usermeta_saved_fields );
-		// $this->plugin->set( '_bp_fields_saved_fields', $_bp_fields_saved_fields );
-		// $this->plugin->set( '_bp_fields_update_time_saved_fields', $_bp_fields_update_time_saved_fields );
 		$this->plugin->set( '_updated_since_date', $_updated_since_date );
-		$this->plugin->set( '_field_updated_since', $_field_updated_since );
 		$this->plugin->set( '_role', $_role );
 		$this->plugin->set( '_user_fields', $_user_fields );
 		$this->plugin->set( '_roles', $_roles );
@@ -193,19 +175,8 @@ class user {
 
         }
 
-        // h::log( $key );
-		// h::log( $options );
-
 		// get prop ##
 		$_q_eud_exports = $this->plugin->get( '_q_eud_exports' );
-
-        // for now, I'm simply allowing keys to be resaved - but this is not so logical ##
-        // if ( array_key_exists( $key, $_q_eud_exports ) ) {
-
-            #h::log( 'key exists, skipping save' );
-            #return false;
-
-        // }
 
         if ( isset( $options ) && is_array( $options ) ) {
 
@@ -269,9 +240,6 @@ class user {
 
         // clean it up ##
         $key = \sanitize_text_field( $key );
-
-        // check it out ##
-        #h::log( $key );
 
         // drop the array by it's key name from the class property ##
         unset( $_q_eud_exports[$key] );

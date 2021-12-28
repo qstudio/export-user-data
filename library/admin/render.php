@@ -7,7 +7,6 @@ use q\eud;
 use q\eud\plugin;
 use q\eud\core\helper as h;
 use q\eud\core\user as user;
-// use q\eud\core\buddypress as buddypress;
 use q\eud\api\admin as api_admin;
 
 class render {
@@ -74,13 +73,8 @@ class render {
 
             }
 
-            // clean up $save_export ##
-            // $save_export = \sanitize_text_field( $save_export );
-
             // Build array of $options to save and save them ##
             if ( isset( $save_export ) ) {
-
-				// h::log( 'user_fields: '. $_POST['user_fields'] );
 
 				// prepare all array values ##
 				$usermeta = 
@@ -88,14 +82,6 @@ class render {
 					array_map( 'sanitize_text_field', 
 					$_POST['usermeta'] ) : 
 					'';
-                // $bp_fields = 
-                //     isset( $_POST['bp_fields'] ) ? 
-                //     array_map( 'sanitize_text_field', $_POST['bp_fields'] ) : 
-                //     '' ;
-                // $bp_fields_update = 
-                //     isset( $_POST['bp_fields_update_time'] ) ? 
-                //     array_map( 'sanitize_text_field', $_POST['bp_fields_update_time'] ) : 
-                //     '' ;
                 $format = 
                     isset( $_POST['format'] ) ? 
                     \sanitize_text_field( $_POST['format'] ) :
@@ -136,16 +122,10 @@ class render {
                     isset( $_POST['updated_since_date'] ) ? 
                     \sanitize_text_field( $_POST['updated_since_date'] ) : 
                     '' ;
-                $field_updated_since = 
-                    isset( $_POST['bp_field_updated_since'] ) ? 
-                    array_map( 'sanitize_text_field', $_POST['bp_field_updated_since'] ) :
-                    '';
 
                 // assign all values to an array ##
                 $save_array = array (
                     'usermeta_saved_fields' => $usermeta,
-                    // 'bp_fields_saved_fields' => $bp_fields,
-                    // 'bp_fields_update_time_saved_fields' => $bp_fields_update,
                     'role' => $role,
                     'roles' => $roles,
                     'user_fields' => $user_fields,
@@ -155,7 +135,6 @@ class render {
                     'limit_offset' => $limit_offset,
                     'limit_total' => $limit_total,
                     'updated_since_date' => $updated_since_date,
-                    'field_updated_since' => $field_updated_since,
                     'format' => $format
                 );
 
@@ -217,7 +196,6 @@ class render {
 	$_limit_total = $this->plugin->get( '_limit_total' );
 	$_updated_since_date = $this->plugin->get( '_updated_since_date' );
 	$_format = $this->plugin->get( '_format' );
-	$_field_updated_since = $this->plugin->get( '_field_updated_since' );
 	$_updated_since_date = $this->plugin->get( '_updated_since_date' );
 
 ?>
@@ -238,21 +216,14 @@ class render {
 			// run Query ##
 			$meta_keys = $wpdb->get_results( $meta_keys_sql );
 
-            // filterable sort ##
-            // \apply_filters( 
-                // 'q/eud/admin/sort', 
-                asort( $meta_keys );
-            // );
+            // sort ##
+			asort( $meta_keys );
 
             // get meta_key value from object ##
             $meta_keys = \wp_list_pluck( $meta_keys, 'meta_key' );
 
             // allow array to be filtered ##
             $meta_keys_common = \apply_filters( 'q/eud/admin/meta_keys_common', [] );
-
-            // test array ##
-            #helper::log( $meta_keys );
-            #helper::log( $meta_keys_common );
 
             // check if we got anything ? ##
             if ( $meta_keys ) {
@@ -282,17 +253,11 @@ class render {
 
                             foreach ( $meta_keys_common as $drop ) {
 
-                                #helper::log( 'Checking: '.$drop );
-
                                 if ( strpos( $key, $drop ) !== false ) {
-
-                                    #helper::log( 'Checking: '.$key );
 
                                     // https://wordpress.org/support/topic/bugfix-numbers-in-export-headers?replies=1
                                     // removed $key = assignment, as not required ##
                                     if ( ( array_search( $key, $meta_keys ) ) !== false ) {
-
-                                        #helper::log( 'Found: '.$key );
 
                                         $usermeta_class = 'common';
 
@@ -324,98 +289,11 @@ class render {
             } // meta_keys found ##
 
 ?>
-<?php
-
-		/*
-        // buddypress x profile data ##
-        if ( $bp_fields = buddypress::get_fields() ) {
-            
-?>
-            <tr valign="top">
-                <th scope="row">
-                    <label for="q_eud_xprofile"><?php \_e( 'BP xProfile Fields', 'q-export-user-data' ); ?></label>
-                    <p class="filter" style="margin: 10px 0 0;">
-                        <?php \_e('Select', 'q-export-user-data'); ?>: <a href="#" class="select-all"><?php \_e('All', 'q-export-user-data'); ?></a> | <a href="#" class="select-none"><?php \_e('None', 'q-export-user-data'); ?></a>
-                    </p>
-                </th>
-                <td>
-                    <select multiple="multiple" id="bp_fields" name="bp_fields[]">
-<?php
-
-                    foreach ( $bp_fields as $key ) {
-
-                        // print key ##
-                        echo "<option value='".\esc_attr( $key )."' title='".\esc_attr( $key )."'>$key</option>";
-
-                    }
-
-?>
-                    </select>
-                    <p class="description"><?php
-                        printf(
-                            \__( 'Select the BuddyPress XProfile keys to export', 'q-export-user-data' )
-                        );
-                    ?></p>
-                </td>
-            </tr>
-<?php
-
-            // allow export of update times ##
-
-?>
-            <tr valign="top" class="toggleable">
-                <th scope="row">
-                    <label for="q_eud_xprofile"><?php \_e( 'BP xProfile Fields Update Time', 'q-export-user-data' ); ?></label>
-                    <p class="filter" style="margin: 10px 0 0;">
-                        <?php \_e('Select', 'q-export-user-data'); ?>: <a href="#" class="select-all"><?php \_e('All', 'q-export-user-data'); ?></a> | <a href="#" class="select-none"><?php _e('None', 'q-export-user-data'); ?></a>
-                    </p>
-                </th>
-                <td>
-                    <select multiple="multiple" id="bp_fields_update_time" name="bp_fields_update_time[]">
-<?php
-
-                    foreach ( $bp_fields as $key ) {
-
-                        echo "<option value='".\esc_attr( $key )."' title='".\esc_attr( $key )."'>$key</option>";
-
-                    }
-
-?>
-                    </select>
-                    <p class="description"><?php
-                        printf(
-                            \__( 'Select the BuddyPress XProfile keys updated dates to export', 'q-export-user-data' )
-                        );
-                    ?></p>
-                </td>
-            </tr>
-
-            <tr valign="top" class="toggleable">
-                <th scope="row"><label for="groups"><?php \_e( 'BP User Groups', 'q-export-user-data' ); ?></label></th>
-                <td>
-                    <input id='groups' type='checkbox' name='groups' value='1' <?php \checked( isset ( $_groups ) ? intval ( $_groups ) : '', 1 ); ?> />
-                    <p class="description"><?php
-                        printf(
-                            \__( 'Include BuddyPress Group Data. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
-                            ,   \esc_html('https://codex.buddypress.org/buddypress-components-and-features/groups/')
-                            ,   'Codex'
-                        );
-                    ?></p>
-                </td>
-            </tr>
-<?php
-
-        } // BP installed and active ##
-		*/
-
-?>
             <tr valign="top" class="toggleable">
                 <th scope="row"><label for="user_fields"><?php \_e( 'Standard User Fields', 'q-export-user-data' ); ?></label></th>
                 <td>
                     <input id='user_fields' type='checkbox' name='user_fields' value='1' <?php \checked( isset ( $_user_fields ) ? intval ( $_user_fields ) : '', 1 ); ?> />
                     <p class="description"><?php
-
-                        #h::log( 'user_fields: '.$_user_fields );
 
                         printf(
                             \__( 'Include Standard user profile fields, such as user_login. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
@@ -506,64 +384,23 @@ class render {
                     ?></p>
                 </td>
             </tr>
-<?php
+			<?php
 
-        // buddypress x profile data ##
-		/*
-        if ( $bp_fields = buddypress::get_fields() ) {
-            
-?>
-            <tr valign="top" class="toggleable">
-                <th scope="row"><label><?php \_e( 'Updated Since', 'q-export-user-data' ); ?></label></th>
-                <td>
-                    <input type="text" id="q_eud_updated_since_date" name="updated_since_date" value="<?php echo $_updated_since_date; ?>" class="updated-datepicker" />
-                    <select id="bp_field_updated_since" name="bp_field_updated_since">
-<?php
+			// pull in extra export options from api ##
+			if ( $api_fields = \apply_filters( 'q/eud/api/admin/fields', [] ) ) {
 
-                    foreach ( $bp_fields as $key ) {
-                        
-                        if ( $_field_updated_since == $key ) {
-                            
-                            echo "<option value='".\esc_attr( $key )."' title='".\esc_attr( $key )."' selected>$key</option>";
-                       
-                        } else {
-                        
-                            echo "<option value='".\esc_attr( $key )."' title='".\esc_attr( $key )."'>$key</option>";
-                        
-                        }
+				// create api instance #
+				$api_admin = new \q\eud\api\admin();
+				
+				foreach( $api_fields as $field ) {
+				
+					$api_admin->render( $field );
 
-                    }
+				}
 
-?>
-                    </select>
+			}
 
-                    <p class="description"><?php
-                        printf(
-                            \__( 'Limit the results to users who have updated this extended profile field after this date.', 'q-export-user-data' )
-                        );
-                    ?></p>
-                </td>
-            </tr>
-<?php
-
-        } // bp date ##
-		*/
-
-        // pull in extra export options from api ##
-        if ( $api_fields = \apply_filters( 'q/eud/api/admin/fields', [] ) ) {
-
-			// create api instance #
-			$api_admin = new \q\eud\api\admin();
-            
-            foreach( $api_fields as $field ) {
-             
-                $api_admin->render( $field );
-
-            }
-
-        }
-
-?>
+			?>
             <tr valign="top">
                 <th scope="row"><label for="q_eud_users_format"><?php \_e( 'Format', 'q-export-user-data' ); ?></label></th>
                 <td>
@@ -740,7 +577,6 @@ class render {
 		if ( ! is_array( $_usermeta_saved_fields ) ) {
 			$_usermeta_saved_fields = [];
 		}
-		// h::log( $_usermeta_saved_fields );
 
 ?>
     <script>
@@ -820,7 +656,7 @@ class render {
 
             if ( ! q_eud_save_options_new_export || q_eud_save_options_new_export == '' ) {
 
-                e.preventDefault(); // stop things here ##
+                e.preventDefault();
                 jQuery('#q_eud_save_options_new_export').addClass("error");
 
             }
@@ -841,7 +677,6 @@ class render {
         // get date format from WP settings #
         $date_format = 'yy-mm-dd' ; // get_option('date_format') ? get_option('date_format') : 'yy-mm-dd' ;
         $start_of_week = \get_option('start_of_week') ? \get_option('start_of_week') : 'yy-mm-dd' ;
-        #self::log( 'Date format: '.$date_format );
 
 		?>
         // start date picker ##

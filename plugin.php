@@ -27,7 +27,7 @@ final class plugin {
 	public static 
 	
 		// current tag ##
-		$_version = '2.2.5',
+		$_version = '2.2.6',
 
 		// debugging control ##
 		$_debug = \WP_DEBUG
@@ -43,8 +43,6 @@ final class plugin {
 
 		$_q_eud_exports = '', // export settings ##
 		$_usermeta_saved_fields = [],
-		// $_bp_fields_saved_fields = [],
-		// $_bp_fields_update_time_saved_fields = [],
 		$_role = '',
 		$_roles = '0',
 		$_user_fields = '1',
@@ -54,9 +52,7 @@ final class plugin {
 		$_limit_offset = '',
 		$_limit_total = '',
 		$_updated_since_date = '',
-		$_field_updated_since = '',
 		$_format = '',
-		// $_bp_data_available = false,
 		$_allowed_tags = '',
  
 		// api ##
@@ -154,8 +150,6 @@ final class plugin {
 
         }
 
-        // w__log( 'prop->set: '.$key.' -> '.$value );
-
         // set new value ##
 		return $this->{$key} = $value;
 
@@ -219,8 +213,6 @@ final class plugin {
      */
     public static function deactivation_hook(){
 
-        // Log::write( 'Plugin De-activated..' );
-
         // check user caps ##
         if ( ! \current_user_can( 'activate_plugins' ) ) {
         
@@ -233,9 +225,6 @@ final class plugin {
 
         // de-configure plugin ##
         \delete_option('plugin_export_user_data');
-
-        // clear rewrite rules ##
-        // \flush_rewrite_rules();
 
 	}
 	
@@ -254,11 +243,6 @@ final class plugin {
 			) ?
 			true :
 			$this->_debug;
-
-		// test ##
-		// w__log( 'Q exists: '.json_encode( class_exists( 'Q' ) ) );
-		// w__log( 'Q debug: '.json_encode( \Q::$debug ) );
-		// w__log( json_encode( self::$debug ) );
 
 		return $this->_debug;
 

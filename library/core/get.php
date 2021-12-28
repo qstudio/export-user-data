@@ -17,27 +17,19 @@ class get {
         // standard wp_users fields ##
         if ( isset( $_POST['user_fields'] ) && '1' == $_POST['user_fields'] ) {
 
-            // debug ##
-            #h::log( 'full' );
-
             // exportable user data ##
             $user_fields = array(
                     'ID'
                 ,   'user_login'
-                #,  'user_pass'
                 ,   'user_nicename'
                 ,   'user_email'
                 ,   'user_url'
                 ,   'user_registered'
-                #,  'user_activation_key'
                 ,   'user_status'
                 ,   'display_name'
             );
 
         } else {
-
-            // debug ##
-            #h::log( 'reduced' );
 
             // just return the user ID
             $user_fields = array(
@@ -57,10 +49,7 @@ class get {
     public static function special_fields(){
 
         // exportable user data ##
-        $special_fields = array(
-            #    'roles'     // list of WP Roles
-            #,   'groups'    // BP Groups
-        );
+        $special_fields = [];
 
         // should we allow groups ##
         if ( isset( $_POST['groups'] ) && '1' == $_POST['groups'] ) {
@@ -89,7 +78,6 @@ class get {
         $exclude_fields = array (
                 'user_pass'
             ,   'q_eud_exports'
-            #,   'user_activation_key'
         );
 
         // kick back array via filter ##
@@ -113,15 +101,13 @@ class get {
         // query user table for oldest and newest registration ##
         $range =
             $wpdb->get_results (
-                #$wpdb->prepare (
-                    "
-                    SELECT
-                        MIN( user_registered ) AS first,
-                        MAX( user_registered ) AS last
-                    FROM
-                        {$wpdb->users}
-                    "
-                #)
+				"
+				SELECT
+					MIN( user_registered ) AS first,
+					MAX( user_registered ) AS last
+				FROM
+					{$wpdb->users}
+				"
             );
 
         return $range;
