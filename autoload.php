@@ -45,7 +45,7 @@ spl_autoload_register( function( $class ) {
 
 	// error_log( 'Class Name: '.$class_name );
 
-	$possible_file = strtolower( $base_dir . str_replace('\\', '/', $class_name ) . '.php' );
+	$possible_file = $base_dir . strtolower( str_replace('\\', '/', $class_name ) . '.php' );
 
 	// require the file if it exists
 	if( file_exists( $possible_file ) ) {
