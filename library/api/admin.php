@@ -48,7 +48,7 @@ class admin {
         }
 
         // is this toggleable ? ##
-        $toggleable = false === $array['toggleable'] ? 'standard' : 'toggleable' ;
+        $toggleable = ( isset( $array['toggleable'] ) && false === $array['toggleable'] ) ? 'standard' : 'toggleable' ;
 
         // keep labels formatted nicely ##
         $array['label'] = \sanitize_key( $array['label'] );
@@ -61,8 +61,8 @@ class admin {
         }
 
 ?>
-        <tr valign="top" class="<?php \esc_attr_e( $toggleable ); ?>">
-            <th scope="row"><label for="q_eud_<?php \esc_attr_e( $array['label'] ); ?>"><?php \esc_attr_e( $array['title'] ); ?></label></th>
+        <tr valign="top" class="<?php echo \esc_attr( $toggleable ); ?>">
+            <th scope="row"><label for="q_eud_<?php echo \esc_attr( $array['label'] ); ?>"><?php echo \esc_attr( $array['title'] ); ?></label></th>
             <td>
 <?php 
 
@@ -73,7 +73,7 @@ class admin {
                 if ( isset( $array['description'] ) ) {
 
 ?>
-                    <p class="description"><?php \esc_attr_e( $array['description'] ); ?></p>
+                    <p class="description"><?php echo \esc_attr( $array['description'] ); ?></p>
 <?php
 
                 }
@@ -160,7 +160,7 @@ class admin {
         $name_append =  ( $multiselect ) ? '[]' : '';
 
 ?>
-        <select <?php echo( $multiselect ); ?> name="<?php echo \esc_attr( $array['label'] ) . $name_append; ?>" id="q_eud_<?php \esc_attr_e( $array['label'] ); ?>">
+        <select <?php echo \esc_attr( $multiselect ); ?> name="<?php echo \esc_attr( $array['label'] ) . $name_append; ?>" id="q_eud_<?php echo \esc_attr( $array['label'] ); ?>">
 		<?php
 
             // label ##
@@ -188,7 +188,7 @@ class admin {
                 }
 
 ?>
-                <option value='<?php \esc_attr_e( $id ); ?>'><?php esc_attr_e( $title ); ?></option>
+                <option value='<?php echo \esc_attr( $id ); ?>'><?php echo \esc_attr( $title ); ?></option>
 <?php
 
             }

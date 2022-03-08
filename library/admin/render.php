@@ -269,8 +269,8 @@ class render {
 
                             // print key ##
                             ?>
-							<option value="<?php \esc_attr_e( $key ); ?>" title="<?php \esc_attr_e( $key ); ?>" class="<?php \esc_attr_e( $usermeta_class ); ?>">
-								<?php \esc_attr_e( $display_key ); ?>
+							<option value="<?php echo \esc_attr( $key ); ?>" title="<?php echo \esc_attr( $key ); ?>" class="<?php echo \esc_attr( $usermeta_class ); ?>">
+								<?php echo \esc_attr( $display_key ); ?>
 							</option>
 							<?php
 
@@ -319,13 +319,13 @@ class render {
 						if ( isset ( $_role ) && ( $_role == $role ) ) {
 
 						?>
-						<option selected value="<?php \esc_attr_e( $role ); ?>"><?php \esc_attr_e( $name ); ?></option>
+						<option selected value="<?php echo \esc_attr( $role ); ?>"><?php echo \esc_attr( $name ); ?></option>
 						<?php
 
 						} else {
 
 						?>
-						<option value="<?php \esc_attr_e( $role ); ?>"><?php \esc_attr_e( $name ); ?></option>
+						<option value="<?php echo \esc_attr( $role ); ?>"><?php echo \esc_attr( $name ); ?></option>
 						<?php
 
 						}
@@ -360,8 +360,8 @@ class render {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Registered', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input type="text" id="q_eud_users_start_date" name="start_date" value="<?php \esc_attr_e( $_start_date ); ?>" class="start-datepicker" />
-                    <input type="text" id="q_eud_users_end_date" name="end_date" value="<?php \esc_attr_e( $_end_date ); ?>" class="end-datepicker" />
+                    <input type="text" id="q_eud_users_start_date" name="start_date" value="<?php echo \esc_attr( $_start_date ); ?>" class="start-datepicker" />
+                    <input type="text" id="q_eud_users_end_date" name="end_date" value="<?php echo \esc_attr( $_end_date ); ?>" class="end-datepicker" />
                     <p class="description"><?php
                         printf(
                             \__( 'Pick a start and end user registration date to limit the results.', 'q-export-user-data' )
@@ -373,8 +373,8 @@ class render {
             <tr valign="top" class="toggleable">
                 <th scope="row"><label><?php \_e( 'Limit Range', 'q-export-user-data' ); ?></label></th>
                 <td>
-                    <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php \esc_attr_e( $_limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php \_e( 'Offset', 'q-export-user-data' ); ?>">
-                    <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php \esc_attr_e ( $_limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php \_e( 'Total', 'q-export-user-data' ); ?>">
+                    <input name="limit_offset" type="text" id="q_eud_users_limit_offset" value="<?php echo \esc_attr( $_limit_offset ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php \_e( 'Offset', 'q-export-user-data' ); ?>">
+                    <input name="limit_total" type="text" id="q_eud_users_limit_total" value="<?php echo \esc_attr ( $_limit_total ); ?>" class="regular-text code numeric" style="width: 136px;" placeholder="<?php \_e( 'Total', 'q-export-user-data' ); ?>">
                     <p class="description"><?php
                         printf(
                             \__( 'Enter an offset start number and a total number of users to export. <a href="%s" target="_blank">%s</a>', 'q-export-user-data' )
@@ -450,7 +450,7 @@ class render {
                 <td>
 
                     <div class="row">
-                        <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php \_e( 'Export Name', 'q-export-user-data' ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? \esc_attr_e( $_POST['export_name'] ) : '' ; ?>">
+                        <input type="text" class="regular-text" name="save_new_export_name" id="q_eud_save_options_new_export" placeholder="<?php \_e( 'Export Name', 'q-export-user-data' ); ?>" value="<?php echo isset( $_POST['export_name'] ) ? \esc_attr( $_POST['export_name'] ) : '' ; ?>">
                         <input type="submit" id="save_export" class="button-primary" name="save_export" value="<?php \_e( 'Save', 'q-export-user-data' ); ?>" />
                     </div>
                     <?php
@@ -474,14 +474,14 @@ class render {
 						) {
 
 							?>
-							<option selected value='<?php \esc_attr_e( $export ); ?>'><?php \esc_attr_e( $export ); ?></option>
+							<option selected value='<?php echo \esc_attr( $export ); ?>'><?php echo \esc_attr( $export ); ?></option>
 							<?php
 
 						// just list previous export name ##
 						} else {
 
 							?>
-							<option value='<?php \esc_attr_e( $export ); ?>'><?php \esc_attr_e( $export ); ?></option>
+							<option value='<?php echo \esc_attr( $export ); ?>'><?php echo \esc_attr( $export ); ?></option>
 							<?php
 
 						}
@@ -586,6 +586,7 @@ class render {
 
         // build super multiselect ##
         jQuery('select[multiple]').multiSelect();
+		// jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
 
         // Select any fields from saved settings ##
         jQuery('#usermeta').multiSelect('select',([ <?php echo implode( ',', array_map( function( $field ){ return "'".\esc_attr( $field )."'"; }, $_usermeta_saved_fields ) );; // escaped ?>]));
@@ -681,28 +682,28 @@ class render {
 		?>
         // start date picker ##
         jQuery('.start-datepicker').datepicker( {
-            dateFormat  : '<?php \esc_attr_e( $date_format ); ?>',
-            minDate     : '<?php \esc_attr_e( substr( $dates["0"]->first, 0, 10 ) ); ?>',
-            maxDate     : '<?php \esc_attr_e( substr( $dates["0"]->last, 0, 10 ) ); ?>',
-            firstDay    : '<?php \esc_attr_e( $start_of_week ); ?>'
+            dateFormat  : '<?php echo \esc_attr( $date_format ); ?>',
+            minDate     : '<?php echo \esc_attr( substr( $dates["0"]->first, 0, 10 ) ); ?>',
+            maxDate     : '<?php echo \esc_attr( substr( $dates["0"]->last, 0, 10 ) ); ?>',
+            firstDay    : '<?php echo \esc_attr( $start_of_week ); ?>'
         } );
 
         // end date picker ##
         jQuery('.end-datepicker').datepicker( {
-            dateFormat  : '<?php \esc_attr_e( $date_format ); ?>',
-            minDate     : '<?php \esc_attr_e( substr( $dates["0"]->first, 0, 10 ) ); ?>',
-            maxDate     : '<?php \esc_attr_e( substr( $dates["0"]->last, 0, 10 ) ); ?>',
-            firstDay    : '<?php \esc_attr_e( $start_of_week ); ?>'
+            dateFormat  : '<?php echo \esc_attr( $date_format ); ?>',
+            minDate     : '<?php echo \esc_attr( substr( $dates["0"]->first, 0, 10 ) ); ?>',
+            maxDate     : '<?php echo \esc_attr( substr( $dates["0"]->last, 0, 10 ) ); ?>',
+            firstDay    : '<?php echo \esc_attr( $start_of_week ); ?>'
         } );
 
         // end date picker ##
         // might want to set minDate to something else, but not sure
         // what would be best for everyone
         jQuery('.updated-datepicker').datepicker( {
-            dateFormat  : '<?php \esc_attr_e( $date_format ); ?>',
-            minDate     : '<?php \esc_attr_e( substr( $dates["0"]->first, 0, 10 ) ); ?>',
+            dateFormat  : '<?php echo \esc_attr( $date_format ); ?>',
+            minDate     : '<?php echo \esc_attr( substr( $dates["0"]->first, 0, 10 ) ); ?>',
             maxDate	    : '0',
-            firstDay    : '<?php \esc_attr_e( $start_of_week ); ?>'
+            firstDay    : '<?php echo \esc_attr( $start_of_week ); ?>'
         } );
 
     });
