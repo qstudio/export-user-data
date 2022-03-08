@@ -48,7 +48,7 @@ class admin {
         }
 
         // is this toggleable ? ##
-        $toggleable = false === $array['title'] ? 'standard' : 'toggleable' ;
+        $toggleable = false === $array['toggleable'] ? 'standard' : 'toggleable' ;
 
         // keep labels formatted nicely ##
         $array['label'] = \sanitize_key( $array['label'] );
@@ -155,14 +155,18 @@ class admin {
         }
 
         // is this a multiselect ? ##
-        $multiselect = isset( $array['multiselect'] ) ? ' multiple="multiple"' : '' ;
+        $multiselect = ! empty( $array['multiselect'] ) ? ' multiple="multiple"' : '' ;
+        // If this is a multiselect, the name must reflect that.
+        $name_append =  ( $multiselect ) ? '[]' : '';
 
 ?>
-        <select <?php \esc_attr_e( $multiselect ); ?> name="<?php \esc_attr_e( $array['label'] ); ?>" id="q_eud_<?php \esc_attr_e( $array['label'] ); ?>">
+        <select <?php echo( $multiselect ); ?> name="<?php echo \esc_attr( $array['label'] ) . $name_append; ?>" id="q_eud_<?php \esc_attr_e( $array['label'] ); ?>">
 		<?php
 
             // label ##
-            echo '<option value="">'.\esc_attr( $array['label_select'] ).'</option>';
+            if ( ! empty( $array['label_select'] ) ) {
+                echo '<option value="">'.\esc_attr( $array['label_select'] ).'</option>';
+            }
 
             // loop over all options  ##
             foreach ( $array['options'] as $item ) {

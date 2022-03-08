@@ -585,7 +585,7 @@ class render {
     jQuery(document).ready(function($) {
 
         // build super multiselect ##
-        jQuery('#usermeta, #bp_fields, #bp_fields_update_time').multiSelect();
+        jQuery('select[multiple]').multiSelect();
 
         // Select any fields from saved settings ##
         jQuery('#usermeta').multiSelect('select',([ <?php echo implode( ',', array_map( function( $field ){ return "'".\esc_attr( $field )."'"; }, $_usermeta_saved_fields ) );; // escaped ?>]));
