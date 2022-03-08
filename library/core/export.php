@@ -192,6 +192,9 @@ class export {
             ,	$usermeta_fields // wp_user_meta fields ##
         );
 
+        // Filter available fields.
+        $fields = \apply_filters( 'q/eud/export/fields', $fields );
+
         // test field array ##
         #h::log( $fields );
 
@@ -345,6 +348,9 @@ class export {
 
                     }
 
+                    // Allow plugins to supply values.
+                    $value = \apply_filters( 'q/eud/export/field_value_before_formatting', $value, $field, $user );
+
                 }
 
 				// ---------- cleanup and format the value, before exporting ##
@@ -363,7 +369,7 @@ class export {
 
 				}
 
-				// apply generic filter to value ##
+				// apply generic filter to format value ##
 				if( has_filter( 'q/eud/export/value' ) ){
 
 					$value = \apply_filters( 'q/eud/export/value', $value );
